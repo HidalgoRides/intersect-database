@@ -1,0 +1,23 @@
+<?php
+
+use Intersect\Database\Migrations\AbstractMigration;
+
+class {{CLASS_NAME}} extends AbstractMigration {
+
+    /**
+     * Run the migration
+     */
+    public function up()
+    {
+        //
+    }
+
+    /**
+     * Reverse the migration
+     */
+    public function down()
+    {
+        //
+    }
+
+}
