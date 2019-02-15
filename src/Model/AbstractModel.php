@@ -115,12 +115,19 @@ abstract class AbstractModel implements ModelActions {
      */
     public function getAttribute($key)
     {
+        $data = null;
+
         if (isset($this->attributes[$key]))
         {
-            return $this->attributes[$key];
+            $data = $this->attributes[$key];
+        }
+        else if (method_exists($this, $key))
+        {
+            $data = $this->{$key}();
+            $this->attributes[$key] = $data;
         }
 
-        return null;
+        return $data;
     }
 
     /**

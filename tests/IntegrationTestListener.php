@@ -40,11 +40,8 @@ class IntegrationTestListener implements TestListener {
             $this->logger->info('Starting integration tests');
             $this->logger->info('');
 
-            $this->createDatabaseAndUse();
-
             try {
-                $this->createTestsTable();
-                $this->createRelationalTestTables();
+                $this->initTestDatabase();
             } catch (DatabaseException $e) {}
 
             $this->logger->info('');
@@ -57,46 +54,41 @@ class IntegrationTestListener implements TestListener {
         {
             $this->logger->info('');
             $this->logger->info('');
-            $this->logger->info('Ending test suite');
-
             $this->dropDatabase();
         }
     }
 
-    private function createDatabaseAndUse()
+    private function initTestDatabase()
     {
         $this->logger->info('Creating database ' . $this->databaseName);
         $this->connection->query('CREATE DATABASE IF NOT EXISTS ' . $this->databaseName);
 
         $this->logger->info('Switching database to ' . $this->databaseName);
         $this->connection->switchDatabase($this->databaseName);
-    }
 
-    private function createTestsTable()
-    {
-        $this->connection->query("CREATE TABLE tests (
+        $this->logger->info('Applying test database schemas and data');
+        $this->connection->query("CREATE TABLE users (
             id INT(11) AUTO_INCREMENT PRIMARY KEY,
-            data VARCHAR(255),
-            foo_bar VARCHAR(255)
-        )");
-
-        $this->connection->query("INSERT INTO tests (data, foo_bar) VALUES ('data', 'test')");
-    }
-
-    private function createRelationalTestTables()
-    {
-        $this->connection->query("CREATE TABLE test_relation_one (
+            email VARCHAR(50) NOT NULL,
+            phone_id INT(11),
+            name_id INT(11)
+          );
+          
+          CREATE TABLE phones (
             id INT(11) AUTO_INCREMENT PRIMARY KEY,
-            data_id VARCHAR(255)
-        )");
-
-        $this->connection->query("CREATE TABLE test_relation_two (
+            number VARCHAR(15) NOT NULL
+          );
+          
+          CREATE TABLE names (
             id INT(11) AUTO_INCREMENT PRIMARY KEY,
-            title VARCHAR(255)
-        )");
-
-        $this->connection->query("INSERT INTO test_relation_one (data_id) VALUES (1)");
-        $this->connection->query("INSERT INTO test_relation_two (title) VALUES ('data title')");
+            first_name VARCHAR(20) NOT NULL,
+            last_name VARCHAR(20) NOT NULL
+          );
+          
+          INSERT INTO names (first_name, last_name) VALUES ('Unit', 'Test');
+          INSERT INTO phones (number) VALUES ('15551234567');
+          INSERT INTO users (email, phone_id, name_id) VALUES ('unit-test@test.com', 1, 1);
+        ");
     }
 
     private function dropDatabase()

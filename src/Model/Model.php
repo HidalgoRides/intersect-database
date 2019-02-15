@@ -262,6 +262,23 @@ abstract class Model extends AbstractModel implements Extensible {
         return (array_key_exists($key, $metaData)) ? $metaData[$key] : null;
     }
 
+    public function hasOne($className, $column)
+    {
+        $attributeValue = $this->getAttribute($column);
+
+        if (is_null($attributeValue))
+        {
+            return null;
+        }
+
+        /** @var Model $class */
+        $class = new $className();
+
+        $qp = new QueryParameters();
+        $qp->equals($class->getPrimaryKey(), $attributeValue);
+        return $class::findOne($qp);
+    }
+
     /**
      * @return mixed|null
      * @throws ValidationException
@@ -431,18 +448,6 @@ abstract class Model extends AbstractModel implements Extensible {
         if (array_key_exists($key, $this->relationships))
         {
             return $this->relationships[$key];
-        }
-
-        if ($this instanceof Relational)
-        {
-            /** @var Relationship $relationship */
-            foreach ($this->getLazyRelationshipMap() as $relationship)
-            {
-                if ($relationship->getAttribute() == $key)
-                {
-                    RelationshipLoader::loadLazyRelationship($this, $relationship, $key);
-                }
-            }
         }
 
         return (array_key_exists($key, $this->relationships)) ? $this->relationships[$key] : null;

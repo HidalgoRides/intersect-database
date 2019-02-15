@@ -3,69 +3,79 @@
 namespace Tests\Model;
 
 use PHPUnit\Framework\TestCase;
-use Tests\Model\TestModel;
 use Intersect\Database\Model\ModelHelper;
+use Tests\Stubs\User;
 
 class ModelHelperTest extends TestCase {
 
     public function test_normalize_withoutConvertAttributeKeys()
     {
-        $testModel = TestModel::findOne();
+        $model = User::findOne();
         
-        $normalizedModel = ModelHelper::normalize($testModel);
+        $normalizedModel = ModelHelper::normalize($model);
 
-        $this->assertArrayHasKey('id', $normalizedModel);
-        $this->assertArrayHasKey('data', $normalizedModel);
-        $this->assertArrayHasKey('foo_bar', $normalizedModel);
+        $this->assertNormalizedModelWithoutAttributeKeyConversion($normalizedModel);
     }
 
     public function test_normalize_withConvertAttributeKeys()
     {
-        $testModel = TestModel::findOne();
+        $model = User::findOne();
         
-        $normalizedModel = ModelHelper::normalize($testModel, true);
+        $normalizedModel = ModelHelper::normalize($model, true);
 
-        $this->assertArrayHasKey('id', $normalizedModel);
-        $this->assertArrayHasKey('data', $normalizedModel);
-        $this->assertArrayHasKey('fooBar', $normalizedModel);
+        $this->assertNormalizedModelWithAttributeKeyConversion($normalizedModel);
     }
 
     public function test_normalizeList_withoutConvertAttributeKeys()
     {
-        $testModel = TestModel::findOne();
+        $model = User::findOne();
 
         $models = [
-            $testModel,
-            $testModel
+            $model,
+            $model
         ];
         
         $normalizedModels = ModelHelper::normalizeList($models);
 
         foreach ($normalizedModels as $normalizedModel)
         {
-            $this->assertArrayHasKey('id', $normalizedModel);
-            $this->assertArrayHasKey('data', $normalizedModel);
-            $this->assertArrayHasKey('foo_bar', $normalizedModel);
+            $this->assertNormalizedModelWithoutAttributeKeyConversion($normalizedModel);
         }
     }
 
     public function test_normalizeList_withConvertAttributeKeys()
     {
-        $testModel = TestModel::findOne();
+        $model = User::findOne();
 
         $models = [
-            $testModel,
-            $testModel
+            $model,
+            $model
         ];
         
         $normalizedModels = ModelHelper::normalizeList($models, true);
 
         foreach ($normalizedModels as $normalizedModel)
         {
-            $this->assertArrayHasKey('id', $normalizedModel);
-            $this->assertArrayHasKey('data', $normalizedModel);
-            $this->assertArrayHasKey('fooBar', $normalizedModel);
+            $this->assertNormalizedModelWithAttributeKeyConversion($normalizedModel);
         }
+    }
+
+    private function assertNormalizedModelWithoutAttributeKeyConversion($model)
+    {
+        $this->assertArrayHasKey('id', $model);
+        $this->assertArrayHasKey('email', $model);
+        $this->assertArrayHasKey('name_id', $model);
+        $this->assertArrayHasKey('phone_id', $model);
+        $this->assertArrayHasKey('phone', $model);
+    }
+
+    private function assertNormalizedModelWithAttributeKeyConversion($model)
+    {
+        $this->assertArrayHasKey('id', $model);
+        $this->assertArrayHasKey('email', $model);
+        $this->assertArrayHasKey('nameId', $model);
+        $this->assertArrayHasKey('phoneId', $model);
+        $this->assertArrayHasKey('phone', $model);
     }
 
 }
