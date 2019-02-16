@@ -4,7 +4,6 @@ namespace Intersect\Database\Query;
 
 class QueryParameters {
 
-    private $bypassEagerLoading = false;
     private $columns = [];
     private $limit;
     private $order;
@@ -13,16 +12,6 @@ class QueryParameters {
     public function __construct()
     {
         return $this;
-    }
-
-    public function getBypassEagerLoading()
-    {
-        return $this->bypassEagerLoading;
-    }
-
-    public function setBypassEagerLoading($bypassEagerLoading)
-    {
-        $this->bypassEagerLoading = boolval($bypassEagerLoading);
     }
 
     public function getColumns()

@@ -62,17 +62,17 @@ class ModelQueryBuilderTest extends TestCase {
         $this->assertEquals("select " . $alias . ".unit as '" . $alias . ".unit' from `names` as " . $alias . " where " . $alias . ".test = :" . $alias . "_test", strtolower($query->getSql()));
     }
 
-    public function test_buildSelectQuery_allColumns_withEagerRelationship()
-    {
-        $model = new User();
-        $modelQueryBuilder = new ModelQueryBuilder($model);
+    // public function test_buildSelectQuery_allColumns_withEagerRelationship()
+    // {
+    //     $model = new User();
+    //     $modelQueryBuilder = new ModelQueryBuilder($model);
 
-        $query = $modelQueryBuilder->buildSelectQuery();
+    //     $query = $modelQueryBuilder->buildSelectQuery();
 
-        $aliasOne = AliasFactory::getAlias($model->getTableName());
-        $aliasTwo = AliasFactory::getAlias('phone');
+    //     $aliasOne = AliasFactory::getAlias($model->getTableName());
+    //     $aliasTwo = AliasFactory::getAlias('phone');
 
-        $this->assertEquals("select " . $aliasOne . ".*, " . $aliasTwo . ".id as '" . $aliasTwo . ".id', " . $aliasTwo . ".number as '" . $aliasTwo . ".number' from `users` as " . $aliasOne . " left join phones as " . $aliasTwo . " on " . $aliasOne . ".phone_id = " . $aliasTwo . ".id", strtolower($query->getSql()));
-    }
+    //     $this->assertEquals("select " . $aliasOne . ".*, " . $aliasTwo . ".id as '" . $aliasTwo . ".id', " . $aliasTwo . ".number as '" . $aliasTwo . ".number' from `users` as " . $aliasOne . " left join phones as " . $aliasTwo . " on " . $aliasOne . ".phone_id = " . $aliasTwo . ".id", strtolower($query->getSql()));
+    // }
 
 }

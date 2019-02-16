@@ -66,7 +66,6 @@ class ModelHelperTest extends TestCase {
         $this->assertArrayHasKey('email', $model);
         $this->assertArrayHasKey('name_id', $model);
         $this->assertArrayHasKey('phone_id', $model);
-        $this->assertArrayHasKey('phone', $model);
     }
 
     private function assertNormalizedModelWithAttributeKeyConversion($model)
@@ -75,7 +74,6 @@ class ModelHelperTest extends TestCase {
         $this->assertArrayHasKey('email', $model);
         $this->assertArrayHasKey('nameId', $model);
         $this->assertArrayHasKey('phoneId', $model);
-        $this->assertArrayHasKey('phone', $model);
     }
 
 }

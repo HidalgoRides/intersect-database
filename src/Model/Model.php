@@ -4,20 +4,15 @@ namespace Intersect\Database\Model;
 
 use Intersect\Database\Query\AliasFactory;
 use Intersect\Database\Query\QueryParameters;
-use Intersect\Database\Query\QueryRelationship;
 use Intersect\Database\Exception\DatabaseException;
 use Intersect\Database\Exception\ValidationException;
-use Intersect\Database\Model\Relationship\Relational;
-use Intersect\Database\Model\Relationship\Relationship;
 use Intersect\Database\Query\Builder\ModelQueryBuilder;
-use Intersect\Database\Model\Relationship\RelationshipLoader;
 
 abstract class Model extends AbstractModel implements Extensible {
     
     protected $metaDataColumn = 'meta_data';
     
     private $metaData = null;
-    private $relationships = [];
 
     /**
      * @param QueryParameters|null $queryParameters
@@ -43,7 +38,7 @@ abstract class Model extends AbstractModel implements Extensible {
 
         foreach ($result->getRecords() as $record)
         {
-            $models[] = self::newInstance($record, $query->getRelationshipMap());
+            $models[] = self::newInstance($record);
         }
 
         return $models;
@@ -101,14 +96,12 @@ abstract class Model extends AbstractModel implements Extensible {
 
     /**
      * @param array $properties
-     * @param array $relationshipMap
      * @return Model
      */
-    public static function newInstance(array $properties = [], array $relationshipMap = [])
+    public static function newInstance(array $properties = [])
     {
         $instance = new static();
 
-        $relationshipModels = [];
         $modelAlias = AliasFactory::getAlias($instance->getTableName());
 
         foreach ($properties as $key => $value)
@@ -125,45 +118,6 @@ abstract class Model extends AbstractModel implements Extensible {
 
                 $instance->setAttribute($key, $value);
             }
-            else
-            {
-                $relationshipAlias = $keyParts[0];
-                $relationshipProperty = ($keyParts[1] ?? null);
-
-                if (isset($relationshipProperty) && array_key_exists($relationshipAlias, $relationshipMap))
-                {
-                    /** @var QueryRelationship $queryRelationship */
-                    $queryRelationship = $relationshipMap[$relationshipAlias];
-                    $relationshipKey = $queryRelationship->getKey();
-
-                    if (is_null($value))
-                    {
-                        $instance->setRelationship($relationshipKey, null);
-                    }
-                    else
-                    {
-                        /** @var Model $relationshipModel */
-
-                        if (!array_key_exists($relationshipKey, $relationshipModels))
-                        {
-                            $queryRelationshipClass = $queryRelationship->getClass();
-                            $relationshipModel = new $queryRelationshipClass();
-                            $relationshipModels[$relationshipKey] = $relationshipModel;
-                        }
-                        else
-                        {
-                            $relationshipModel =  $relationshipModels[$relationshipKey];
-                        }
-
-                        $relationshipModel->setAttribute($relationshipProperty, $value);
-                    }
-                }
-            }
-        }
-
-        foreach ($relationshipModels as $key => $model)
-        {
-            $instance->setRelationship($key, $model);
         }
 
         return $instance;
@@ -182,11 +136,6 @@ abstract class Model extends AbstractModel implements Extensible {
         }
 
         $value = $this->getAttribute($key);
-
-        if (is_null($value))
-        {
-            $value = $this->getRelationship($key);
-        }
 
         return $value;
     }
@@ -420,13 +369,6 @@ abstract class Model extends AbstractModel implements Extensible {
             }
         }
 
-        /** @var Model $relationshipValue */
-        foreach ($this->relationships as $relationshipKey => $relationshipValue)
-        {
-            $relationshipKey = (!$convertAttributeKeys ? $relationshipKey : $this->convertColumnAttributeToCamelCase($relationshipKey));
-            $data[$relationshipKey] = (is_null($relationshipValue) ? null : $relationshipValue->normalize());
-        }
-
         $metaData = $this->getMetaData();
         if (!is_null($metaData))
         {
@@ -444,30 +386,10 @@ abstract class Model extends AbstractModel implements Extensible {
         return $data;
     }
 
-    public function setRelationship($key, $value)
-    {
-        $this->relationships[$key] = $value;
-    }
-
     protected function isNewModel()
     {
         $primaryKeyValue = $this->getPrimaryKeyValue();
         return is_null($primaryKeyValue);
-    }
-
-    /**
-     * @param $key
-     * @return mixed|null
-     * @throws DatabaseException
-     */
-    private function getRelationship($key)
-    {
-        if (array_key_exists($key, $this->relationships))
-        {
-            return $this->relationships[$key];
-        }
-
-        return (array_key_exists($key, $this->relationships)) ? $this->relationships[$key] : null;
     }
 
     private function convertColumnAttributeToCamelCase($string)

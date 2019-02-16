@@ -6,16 +6,12 @@ use Tests\Stubs\Name;
 use Tests\Stubs\Phone;
 use Intersect\Database\Model\Model;
 use Intersect\Database\Query\QueryParameters;
-use Intersect\Database\Model\Relationship\Relational;
-use Intersect\Database\Model\Relationship\EagerRelationship;
 
-class User extends Model implements Relational {
+class User extends Model {
 
-    public function getEagerRelationshipMap()
+    public function phone()
     {
-        return [
-            new EagerRelationship(Phone::class, 'phone_id', 'phone')
-        ];
+        return $this->hasOne(Phone::class, 'phone_id');
     }
 
     public function name()
