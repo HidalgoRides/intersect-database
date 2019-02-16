@@ -279,6 +279,23 @@ abstract class Model extends AbstractModel implements Extensible {
         return $class::findOne($qp);
     }
 
+    public function hasMany($className, $column)
+    {
+        $primaryKeyValue = $this->getPrimaryKeyValue();
+
+        if (is_null($primaryKeyValue))
+        {
+            return [];
+        }
+
+        /** @var Model $class */
+        $class = new $className();
+
+        $qp = new QueryParameters();
+        $qp->equals($column, $primaryKeyValue);
+        return $class::find($qp);
+    }
+
     /**
      * @return mixed|null
      * @throws ValidationException

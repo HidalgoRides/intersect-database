@@ -23,4 +23,9 @@ class User extends Model implements Relational {
         return $this->hasOne(Name::class, 'name_id');
     }
 
+    public function addresses()
+    {
+        return $this->hasMany(Address::class, 'user_id');
+    }
+
 }

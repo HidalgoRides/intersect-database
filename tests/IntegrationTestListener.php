@@ -84,10 +84,22 @@ class IntegrationTestListener implements TestListener {
             first_name VARCHAR(20) NOT NULL,
             last_name VARCHAR(20) NOT NULL
           );
+
+          CREATE TABLE addresses (
+            id INT(11) AUTO_INCREMENT PRIMARY KEY,
+            user_id INT(11) NOT NULL,
+            street VARCHAR(100) NOT NULL,
+            city VARCHAR(100) NOT NULL,
+            state VARCHAR(5) NOT NULL,
+            zip_code VARCHAR(20) NOT NULL
+          );
           
           INSERT INTO names (first_name, last_name) VALUES ('Unit', 'Test');
           INSERT INTO phones (number) VALUES ('15551234567');
           INSERT INTO users (email, phone_id, name_id) VALUES ('unit-test@test.com', 1, 1);
+
+          INSERT INTO addresses (user_id, street, city, state, zip_code) VALUES (1, 'Test Street 1', 'Test City 1', 'IT', '12345');
+          INSERT INTO addresses (user_id, street, city, state, zip_code) VALUES (1, 'Test Street 2', 'Test City 2', 'IT', '67890');
         ");
     }
 
