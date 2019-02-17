@@ -16,58 +16,66 @@ use Intersect\Database\Query\Builder\ResolvedQueryCondition;
 class QueryConditionResolver {
 
     /** @return ResolvedQueryCondition */
-    public function resolve(QueryCondition $queryCondition)
+    public function resolve(QueryCondition $queryCondition, $alias = null)
     {
         $queryString = '';
         $bindParameters = null;
 
+        $column = $queryCondition->getColumn();
+        $columnWithAlias = $this->buildColumnWithAlias($queryCondition->getColumn(), $alias);
+
         if ($queryCondition instanceOf EqualsCondition)
         {
-            $column = $queryCondition->getColumn();
-            $queryString = $column . ' = ' . $this->buildPlaceholder($column);
-            $bindParameters = [$column, $queryCondition->getValue()];
+            $placeholder = $this->buildPlaceholderWithAlias($column, $alias);
+            $queryString = $columnWithAlias . ' = :' . $placeholder;
+            $bindParameters = [$placeholder, $queryCondition->getValue()];
         }
         else if ($queryCondition instanceOf NotEqualsCondition)
         {
-            $column = $queryCondition->getColumn();
-            $queryString = $column . ' != ' . $this->buildPlaceholder($column);
-            $bindParameters = [$column, $queryCondition->getValue()];
+            $placeholder = $this->buildPlaceholderWithAlias($column, $alias);
+            $queryString = $columnWithAlias . ' != :' . $placeholder;
+            $bindParameters = [$placeholder, $queryCondition->getValue()];
         }
         else if ($queryCondition instanceOf NullCondition)
         {
-            $queryString = $queryCondition->getColumn() . ' is null';
+            $queryString = $columnWithAlias . ' is null';
         }
         else if ($queryCondition instanceOf NotNullCondition)
         {
-            $queryString = $queryCondition->getColumn() . ' is not null';
+            $queryString = $columnWithAlias . ' is not null';
         }
         else if ($queryCondition instanceOf LikeCondition)
         {
-            $column = $queryCondition->getColumn();
-            $queryString = $column . ' like ' . $this->buildPlaceholder($column);
-            $bindParameters = [$column, $queryCondition->getValue()];
+            $placeholder = $this->buildPlaceholderWithAlias($column, $alias);
+            $queryString = $columnWithAlias . ' like :' . $placeholder;
+            $bindParameters = [$placeholder, $queryCondition->getValue()];
         }
         else if ($queryCondition instanceOf InCondition)
         {
-            $queryString = $queryCondition->getColumn() . ' in (' . implode(', ', $queryCondition->getValue()) . ')';
+            $queryString = $columnWithAlias . ' in (' . implode(', ', $queryCondition->getValue()) . ')';
         }
         else if ($queryCondition instanceOf BetweenCondition)
         {
             $values = $queryCondition->getValue();
-            $queryString = $queryCondition->getColumn() . ' between ' . $values[0] . ' and ' . $values[1];
+            $queryString = $columnWithAlias . ' between ' . $values[0] . ' and ' . $values[1];
         }
         else if ($queryCondition instanceOf BetweenDatesCondition)
         {
             $values = $queryCondition->getValue();
-            $queryString = $queryCondition->getColumn() . ' between cast(\'' . $values[0] . '\' as datetime) and cast(\'' . $values[1] . '\' as datetime)';
+            $queryString = $columnWithAlias . ' between cast(\'' . $values[0] . '\' as datetime) and cast(\'' . $values[1] . '\' as datetime)';
         }
 
         return new ResolvedQueryCondition($queryString, $bindParameters);
     }
 
-    private function buildPlaceholder($key)
+    private function buildColumnWithAlias($column, $alias)
     {
-        return ':' . $key;
+        return (!is_null($alias)) ? ($alias . '.' . $column) : $column;
+    }
+
+    private function buildPlaceholderWithAlias($key, $alias)
+    {
+        return (!is_null($alias)) ? ($alias . '_'. $key) : $key;
     }
 
 }

@@ -14,6 +14,7 @@ use Intersect\Database\Query\Builder\Condition\BetweenDatesCondition;
 use Intersect\Database\Query\Builder\Condition\BetweenCondition;
 use Intersect\Database\Query\Builder\Condition\LikeCondition;
 use Intersect\Database\Query\QueryParameters;
+use Intersect\Database\Query\AliasFactory;
 
 class QueryBuilder {
 
@@ -29,6 +30,7 @@ class QueryBuilder {
     private $limit;
     private $order;
     private $tableName;
+    private $useAliases = false;
 
     /** @var QueryCondition[] */
     private $queryConditions = [];
@@ -44,6 +46,7 @@ class QueryBuilder {
     {
         $queryBuilder = new static();
         $queryBuilder->action = self::$ACTION_SELECT;
+        $queryBuilder->useAliases = true;
 
         if (count($columns) > 0)
         {
@@ -266,7 +269,15 @@ class QueryBuilder {
 
     private function buildSelectQuery()
     {
-        $queryString = 'select ' . implode(', ', $this->columns) . ' from `' . $this->tableName . '`';
+        $alias = ($this->useAliases) ? AliasFactory::getAlias($this->tableName) : null;
+        $columns = $this->columns;
+
+        foreach ($columns as &$column)
+        {
+            $column = $this->buildColumnWithAlias($column, $alias);
+        }
+
+        $queryString = 'select ' . implode(', ', $columns) . ' from ' . $this->buildTableNameWithAlias($this->tableName, $alias);
 
         $query = new Query($queryString);
 
@@ -278,7 +289,7 @@ class QueryBuilder {
 
     private function buildDeleteQuery()
     {
-        $queryString = 'delete from `' . $this->tableName . '`';
+        $queryString = 'delete from ' . $this->buildTableNameWithAlias($this->tableName);
 
         $query = new Query($queryString);
 
@@ -291,15 +302,18 @@ class QueryBuilder {
     private function buildUpdateQuery()
     {
         $updateValues = [];
+        $bindParameters = [];
 
         foreach ($this->columnData as $key => $value)
         {
-            $updateValues[] = $key . ' = ' . $this->buildPlaceholder($key);
+            $placeholder = $this->buildPlaceholderWithAlias($key);
+            $updateValues[] = $key . ' = :' . $placeholder;
+            $bindParameters[$placeholder] = $value;
         }
 
-        $queryString = 'update `' . $this->tableName . '` set ' . implode(', ', $updateValues);
+        $queryString = 'update ' . $this->buildTableNameWithAlias($this->tableName) . ' set ' . implode(', ', $updateValues);
 
-        $query = new Query($queryString, $this->columnData);
+        $query = new Query($queryString, $bindParameters);
 
         $this->appendWhereConditions($query);
         $this->appendOptions($query);
@@ -315,17 +329,17 @@ class QueryBuilder {
         foreach ($this->columnData as $key => $value)
         {
             $columns[] = $key;
-            $values[] = $this->buildPlaceholder($key);
+            $values[] = ':' . $this->buildPlaceholderWithAlias($key);
         }
 
-        $queryString = 'insert into `' . $this->tableName . '` (' . implode(', ', $columns) . ') value (' . implode(', ', $values) . ')';
+        $queryString = 'insert into ' . $this->buildTableNameWithAlias($this->tableName) . ' (' . implode(', ', $columns) . ') value (' . implode(', ', $values) . ')';
 
         return new Query($queryString, $this->columnData);
     }
 
     private function buildColumnQuery()
     {
-        $queryString = $sql = 'show columns from `' . $this->tableName . '`';
+        $queryString = $sql = 'show columns from ' . $this->buildTableNameWithAlias($this->tableName);
 
         return new Query($queryString);
     }
@@ -338,11 +352,12 @@ class QueryBuilder {
         {
             $sql = $query->getSql();
             $whereSql = '';
+            $alias = ($this->useAliases) ? AliasFactory::getAlias($this->tableName) : null;
             
             foreach ($queryConditions as $queryCondition)
             {
                 $whereSql .= ($whereSql == '') ? ' where ' : ' and ';
-                $resolvedQueryCondition = $this->queryConditionResolver->resolve($queryCondition);
+                $resolvedQueryCondition = $this->queryConditionResolver->resolve($queryCondition, $alias);
                 
                 $whereSql .= $resolvedQueryCondition->getQueryString();
                 $bindParameters = $resolvedQueryCondition->getBindParameters();
@@ -359,10 +374,11 @@ class QueryBuilder {
     private function appendOptions(Query $query)
     {
         $sql = $query->getSql();
+        $alias = ($this->useAliases) ? AliasFactory::getAlias($this->tableName) : null;
         
         if (!is_null($this->order))
         {
-            $sql .= ' order by ' . $this->order;
+            $sql .= ' order by ' . ((!is_null($alias)) ? $alias . '.' : '') . $this->order;
         }
 
         if (!is_null($this->limit))
@@ -373,9 +389,26 @@ class QueryBuilder {
         $query->setSql($sql);
     }
 
-    private function buildPlaceholder($key)
+    private function buildColumnWithAlias($column, $alias = null)
     {
-        return ':' . $key;
+        return (!is_null($alias)) ? ($alias . '.' . $column) : $column;
+    }
+
+    private function buildPlaceholderWithAlias($key, $alias = null)
+    {
+        return (!is_null($alias)) ? ($alias . '_' . $key) : $key;
+    }
+
+    private function buildTableNameWithAlias($tableName, $alias = null)
+    {
+        $tableName = $this->wrapTableName($tableName);
+
+        return (!is_null($alias)) ? ($tableName . ' as ' . $alias) : $tableName;
+    }
+
+    private function wrapTableName($tableName)
+    {
+        return '`' . $tableName . '`';
     }
 
 }
