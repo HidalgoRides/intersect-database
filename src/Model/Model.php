@@ -5,15 +5,15 @@ namespace Intersect\Database\Model;
 use Intersect\Database\Query\Query;
 use Intersect\Database\Query\AliasFactory;
 use Intersect\Database\Query\QueryParameters;
+use Intersect\Database\Model\Traits\HasMetaData;
 use Intersect\Database\Query\Builder\QueryBuilder;
 use Intersect\Database\Exception\DatabaseException;
 use Intersect\Database\Exception\ValidationException;
 
-abstract class Model extends AbstractModel implements Extensible {
-    
-    protected $metaDataColumn = 'meta_data';
-    
-    private $metaData = null;
+abstract class Model extends AbstractModel {
+    use HasMetaData {
+        HasMetaData::save as saveMetaData;
+    }
 
     /**
      * @param QueryParameters|null $queryParameters
@@ -105,79 +105,7 @@ abstract class Model extends AbstractModel implements Extensible {
             return $this->getMetaData();
         }
 
-        $value = $this->getAttribute($key);
-
-        return $value;
-    }
-
-    /**
-     * @param $key
-     * @param $value
-     */
-    public function addMetaData($key, $value)
-    {
-        $this->metaData[$key] = $value;
-    }
-
-    public function clearAllMetaData()
-    {
-        $metaDataAttribute = (array_key_exists($this->metaDataColumn, $this->attributes)) ? $this->attributes[$this->metaDataColumn] : null;
-
-        if (!is_null($metaDataAttribute))
-        {
-            $this->attributes[$this->metaDataColumn] = null;
-        }
-
-        $this->metaData = null;
-    }
-
-    public function clearMetaDataByKey($key)
-    {
-        if (!is_null($this->metaData))
-        {
-            if (array_key_exists($key, $this->metaData))
-            {
-                unset($this->metaData[$key]);
-            }
-        }
-    }
-
-    /**
-     * @param array $metaData
-     */
-    public function setMetaData(array $metaData)
-    {
-        $this->metaData = $metaData;
-    }
-
-    /**
-     * @return array|null
-     */
-    public function getMetaData()
-    {
-        if (is_null($this->metaData))
-        {
-            $metaDataAttribute = (array_key_exists($this->metaDataColumn, $this->attributes)) ? $this->attributes[$this->metaDataColumn] : null;
-
-            if (!is_null($metaDataAttribute))
-            {
-                $this->metaData = unserialize($metaDataAttribute);
-            }
-        }
-
-        return $this->metaData;
-    }
-
-    public function getMetaDataByKey($key)
-    {
-        $metaData = $this->getMetaData();
-
-        if (is_null($metaData))
-        {
-            return null;
-        }
-
-        return (array_key_exists($key, $metaData)) ? $metaData[$key] : null;
+        return parent::__get($key);
     }
 
     /**
@@ -303,16 +231,6 @@ abstract class Model extends AbstractModel implements Extensible {
         $result = $this->getConnection()->run($query);
 
         return ($result->getAffectedRows() == 1);
-    }
-
-    public function getPrimaryKey()
-    {
-        return $this->primaryKey;
-    }
-
-    public function getPrimaryKeyValue()
-    {
-        return $this->getAttribute($this->primaryKey);
     }
 
     public function normalize($convertAttributeKeys = false)

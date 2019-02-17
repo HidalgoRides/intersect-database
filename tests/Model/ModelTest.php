@@ -69,4 +69,33 @@ class ModelTest extends TestCase {
         $this->assertNotEquals($email, $updatedUser->email);
     }
 
+    public function test_metaData() 
+    {
+        $user = new User();
+        $user->email = 'unit-test-' . uniqid() . '@test.com';
+        $user->setMetaData([
+            'unit' => 'test'
+        ]);
+
+        $newUser = $user->save();
+        $metaData = $newUser->getMetaDataByKey('unit');
+        $this->assertNotNull($metaData);
+        $this->assertEquals('test', $metaData);
+
+        $metaData = $newUser->addMetaData('new', 'data');
+
+        $newUser = $newUser->save();
+        $metaDataUnit = $newUser->getMetaDataByKey('unit');
+        $metaDataNew = $newUser->getMetaDataByKey('new');
+        $this->assertNotNull($metaDataUnit);
+        $this->assertNotNull($metaDataNew);
+        $this->assertEquals('test', $metaDataUnit);
+        $this->assertEquals('data', $metaDataNew);
+
+        $newUser->clearAllMetaData();
+        $newUser = $newUser->save();
+
+        $this->assertNull($newUser->getMetaData());
+    }
+
 }

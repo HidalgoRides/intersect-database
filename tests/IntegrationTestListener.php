@@ -71,7 +71,8 @@ class IntegrationTestListener implements TestListener {
             id INT(11) AUTO_INCREMENT PRIMARY KEY,
             email VARCHAR(50) NOT NULL,
             phone_id INT(11),
-            name_id INT(11)
+            name_id INT(11),
+            meta_data TEXT
           );
           
           CREATE TABLE phones (

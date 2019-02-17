@@ -22,6 +22,7 @@ abstract class AbstractModel implements ModelActions {
     protected $columns = [];
     protected $primaryKey = 'id';
     protected $readOnlyAttributes = [];
+    protected $relationships = [];
     protected $tableName;
 
     abstract public function delete();
@@ -129,19 +130,14 @@ abstract class AbstractModel implements ModelActions {
      */
     public function getAttribute($key)
     {
-        $data = null;
+        $attribute = null;
 
         if (isset($this->attributes[$key]))
         {
-            $data = $this->attributes[$key];
-        }
-        else if (method_exists($this, $key))
-        {
-            $data = $this->{$key}();
-            $this->attributes[$key] = $data;
+            $attribute = $this->attributes[$key];
         }
 
-        return $data;
+        return $attribute;
     }
 
     /**
@@ -152,12 +148,27 @@ abstract class AbstractModel implements ModelActions {
         return $this->attributes;
     }
 
+    public function getPrimaryKey()
+    {
+        return $this->primaryKey;
+    }
+
+    public function getPrimaryKeyValue()
+    {
+        return $this->getAttribute($this->primaryKey);
+    }
+
     /**
      * @return array
      */
     public function getReadOnlyAttributes()
     {
         return $this->readOnlyAttributes;
+    }
+
+    public function getRelationship($key)
+    {
+        return (array_key_exists($key, $this->relationships)) ? $this->relationships[$key] : null;
     }
 
     /**
@@ -196,7 +207,22 @@ abstract class AbstractModel implements ModelActions {
      */
     public function __get($key)
     {
-        return $this->getAttribute($key);
+        $value = $this->getAttribute($key);
+
+        if (is_null($value))
+        {
+            if (isset($this->relationships[$key]))
+            {
+                $value = $this->relationships[$key];
+            }
+            else if (method_exists($this, $key))
+            {
+                $value = $this->{$key}();
+                $this->relationships[$key] = $value;
+            }
+        }
+
+        return $value;
     }
 
     /**

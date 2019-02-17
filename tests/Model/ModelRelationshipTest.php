@@ -35,6 +35,7 @@ class ModelRelationshipTest extends TestCase {
     {
         $user = User::findOne();
         $phone = $user->phone;
+        $phone = $user->phone();
         
         $this->assertNotNull($phone);
         $this->assertInstanceOf(Phone::class, $phone);
