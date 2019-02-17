@@ -2,11 +2,10 @@
 
 namespace Intersect\Database\Model;
 
+use Intersect\Database\Query\QueryParameters;
+use Intersect\Database\Query\Builder\QueryBuilder;
 use Intersect\Database\Exception\DatabaseException;
 use Intersect\Database\Model\Validation\Validation;
-use Intersect\Database\Query\Builder\DefaultQueryBuilder;
-use Intersect\Database\Query\Builder\ModelQueryBuilder;
-use Intersect\Database\Query\QueryParameters;
 
 abstract class AssociativeModel extends AbstractModel implements Validation {
 
@@ -35,7 +34,7 @@ abstract class AssociativeModel extends AbstractModel implements Validation {
     /**
      * @param $columnOneValue
      * @param $columnTwoValue
-     * @return mixed|null
+     * @return static|null
      */
     public static function findAssociation($columnOneValue, $columnTwoValue)
     {
@@ -60,7 +59,7 @@ abstract class AssociativeModel extends AbstractModel implements Validation {
 
     /**
      * @param $columnOneValue
-     * @return array
+     * @return static[]
      */
     public static function findAssociationsForColumnOne($columnOneValue)
     {
@@ -71,14 +70,12 @@ abstract class AssociativeModel extends AbstractModel implements Validation {
         $queryParameters = new QueryParameters();
         $queryParameters->equals($modelClass->getColumnOneName(), $columnOneValue);
 
-        $models = self::find($queryParameters);
-
-        return $models;
+        return self::find($queryParameters);
     }
 
     /**
      * @param $columnTwoValue
-     * @return array
+     * @return static[]
      */
     public static function findAssociationsForColumnTwo($columnTwoValue)
     {
@@ -89,14 +86,12 @@ abstract class AssociativeModel extends AbstractModel implements Validation {
         $queryParameters = new QueryParameters();
         $queryParameters->equals($modelClass->getColumnTwoName(), $columnTwoValue);
 
-        $models = self::find($queryParameters);
-
-        return $models;
+        return self::find($queryParameters);
     }
 
     /**
      * @param QueryParameters $queryParameters
-     * @return array
+     * @return static[]
      */
     private static function find(QueryParameters $queryParameters)
     {
@@ -108,12 +103,10 @@ abstract class AssociativeModel extends AbstractModel implements Validation {
             $modelClass->columns = $queryParameters->getColumns();
         }
 
-        $models = [];
-        $queryBuilder = new DefaultQueryBuilder($modelClass->getTableName(), $queryParameters);
-
-        $query = $queryBuilder->buildSelectQuery($modelClass->getColumnList());
-
+        $query = QueryBuilder::select($modelClass->getColumnList(), $queryParameters)->table($modelClass->getTableName())->build();
         $result = $modelClass->getConnection()->run($query);
+
+        $models = [];
 
         foreach ($result->getRecords() as $record)
         {
@@ -137,16 +130,14 @@ abstract class AssociativeModel extends AbstractModel implements Validation {
         $queryParameters->equals($this->getColumnTwoName(), $this->getColumnTwoValue());
         $queryParameters->setLimit(1);
 
-        $queryBuilder = new ModelQueryBuilder($this, $queryParameters);
-        $query = $queryBuilder->buildDeleteQuery();
-
+        $query = QueryBuilder::delete($queryParameters)->table($this->getTableName())->build();
         $result = $this->getConnection()->run($query);
 
         return ($result->getAffectedRows() == 1);
     }
 
     /**
-     * @return mixed|null
+     * @return static|null
      * @throws DatabaseException
      * @throws \Intersect\Database\Exception\ValidationException
      */
@@ -154,9 +145,7 @@ abstract class AssociativeModel extends AbstractModel implements Validation {
     {
         $this->validate();
 
-        $queryBuilder = new ModelQueryBuilder($this);
-
-        $query = $queryBuilder->buildInsertQuery($this->attributes);
+        $query = QueryBuilder::insert($this->attributes)->table($this->tableName)->build();
         $result = null;
 
         try {

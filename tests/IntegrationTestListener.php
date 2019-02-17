@@ -93,6 +93,12 @@ class IntegrationTestListener implements TestListener {
             state VARCHAR(5) NOT NULL,
             zip_code VARCHAR(20) NOT NULL
           );
+
+          CREATE TABLE associations (
+            key_one INT(11) NOT NULL,
+            key_two INT(11) NOT NULL,
+            PRIMARY KEY (key_one, key_two)
+          );
           
           INSERT INTO names (first_name, last_name) VALUES ('Unit', 'Test');
           INSERT INTO phones (number) VALUES ('15551234567');
@@ -100,6 +106,10 @@ class IntegrationTestListener implements TestListener {
 
           INSERT INTO addresses (user_id, street, city, state, zip_code) VALUES (1, 'Test Street 1', 'Test City 1', 'IT', '12345');
           INSERT INTO addresses (user_id, street, city, state, zip_code) VALUES (1, 'Test Street 2', 'Test City 2', 'IT', '67890');
+
+          INSERT INTO associations (key_one, key_two) VALUES (1, 1);
+          INSERT INTO associations (key_one, key_two) VALUES (1, 2);
+          INSERT INTO associations (key_one, key_two) VALUES (2, 1);
         ");
     }
 

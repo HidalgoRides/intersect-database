@@ -2,11 +2,19 @@
 
 namespace Intersect\Database\Model;
 
+use Intersect\Database\Exception\DatabaseException;
+use Intersect\Database\Exception\ValidationException;
+
 abstract class TemporalModel extends Model {
 
     protected $dateCreatedColumn = 'date_created';
     protected $dateUpdatedColumn = 'date_updated';
 
+    /**
+     * @return static
+     * @throws ValidationException
+     * @throws DatabaseException
+     */
     public function save()
     {
         if ($this->isNewModel())

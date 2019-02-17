@@ -9,8 +9,8 @@ use Intersect\Database\Connection\Connection;
 use Intersect\Database\Model\Validation\Validation;
 use Intersect\Database\Exception\ValidationException;
 use Intersect\Database\Model\Validation\ModelValidator;
-use Intersect\Database\Query\Builder\DefaultQueryBuilder;
 use Intersect\Database\Connection\NullConnection;
+use Intersect\Database\Query\Builder\QueryBuilder;
 
 abstract class AbstractModel implements ModelActions {
 
@@ -71,8 +71,8 @@ abstract class AbstractModel implements ModelActions {
                 return self::$COLUMN_LIST_CACHE[$cacheKey];
             }
 
-            $queryBuilder = new DefaultQueryBuilder($this->tableName);
-            $result = $this->getConnection()->run($queryBuilder->buildColumnListQuery());
+            $query = QueryBuilder::columns()->table($this->tableName)->build();
+            $result = $this->getConnection()->run($query);
 
             $columnList = [];
 

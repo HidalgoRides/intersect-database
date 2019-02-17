@@ -2,11 +2,12 @@
 
 namespace Intersect\Database\Model;
 
+use Intersect\Database\Query\Query;
 use Intersect\Database\Query\AliasFactory;
 use Intersect\Database\Query\QueryParameters;
+use Intersect\Database\Query\Builder\QueryBuilder;
 use Intersect\Database\Exception\DatabaseException;
 use Intersect\Database\Exception\ValidationException;
-use Intersect\Database\Query\Builder\ModelQueryBuilder;
 
 abstract class Model extends AbstractModel implements Extensible {
     
@@ -16,7 +17,7 @@ abstract class Model extends AbstractModel implements Extensible {
 
     /**
      * @param QueryParameters|null $queryParameters
-     * @return Model[]
+     * @return static[]
      * @throws DatabaseException
      */
     public static function find(QueryParameters $queryParameters = null)
@@ -29,12 +30,10 @@ abstract class Model extends AbstractModel implements Extensible {
             $modelClass->columns = $queryParameters->getColumns();
         }
 
-        $models = [];
-        $queryBuilder = new ModelQueryBuilder($modelClass, $queryParameters);
-
-        $query = $queryBuilder->buildSelectQuery($modelClass->getColumnList());
-
+        $query = QueryBuilder::select($modelClass->getColumnList(), $queryParameters)->table($modelClass->getTableName())->build();
         $result = $modelClass->getConnection()->run($query);
+
+        $models = [];
 
         foreach ($result->getRecords() as $record)
         {
@@ -46,7 +45,7 @@ abstract class Model extends AbstractModel implements Extensible {
 
     /**
      * @param QueryParameters|null $queryParameters
-     * @return Model|null
+     * @return static|null
      * @throws DatabaseException
      */
     public static function findOne(QueryParameters $queryParameters = null)
@@ -71,7 +70,7 @@ abstract class Model extends AbstractModel implements Extensible {
 
     /**
      * @param $id
-     * @return Model|null
+     * @return static|null
      * @throws DatabaseException
      */
     public static function findById($id)
@@ -96,7 +95,7 @@ abstract class Model extends AbstractModel implements Extensible {
 
     /**
      * @param array $properties
-     * @return Model
+     * @return static
      */
     public static function newInstance(array $properties = [])
     {
@@ -174,11 +173,10 @@ abstract class Model extends AbstractModel implements Extensible {
 
     /**
      * @param array $metaData
-     * @return array
      */
     public function setMetaData(array $metaData)
     {
-        return $this->metaData = $metaData;
+        $this->metaData = $metaData;
     }
 
     /**
@@ -211,6 +209,11 @@ abstract class Model extends AbstractModel implements Extensible {
         return (array_key_exists($key, $metaData)) ? $metaData[$key] : null;
     }
 
+    /**
+     * @param string $className
+     * @param string $column
+     * @return static|null
+     */
     public function hasOne($className, $column)
     {
         $attributeValue = $this->getAttribute($column);
@@ -228,6 +231,11 @@ abstract class Model extends AbstractModel implements Extensible {
         return $class::findOne($qp);
     }
 
+    /**
+     * @param string $className
+     * @param string $column
+     * @return static[]
+     */
     public function hasMany($className, $column)
     {
         $primaryKeyValue = $this->getPrimaryKeyValue();
@@ -246,7 +254,7 @@ abstract class Model extends AbstractModel implements Extensible {
     }
 
     /**
-     * @return mixed|null
+     * @return static
      * @throws ValidationException
      * @throws DatabaseException
      */
@@ -254,7 +262,6 @@ abstract class Model extends AbstractModel implements Extensible {
     {
         $this->validate();
 
-        $queryBuilder = new ModelQueryBuilder($this);
         $primaryKeyValue = $this->getPrimaryKeyValue();
         $isNewModel = $this->isNewModel();
 
@@ -270,18 +277,24 @@ abstract class Model extends AbstractModel implements Extensible {
 
         if ($isNewModel)
         {
-            $query = $queryBuilder->buildInsertQuery($this->attributes);
+            $query = QueryBuilder::insert($this->attributes)->table($this->getTableName())->build();
         }
         else
         {
             $attributes = $this->attributes;
+            $primaryKey = $this->getPrimaryKey();
 
             if (count($this->readOnlyAttributes) > 0)
             {
                 $attributes = array_diff_key($this->attributes, array_flip($this->readOnlyAttributes));
             }
 
-            $query = $queryBuilder->buildUpdateQuery($attributes, [$this->getPrimaryKey()]);
+            if (array_key_exists($primaryKey, $attributes))
+            {
+                unset($attributes[$primaryKey]);
+            }
+
+            $query = QueryBuilder::update($attributes)->table($this->getTableName())->whereEquals($primaryKey, $primaryKeyValue)->build();
         }
 
         $result = $this->getConnection()->run($query);
@@ -314,8 +327,7 @@ abstract class Model extends AbstractModel implements Extensible {
         $queryParameters->equals($this->getPrimaryKey(), $primaryKeyValue);
         $queryParameters->setLimit(1);
 
-        $queryBuilder = new ModelQueryBuilder($this, $queryParameters);
-        $query = $queryBuilder->buildDeleteQuery();
+        $query = QueryBuilder::delete($queryParameters)->table($this->getTableName())->build();
 
         $result = $this->getConnection()->run($query);
 
