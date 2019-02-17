@@ -5,12 +5,13 @@ namespace Intersect\Database\Model;
 use Intersect\Core\Container;
 use Intersect\Core\ClassResolver;
 use Intersect\Core\Registry\ClassRegistry;
+use Intersect\Database\Query\AliasFactory;
 use Intersect\Database\Connection\Connection;
+use Intersect\Database\Connection\NullConnection;
+use Intersect\Database\Query\Builder\QueryBuilder;
 use Intersect\Database\Model\Validation\Validation;
 use Intersect\Database\Exception\ValidationException;
 use Intersect\Database\Model\Validation\ModelValidator;
-use Intersect\Database\Connection\NullConnection;
-use Intersect\Database\Query\Builder\QueryBuilder;
 
 abstract class AbstractModel implements ModelActions {
 
@@ -33,15 +34,28 @@ abstract class AbstractModel implements ModelActions {
 
     /**
      * @param array $properties
-     * @return AbstractModel
+     * @return static
      */
     public static function newInstance(array $properties = [])
     {
         $instance = new static();
 
+        $modelAlias = AliasFactory::getAlias($instance->getTableName());
+
         foreach ($properties as $key => $value)
         {
-            $instance->setAttribute($key, $value);
+            $keyParts = explode('.', $key);
+            $isAssumedRootAlias = (count($keyParts) == 1);
+
+            if ($isAssumedRootAlias || strpos($key, $modelAlias) === 0)
+            {
+                if (!$isAssumedRootAlias)
+                {
+                    $key = substr($key, strlen($modelAlias) + 1);
+                }
+
+                $instance->setAttribute($key, $value);
+            }
         }
 
         return $instance;

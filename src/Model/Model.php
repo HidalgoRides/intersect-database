@@ -94,35 +94,6 @@ abstract class Model extends AbstractModel implements Extensible {
     }
 
     /**
-     * @param array $properties
-     * @return static
-     */
-    public static function newInstance(array $properties = [])
-    {
-        $instance = new static();
-
-        $modelAlias = AliasFactory::getAlias($instance->getTableName());
-
-        foreach ($properties as $key => $value)
-        {
-            $keyParts = explode('.', $key);
-            $isAssumedRootAlias = (count($keyParts) == 1);
-
-            if ($isAssumedRootAlias || strpos($key, $modelAlias) === 0)
-            {
-                if (!$isAssumedRootAlias)
-                {
-                    $key = substr($key, strlen($modelAlias) + 1);
-                }
-
-                $instance->setAttribute($key, $value);
-            }
-        }
-
-        return $instance;
-    }
-
-    /**
      * @param $key
      * @return mixed|null
      * @throws DatabaseException

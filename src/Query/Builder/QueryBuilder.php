@@ -27,6 +27,7 @@ class QueryBuilder {
     private $action;
     private $columns = ['*'];
     private $columnData = [];
+    private $joinQueries = [];
     private $limit;
     private $order;
     private $tableName;
@@ -239,6 +240,29 @@ class QueryBuilder {
         $this->queryConditions[] = new BetweenDatesCondition($column, $startDate, $endDate);
         return $this;
     }
+    
+    /** @return QueryBuilder */
+    public function joinLeft($joinTableName, $joinColumnName, $originalColumnName, array $joinColumns = [])
+    {
+        $originalTableAlias = $this->getTableAlias();
+        $joinTableAlias = ($this->useAliases) ? AliasFactory::getAlias($joinTableName) : $joinTableName;
+        $queryString = 'left join ' . $this->buildTableNameWithAlias($joinTableName, $joinTableAlias) . ' on ' . $originalTableAlias . '.' . $originalColumnName . ' = ' . $joinTableAlias . '.' . $joinColumnName;
+        
+        $bindParameters = [
+            $this->buildPlaceholderWithAlias($joinColumnName, $joinTableAlias) => $joinColumnValue,
+            $this->buildPlaceholderWithAlias($originalColumnName, $originalTableAlias) => $originalColumnValue
+        ];
+
+        $allNamedColumns = [];
+        $this->addNamedColumns($allNamedColumns, $joinColumns, $joinTableAlias);
+        
+        $this->joinQueries[] = [
+            'columns' => $allNamedColumns,
+            'queryString' => $queryString,
+            'bindParameters' => $bindParameters
+        ];
+        return $this;
+    }
 
     /** @return Query */
     public function build()
@@ -267,24 +291,49 @@ class QueryBuilder {
         return $query;
     }
 
+    protected function getTableAlias()
+    {
+        return ($this->useAliases) ? AliasFactory::getAlias($this->tableName) : null;
+    }
+
     private function buildSelectQuery()
     {
-        $alias = ($this->useAliases) ? AliasFactory::getAlias($this->tableName) : null;
+        $alias = $this->getTableAlias();
         $columns = $this->columns;
+        $allNamedColumns = [];
+        
+        $this->addNamedColumns($allNamedColumns, $columns, $alias);
 
-        foreach ($columns as &$column)
+        foreach ($this->joinQueries as $joinQuery)
         {
-            $column = $this->buildColumnWithAlias($column, $alias);
+            foreach ($joinQuery['columns'] as $column)
+            {
+                $allNamedColumns[] = $column;
+            }
         }
 
-        $queryString = 'select ' . implode(', ', $columns) . ' from ' . $this->buildTableNameWithAlias($this->tableName, $alias);
+        $bindParameters = [];
+        $queryString = 'select ' . implode(', ', $allNamedColumns) . ' from ' . $this->buildTableNameWithAlias($this->tableName, $alias);
 
-        $query = new Query($queryString);
+        foreach ($this->joinQueries as $joinQuery)
+        {
+            $queryString .= ' ' . $joinQuery['queryString'];
+        }
+
+        $query = new Query($queryString, $bindParameters);
 
         $this->appendWhereConditions($query);
         $this->appendOptions($query);
 
         return $query;
+    }
+
+    private function addNamedColumns(&$allColumns, $columnList, $alias)
+    {
+        foreach ($columnList as $column)
+        {
+            $allColumns[] = $this->buildColumnWithAlias($column, $alias);
+        }
     }
 
     private function buildDeleteQuery()
@@ -352,7 +401,7 @@ class QueryBuilder {
         {
             $sql = $query->getSql();
             $whereSql = '';
-            $alias = ($this->useAliases) ? AliasFactory::getAlias($this->tableName) : null;
+            $alias = $this->getTableAlias();
             
             foreach ($queryConditions as $queryCondition)
             {
@@ -374,7 +423,7 @@ class QueryBuilder {
     private function appendOptions(Query $query)
     {
         $sql = $query->getSql();
-        $alias = ($this->useAliases) ? AliasFactory::getAlias($this->tableName) : null;
+        $alias = $this->getTableAlias();
         
         if (!is_null($this->order))
         {
@@ -391,7 +440,7 @@ class QueryBuilder {
 
     private function buildColumnWithAlias($column, $alias = null)
     {
-        return (!is_null($alias)) ? ($alias . '.' . $column) : $column;
+        return (!is_null($alias)) ? ($alias . '.' . $column . " as '" . $alias . '.' . $column . "'") : $column;
     }
 
     private function buildPlaceholderWithAlias($key, $alias = null)

@@ -16,7 +16,7 @@ class QueryBuilderTest extends TestCase {
 
         $alias = AliasFactory::getAlias('users');
 
-        $this->assertEquals("select " . $alias . ".* from `users` as " . $alias, $query->getSql());
+        $this->assertEquals("select " . $alias . ".* as '" . $alias . ".*' from `users` as " . $alias, $query->getSql());
     }
 
     public function test_buildSelectQuery_specificColumns()
@@ -27,7 +27,7 @@ class QueryBuilderTest extends TestCase {
 
         $alias = AliasFactory::getAlias('users');
 
-        $this->assertEquals("select " . $alias . ".id, " . $alias . ".email from `users` as " . $alias, $query->getSql());
+        $this->assertEquals("select " . $alias . ".id as '" . $alias . ".id', " . $alias . ".email as '" . $alias . ".email' from `users` as " . $alias, $query->getSql());
     }
 
     public function test_buildSelectQuery_withWhereConditions()
@@ -46,7 +46,7 @@ class QueryBuilderTest extends TestCase {
 
         $alias = AliasFactory::getAlias('users');
 
-        $this->assertEquals("select " . $alias . ".* from `users` as " . $alias . " where " . $alias . ".unit = :" . $alias . "_unit and " . $alias . ".test != :" . $alias . "_test and " . $alias . ".foo is null and " . $alias . ".bar is not null and " . $alias . ".id in (1, 2, 3) and " . $alias . ".value between 1 and 10 and " . $alias . ".start between cast('1969-01-01' as datetime) and cast('1969-01-02' as datetime) and " . $alias . ".foo like :" . $alias . "_foo", $query->getSql());
+        $this->assertEquals("select " . $alias . ".* as '" . $alias . ".*' from `users` as " . $alias . " where " . $alias . ".unit = :" . $alias . "_unit and " . $alias . ".test != :" . $alias . "_test and " . $alias . ".foo is null and " . $alias . ".bar is not null and " . $alias . ".id in (1, 2, 3) and " . $alias . ".value between 1 and 10 and " . $alias . ".start between cast('1969-01-01' as datetime) and cast('1969-01-02' as datetime) and " . $alias . ".foo like :" . $alias . "_foo", $query->getSql());
 
         $bindParameters = $query->getBindParameters();
         $this->assertArrayHasKey($alias . '_unit', $bindParameters);
@@ -66,7 +66,7 @@ class QueryBuilderTest extends TestCase {
 
         $alias = AliasFactory::getAlias('users');
 
-        $this->assertEquals("select " . $alias . ".* from `users` as " . $alias . " limit 3", $query->getSql());
+        $this->assertEquals("select " . $alias . ".* as '" . $alias . ".*' from `users` as " . $alias . " limit 3", $query->getSql());
     }
 
     public function test_buildSelectQuery_withOrder()
@@ -78,7 +78,20 @@ class QueryBuilderTest extends TestCase {
 
         $alias = AliasFactory::getAlias('users');
 
-        $this->assertEquals("select " . $alias . ".* from `users` as " . $alias . " order by " . $alias . ".id desc", $query->getSql());
+        $this->assertEquals("select " . $alias . ".* as '" . $alias . ".*' from `users` as " . $alias . " order by " . $alias . ".id desc", $query->getSql());
+    }
+
+    public function test_buildSelectQuery_withJoinLeft()
+    {
+        $query = QueryBuilder::select()
+            ->table('users')
+            ->joinLeft('phones', 'id', 'phone_id')
+            ->build();
+
+        $usersAlias = AliasFactory::getAlias('users');
+        $phonesAlias = AliasFactory::getAlias('phones');
+
+        $this->assertEquals("select " . $usersAlias . ".* as '" . $usersAlias . ".*' from `users` as " . $usersAlias . " left join `phones` as " . $phonesAlias . " on " . $usersAlias . ".phone_id = " . $phonesAlias . ".id", $query->getSql());
     }
 
     public function test_buildDeleteQuery()
