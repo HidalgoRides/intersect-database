@@ -72,7 +72,9 @@ class IntegrationTestListener implements TestListener {
             email VARCHAR(50) NOT NULL,
             phone_id INT(11),
             name_id INT(11),
-            meta_data TEXT
+            meta_data TEXT,
+            date_created DATETIME,
+            date_updated DATETIME
           );
           
           CREATE TABLE phones (

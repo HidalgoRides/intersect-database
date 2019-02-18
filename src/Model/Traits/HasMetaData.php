@@ -28,11 +28,6 @@ trait HasMetaData {
         $this->metaData = null;
     }
 
-    public function save()
-    {
-        var_dump('here');
-    }
-
     /**
      * @param $key
      */

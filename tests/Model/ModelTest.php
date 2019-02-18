@@ -35,6 +35,7 @@ class ModelTest extends TestCase {
 
         $newUser = $user->save();
         $this->assertNotNull($newUser);
+        $this->assertNotNull($newUser->getPrimaryKeyValue());
 
         $newUser->delete();
 
@@ -48,6 +49,7 @@ class ModelTest extends TestCase {
 
         $newUser = $user->save();
         $this->assertNotNull($newUser);
+        $this->assertNotNull($newUser->getPrimaryKeyValue());
     }
 
     public function test_update()
@@ -60,11 +62,13 @@ class ModelTest extends TestCase {
 
         $newUser = $user->save();
         $this->assertNotNull($newUser);
+        $this->assertNotNull($newUser->getPrimaryKeyValue());
 
         $newUser->email = $newEmail;
 
         $updatedUser = $newUser->save();
         $this->assertNotNull($updatedUser);
+        $this->assertNotNull($updatedUser->getPrimaryKeyValue());
         $this->assertEquals($newUser->id, $updatedUser->id);
         $this->assertNotEquals($email, $updatedUser->email);
     }
@@ -78,6 +82,8 @@ class ModelTest extends TestCase {
         ]);
 
         $newUser = $user->save();
+        $this->assertNotNull($newUser->getPrimaryKeyValue());
+
         $metaData = $newUser->getMetaDataByKey('unit');
         $this->assertNotNull($metaData);
         $this->assertEquals('test', $metaData);
@@ -96,6 +102,25 @@ class ModelTest extends TestCase {
         $newUser = $newUser->save();
 
         $this->assertNull($newUser->getMetaData());
+    }
+
+    public function test_dirtyUpdates()
+    {
+        $user = new User();
+        $user->email = 'unit-test-' . uniqid() . '@test.com';
+        $user->save();
+
+        $this->assertNotNull($user->id);
+        $this->assertNotNull($user->date_created);
+        $this->assertNull($user->date_updated);
+
+        $user->save();
+        $this->assertNull($user->date_updated);
+
+        $user->email = 'unit-test-' . uniqid() . '@test.com';
+        
+        $user->save();
+        $this->assertNotNull($user->date_updated);
     }
 
 }

@@ -4,10 +4,10 @@ namespace Tests\Stubs;
 
 use Tests\Stubs\Name;
 use Tests\Stubs\Phone;
-use Intersect\Database\Model\Model;
 use Intersect\Database\Query\QueryParameters;
+use Intersect\Database\Model\TemporalModel;
 
-class User extends Model {
+class User extends TemporalModel {
 
     public function phone()
     {

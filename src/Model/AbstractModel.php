@@ -20,6 +20,7 @@ abstract class AbstractModel implements ModelActions {
 
     protected $attributes = [];
     protected $columns = [];
+    protected $isDirty = false;
     protected $primaryKey = 'id';
     protected $readOnlyAttributes = [];
     protected $relationships = [];
@@ -113,7 +114,7 @@ abstract class AbstractModel implements ModelActions {
     {
         if (is_null(self::$CONNECTION))
         {
-            return new NullConnection(null);
+            return new NullConnection();
         }
 
         return self::$CONNECTION;
@@ -122,22 +123,6 @@ abstract class AbstractModel implements ModelActions {
     public static function setConnection(Connection $connection)
     {
         self::$CONNECTION = $connection;
-    }
-
-    /**
-     * @param $key
-     * @return mixed|null
-     */
-    public function getAttribute($key)
-    {
-        $attribute = null;
-
-        if (isset($this->attributes[$key]))
-        {
-            $attribute = $this->attributes[$key];
-        }
-
-        return $attribute;
     }
 
     /**
@@ -194,15 +179,6 @@ abstract class AbstractModel implements ModelActions {
 
     /**
      * @param $key
-     * @param $value
-     */
-    public function setAttribute($key, $value)
-    {
-        $this->attributes[$key] = $value;
-    }
-
-    /**
-     * @param $key
      * @return mixed|null
      */
     public function __get($key)
@@ -241,6 +217,32 @@ abstract class AbstractModel implements ModelActions {
     public function __set($key, $value)
     {
         $this->setAttribute($key, $value);
+        $this->isDirty = true;
+    }
+
+    /**
+     * @param $key
+     * @return mixed|null
+     */
+    protected function getAttribute($key)
+    {
+        $attribute = null;
+
+        if (isset($this->attributes[$key]))
+        {
+            $attribute = $this->attributes[$key];
+        }
+
+        return $attribute;
+    }
+
+    /**
+     * @param $key
+     * @param $value
+     */
+    protected function setAttribute($key, $value)
+    {
+        $this->attributes[$key] = $value;
     }
 
     /**

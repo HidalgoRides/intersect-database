@@ -11,9 +11,7 @@ use Intersect\Database\Exception\DatabaseException;
 use Intersect\Database\Exception\ValidationException;
 
 abstract class Model extends AbstractModel {
-    use HasMetaData {
-        HasMetaData::save as saveMetaData;
-    }
+    use HasMetaData;
 
     /**
      * @param QueryParameters|null $queryParameters
@@ -159,6 +157,11 @@ abstract class Model extends AbstractModel {
      */
     public function save()
     {
+        if (!$this->isDirty)
+        {
+            return $this;
+        }
+
         $this->validate();
 
         $primaryKeyValue = $this->getPrimaryKeyValue();
@@ -204,6 +207,11 @@ abstract class Model extends AbstractModel {
         if (!is_null($id))
         {
             $savedModel = $this->findById($id);
+
+            $this->attributes = $savedModel->attributes;
+            $this->relationships = $savedModel->relationships;
+
+            $this->isDirty = false;
         }
 
         return $savedModel;

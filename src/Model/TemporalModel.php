@@ -17,6 +17,11 @@ abstract class TemporalModel extends Model {
      */
     public function save()
     {
+        if (!$this->isDirty)
+        {
+            return $this;
+        }
+
         if ($this->isNewModel())
         {
             $this->setTemporalAttribute($this->dateCreatedColumn);
