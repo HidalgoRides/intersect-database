@@ -23,6 +23,7 @@ abstract class AbstractModel implements ModelActions {
     protected $isDirty = false;
     protected $primaryKey = 'id';
     protected $readOnlyAttributes = [];
+    /** @var static[] */
     protected $relationships = [];
     protected $tableName;
 
@@ -151,9 +152,20 @@ abstract class AbstractModel implements ModelActions {
         return $this->readOnlyAttributes;
     }
 
+    /** 
+     * @return static|null 
+     */
     public function getRelationship($key)
     {
         return (array_key_exists($key, $this->relationships)) ? $this->relationships[$key] : null;
+    }
+
+    /** 
+     * @return static[] 
+     */
+    public function getRelationships()
+    {
+        return $this->relationships;
     }
 
     /**
@@ -167,6 +179,28 @@ abstract class AbstractModel implements ModelActions {
         }
 
         return $this->tableName;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isDirty()
+    {
+        $isDirty = $this->isDirty;
+
+        if (!$isDirty)
+        {
+            foreach ($this->relationships as $relationship)
+            {
+                $isDirty = $relationship->isDirty();
+                if ($isDirty)
+                {
+                    break;
+                }
+            }
+        }
+
+        return $isDirty;
     }
 
     /**

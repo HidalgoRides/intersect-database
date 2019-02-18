@@ -157,64 +157,27 @@ abstract class Model extends AbstractModel {
      */
     public function save()
     {
-        if (!$this->isDirty)
+        if (!$this->isDirty())
         {
             return $this;
         }
 
-        $this->validate();
+        $model = $this;
 
-        $primaryKeyValue = $this->getPrimaryKeyValue();
-        $isNewModel = $this->isNewModel();
-
-        $metaData = $this->getMetaData();
-        if (!is_null($metaData))
+        if ($this->isDirty)
         {
-            $this->{$this->metaDataColumn} = serialize($this->getMetaData());
-        }
-        else
-        {
-            unset($this->{$this->metaDataColumn});
+            $model = $this->performSave();
         }
 
-        if ($isNewModel)
+        foreach ($this->relationships as $relationship)
         {
-            $query = QueryBuilder::insert($this->attributes)->table($this->getTableName())->build();
-        }
-        else
-        {
-            $attributes = $this->attributes;
-            $primaryKey = $this->getPrimaryKey();
-
-            if (count($this->readOnlyAttributes) > 0)
+            if ($relationship->isDirty())
             {
-                $attributes = array_diff_key($this->attributes, array_flip($this->readOnlyAttributes));
+                $relationship->performSave();
             }
-
-            if (array_key_exists($primaryKey, $attributes))
-            {
-                unset($attributes[$primaryKey]);
-            }
-
-            $query = QueryBuilder::update($attributes)->table($this->getTableName())->whereEquals($primaryKey, $primaryKeyValue)->build();
         }
 
-        $result = $this->getConnection()->run($query);
-
-        $savedModel = null;
-        $id = ($isNewModel ? $result->getInsertId() : $primaryKeyValue);
-
-        if (!is_null($id))
-        {
-            $savedModel = $this->findById($id);
-
-            $this->attributes = $savedModel->attributes;
-            $this->relationships = $savedModel->relationships;
-
-            $this->isDirty = false;
-        }
-
-        return $savedModel;
+        return $model;
     }
 
     /**
@@ -304,6 +267,66 @@ abstract class Model extends AbstractModel {
     private function convertColumnAttributeToCamelCase($string)
     {
         return lcfirst(str_replace('_', '', ucwords($string, '_')));
+    }
+
+    /**
+     * @return static
+     */
+    private function performSave()
+    {
+        $this->validate();
+
+        $primaryKeyValue = $this->getPrimaryKeyValue();
+        $isNewModel = $this->isNewModel();
+
+        $metaData = $this->getMetaData();
+        if (!is_null($metaData))
+        {
+            $this->{$this->metaDataColumn} = serialize($this->getMetaData());
+        }
+        else
+        {
+            unset($this->{$this->metaDataColumn});
+        }
+
+        if ($isNewModel)
+        {
+            $query = QueryBuilder::insert($this->attributes)->table($this->getTableName())->build();
+        }
+        else
+        {
+            $attributes = $this->attributes;
+            $primaryKey = $this->getPrimaryKey();
+
+            if (count($this->readOnlyAttributes) > 0)
+            {
+                $attributes = array_diff_key($this->attributes, array_flip($this->readOnlyAttributes));
+            }
+
+            if (array_key_exists($primaryKey, $attributes))
+            {
+                unset($attributes[$primaryKey]);
+            }
+
+            $query = QueryBuilder::update($attributes)->table($this->getTableName())->whereEquals($primaryKey, $primaryKeyValue)->build();
+        }
+
+        $result = $this->getConnection()->run($query);
+
+        $savedModel = null;
+        $id = ($isNewModel ? $result->getInsertId() : $primaryKeyValue);
+
+        if (!is_null($id))
+        {
+            $savedModel = $this->findById($id);
+
+            $this->attributes = $savedModel->attributes;
+            $this->relationships = $savedModel->relationships;
+
+            $this->isDirty = false;
+        }
+
+        return $savedModel;
     }
 
 }

@@ -17,7 +17,7 @@ abstract class TemporalModel extends Model {
      */
     public function save()
     {
-        if (!$this->isDirty)
+        if (!$this->isDirty())
         {
             return $this;
         }

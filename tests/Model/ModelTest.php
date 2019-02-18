@@ -4,6 +4,7 @@ namespace Tests\Model;
 
 use Tests\Stubs\User;
 use PHPUnit\Framework\TestCase;
+use Tests\Stubs\Phone;
 
 class ModelTest extends TestCase {
 
@@ -121,6 +122,27 @@ class ModelTest extends TestCase {
         
         $user->save();
         $this->assertNotNull($user->date_updated);
+    }
+
+    public function test_isDirty_rootChanged()
+    {
+        $user = User::findOne();
+
+        $this->assertFalse($user->isDirty());
+
+        $user->email = 'test';
+        $this->assertTrue($user->isDirty());
+    }
+
+    public function test_isDirty_relationshipChanged()
+    {
+        $user = User::findOne();
+        $phone = $user->phone;
+
+        $this->assertFalse($user->isDirty());
+
+        $phone->number = 'test';
+        $this->assertTrue($user->isDirty());
     }
 
 }
