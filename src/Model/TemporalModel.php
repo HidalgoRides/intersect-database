@@ -15,10 +15,11 @@ abstract class TemporalModel extends Model {
      * @throws ValidationException
      * @throws DatabaseException
      */
-    public function save()
+    public function save($forceSave = false)
     {
-        if (!$this->isDirty())
+        if (!$this->isDirty() && !$forceSave)
         {
+            
             return $this;
         }
 
@@ -31,7 +32,7 @@ abstract class TemporalModel extends Model {
             $this->setTemporalAttribute($this->dateUpdatedColumn);
         }
 
-        return parent::save();
+        return parent::save($forceSave);
     }
 
     private function setTemporalAttribute($columnAttributeName)

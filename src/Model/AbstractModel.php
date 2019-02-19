@@ -5,7 +5,7 @@ namespace Intersect\Database\Model;
 use Intersect\Core\Container;
 use Intersect\Core\ClassResolver;
 use Intersect\Core\Registry\ClassRegistry;
-use Intersect\Database\Query\AliasFactory;
+use Intersect\Database\Query\ModelAliasFactory;
 use Intersect\Database\Connection\Connection;
 use Intersect\Database\Connection\NullConnection;
 use Intersect\Database\Query\Builder\QueryBuilder;
@@ -43,7 +43,7 @@ abstract class AbstractModel implements ModelActions {
     {
         $instance = new static();
 
-        $modelAlias = AliasFactory::getAlias($instance->getTableName());
+        $modelAlias = ModelAliasFactory::generateAlias($instance);
 
         foreach ($properties as $key => $value)
         {
@@ -88,8 +88,8 @@ abstract class AbstractModel implements ModelActions {
                 return self::$COLUMN_LIST_CACHE[$cacheKey];
             }
 
-            $query = QueryBuilder::columns()->table($this->tableName)->build();
-            $result = $this->getConnection()->run($query);
+            $queryBuilder = new QueryBuilder($this->getConnection());
+            $result = $queryBuilder->columns()->table($this->tableName)->get();
 
             $columnList = [];
 
@@ -228,6 +228,12 @@ abstract class AbstractModel implements ModelActions {
             else if (method_exists($this, $key))
             {
                 $value = $this->{$key}();
+
+                if (!is_null($value) && $value instanceOf QueryBuilder)
+                {
+                    $value = $this->convertFromQueryBuilder($value);
+                }
+
                 $this->relationships[$key] = $value;
             }
         }
@@ -289,6 +295,37 @@ abstract class AbstractModel implements ModelActions {
             $modelValidator = new ModelValidator();
             $modelValidator->validate($this, $this->getValidatorMap());
         }
+    }
+
+    private function convertFromQueryBuilder(QueryBuilder $queryBuilder)
+    {
+        $modelAlias = ModelAliasFactory::getAliasValue($queryBuilder->getAlias());
+        $modelClassName = $modelAlias->getModelClassName();
+        $result = $queryBuilder->get();
+
+        $convertedValue = null;
+
+        if ($queryBuilder->getLimit() == 1)
+        {
+            $record = $result->getFirstRecord();
+            if (!is_null($record))
+            {
+                $convertedValue = $modelClassName::newInstance($record);
+            }
+        }
+        else
+        {
+            $models = [];
+
+            foreach ($result->getRecords() as $record)
+            {
+                $models[] = $modelClassName::newInstance($record);
+            }
+
+            $convertedValue = $models;
+        }
+
+        return $convertedValue;
     }
 
     /**

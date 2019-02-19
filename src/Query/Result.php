@@ -66,4 +66,14 @@ class Result {
         $this->count = count($records);
     }
 
+    public function getFirstRecord()
+    {
+        if (count($this->records) > 0)
+        {
+            return $this->records[0];
+        }
+
+        return null;
+    }
+
 }

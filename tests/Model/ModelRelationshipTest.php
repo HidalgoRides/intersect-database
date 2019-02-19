@@ -7,6 +7,8 @@ use Tests\Stubs\User;
 use Tests\Stubs\Phone;
 use PHPUnit\Framework\TestCase;
 use Intersect\Database\Connection\Connection;
+use Intersect\Database\Query\Builder\QueryBuilder;
+use Intersect\Database\Query\QueryParameters;
 
 class ModelRelationshipTest extends TestCase {
 
@@ -47,6 +49,21 @@ class ModelRelationshipTest extends TestCase {
         $phone = Phone::findById($user->phone->id);
 
         $this->assertEquals('9999999999', $phone->number);
+    }
+
+    public function test_relationships_eagerLoading()
+    {
+        $queryParameters = new QueryParameters();
+        $queryParameters->setLimit(1);
+
+        $users = User::with(['phone', 'name', 'addresses'], $queryParameters);
+
+        $this->assertCount(1, $users);
+        
+        $user = $users[0];
+        $this->assertNotNull($user->getRelationship('phone'));
+        $this->assertNotNull($user->getRelationship('name'));
+        $this->assertNotNull($user->getRelationship('addresses'));
     }
 
 }

@@ -3,12 +3,12 @@
 namespace Intersect\Database\Model;
 
 use Intersect\Database\Query\Query;
-use Intersect\Database\Query\AliasFactory;
 use Intersect\Database\Query\QueryParameters;
 use Intersect\Database\Model\Traits\HasMetaData;
 use Intersect\Database\Query\Builder\QueryBuilder;
 use Intersect\Database\Exception\DatabaseException;
 use Intersect\Database\Exception\ValidationException;
+use Intersect\Database\Query\ModelAliasFactory;
 
 abstract class Model extends AbstractModel {
     use HasMetaData;
@@ -28,8 +28,11 @@ abstract class Model extends AbstractModel {
             $modelClass->columns = $queryParameters->getColumns();
         }
 
-        $query = QueryBuilder::select($modelClass->getColumnList(), $queryParameters)->table($modelClass->getTableName())->build();
-        $result = $modelClass->getConnection()->run($query);
+        $tableAlias = ModelAliasFactory::generateAlias($modelClass);
+        $queryBuilder = new QueryBuilder($modelClass->getConnection());
+        $result = $queryBuilder->table($modelClass->getTableName(), $tableAlias)
+            ->select($modelClass->getColumnList(), $queryParameters)
+            ->get();
 
         $models = [];
 
@@ -92,6 +95,27 @@ abstract class Model extends AbstractModel {
     }
 
     /**
+     * @return static[]
+     */
+    public static function with(array $methodNames, QueryParameters $queryParameters = null)
+    {
+        $models = self::find($queryParameters);
+
+        foreach ($models as $model)
+        {
+            foreach ($methodNames as $methodName)
+            {
+                if (method_exists($model, $methodName))
+                {
+                    $model->{$methodName};
+                }
+            }
+        }
+
+        return $models;
+    }
+
+    /**
      * @param $key
      * @return mixed|null
      * @throws DatabaseException
@@ -111,7 +135,7 @@ abstract class Model extends AbstractModel {
      * @param string $column
      * @return static|null
      */
-    public function hasOne($className, $column)
+    public function hasOne($joiningClassName, $column)
     {
         $attributeValue = $this->getAttribute($column);
 
@@ -120,12 +144,18 @@ abstract class Model extends AbstractModel {
             return null;
         }
 
-        /** @var Model $class */
-        $class = new $className();
+        /** @var Model $joiningClass */
+        $joiningClass = new $joiningClassName();
+        $joiningTableAlias = ModelAliasFactory::generateAlias($joiningClass);
 
-        $qp = new QueryParameters();
-        $qp->equals($class->getPrimaryKey(), $attributeValue);
-        return $class::findOne($qp);
+        $queryBuilder = new QueryBuilder($joiningClass->getConnection());
+        $queryBuilder
+            ->select($joiningClass->getColumnList())
+            ->table($joiningClass->getTableName, $joiningTableAlias)
+            ->whereEquals($joiningClass->getPrimaryKey(), $attributeValue)
+            ->limit(1);
+
+        return $queryBuilder;
     }
 
     /**
@@ -133,7 +163,7 @@ abstract class Model extends AbstractModel {
      * @param string $column
      * @return static[]
      */
-    public function hasMany($className, $column)
+    public function hasMany($joiningClassName, $column)
     {
         $primaryKeyValue = $this->getPrimaryKeyValue();
 
@@ -142,12 +172,26 @@ abstract class Model extends AbstractModel {
             return [];
         }
 
-        /** @var Model $class */
-        $class = new $className();
+        /** @var Model $joiningClass */
+        $joiningClass = new $joiningClassName();
+        $joiningTableAlias = ModelAliasFactory::generateAlias($joiningClass);
 
-        $qp = new QueryParameters();
-        $qp->equals($column, $primaryKeyValue);
-        return $class::find($qp);
+        $queryBuilder = new QueryBuilder($joiningClass->getConnection());
+        $queryBuilder
+            ->select($joiningClass->getColumnList())
+            ->table($joiningClass->getTableName, $joiningTableAlias)
+            ->whereEquals($column, $primaryKeyValue);
+
+        return $queryBuilder;
+        
+        $models = [];
+        
+        foreach ($queryBuilder->get()->getRecords() as $record)
+        {
+            $models[] = $joiningClassName::newInstance($record);
+        }
+
+        return $models;
     }
 
     /**
@@ -155,29 +199,27 @@ abstract class Model extends AbstractModel {
      * @throws ValidationException
      * @throws DatabaseException
      */
-    public function save()
+    public function save($forceSave = false)
     {
-        if (!$this->isDirty())
+        if (!$this->isDirty() && !$forceSave)
         {
             return $this;
         }
 
-        $model = $this;
-
-        if ($this->isDirty)
+        if ($forceSave || $this->isDirty)
         {
-            $model = $this->performSave();
+            $this->performSave();
         }
 
         foreach ($this->relationships as $relationship)
         {
-            if ($relationship->isDirty())
+            if ($forceSave || $relationship->isDirty())
             {
                 $relationship->performSave();
             }
         }
 
-        return $model;
+        return $this;
     }
 
     /**
@@ -197,9 +239,8 @@ abstract class Model extends AbstractModel {
         $queryParameters->equals($this->getPrimaryKey(), $primaryKeyValue);
         $queryParameters->setLimit(1);
 
-        $query = QueryBuilder::delete($queryParameters)->table($this->getTableName())->build();
-
-        $result = $this->getConnection()->run($query);
+        $queryBuilder = new QueryBuilder($this->getConnection());
+        $result = $queryBuilder->delete($queryParameters)->table($this->getTableName())->get();
 
         return ($result->getAffectedRows() == 1);
     }
@@ -289,9 +330,11 @@ abstract class Model extends AbstractModel {
             unset($this->{$this->metaDataColumn});
         }
 
+        $queryBuilder = new QueryBuilder($this->getConnection());
+
         if ($isNewModel)
         {
-            $query = QueryBuilder::insert($this->attributes)->table($this->getTableName())->build();
+            $queryBuilder->insert($this->attributes)->table($this->getTableName());
         }
         else
         {
@@ -308,12 +351,11 @@ abstract class Model extends AbstractModel {
                 unset($attributes[$primaryKey]);
             }
 
-            $query = QueryBuilder::update($attributes)->table($this->getTableName())->whereEquals($primaryKey, $primaryKeyValue)->build();
+            $queryBuilder->update($attributes)->table($this->getTableName())->whereEquals($primaryKey, $primaryKeyValue);
         }
 
-        $result = $this->getConnection()->run($query);
+        $result = $queryBuilder->get();
 
-        $savedModel = null;
         $id = ($isNewModel ? $result->getInsertId() : $primaryKeyValue);
 
         if (!is_null($id))
@@ -321,12 +363,10 @@ abstract class Model extends AbstractModel {
             $savedModel = $this->findById($id);
 
             $this->attributes = $savedModel->attributes;
-            $this->relationships = $savedModel->relationships;
-
             $this->isDirty = false;
         }
 
-        return $savedModel;
+        return $this;
     }
 
 }

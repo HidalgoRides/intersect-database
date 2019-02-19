@@ -3,6 +3,7 @@
 namespace Intersect\Database\Model;
 
 use Intersect\Database\Query\QueryParameters;
+use Intersect\Database\Query\ModelAliasFactory;
 use Intersect\Database\Query\Builder\QueryBuilder;
 use Intersect\Database\Exception\DatabaseException;
 use Intersect\Database\Model\Validation\Validation;
@@ -103,8 +104,10 @@ abstract class AssociativeModel extends AbstractModel implements Validation {
             $modelClass->columns = $queryParameters->getColumns();
         }
 
-        $query = QueryBuilder::select($modelClass->getColumnList(), $queryParameters)->table($modelClass->getTableName())->build();
-        $result = $modelClass->getConnection()->run($query);
+        $tableAlias = ModelAliasFactory::generateAlias($modelClass);
+        $queryBuilder = new QueryBuilder($modelClass->getConnection());
+
+        $result = $queryBuilder->select($modelClass->getColumnList(), $queryParameters)->table($modelClass->getTableName(), $tableAlias)->get();
 
         $models = [];
 
@@ -130,8 +133,8 @@ abstract class AssociativeModel extends AbstractModel implements Validation {
         $queryParameters->equals($this->getColumnTwoName(), $this->getColumnTwoValue());
         $queryParameters->setLimit(1);
 
-        $query = QueryBuilder::delete($queryParameters)->table($this->getTableName())->build();
-        $result = $this->getConnection()->run($query);
+        $queryBuilder = new QueryBuilder($this->getConnection());
+        $result = $queryBuilder->delete($queryParameters)->table($this->getTableName())->get();
 
         return ($result->getAffectedRows() == 1);
     }
@@ -141,15 +144,19 @@ abstract class AssociativeModel extends AbstractModel implements Validation {
      * @throws DatabaseException
      * @throws \Intersect\Database\Exception\ValidationException
      */
-    public function save()
+    public function save($forceSave = false)
     {
+        if (!$this->isDirty() && !$forceSave)
+        {
+            return $this;
+        }
+        
         $this->validate();
 
-        $query = QueryBuilder::insert($this->attributes)->table($this->tableName)->build();
-        $result = null;
-
+        $queryBuilder = new QueryBuilder($this->getConnection());
+        
         try {
-            $this->getConnection()->run($query);
+            $queryBuilder->insert($this->attributes)->table($this->tableName)->get();
         } catch (DatabaseException $e) {
             if (strpos($e->getMessage(), 'Duplicate entry') === false)
             {

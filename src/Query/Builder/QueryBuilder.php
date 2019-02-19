@@ -3,18 +3,19 @@
 namespace Intersect\Database\Query\Builder;
 
 use Intersect\Database\Query\Query;
+use Intersect\Database\Query\Result;
+use Intersect\Database\Connection\Connection;
+use Intersect\Database\Query\QueryParameters;
+use Intersect\Database\Query\Builder\Condition\InCondition;
+use Intersect\Database\Query\Builder\QueryConditionResolver;
+use Intersect\Database\Query\Builder\Condition\LikeCondition;
+use Intersect\Database\Query\Builder\Condition\NullCondition;
 use Intersect\Database\Query\Builder\Condition\QueryCondition;
 use Intersect\Database\Query\Builder\Condition\EqualsCondition;
-use Intersect\Database\Query\Builder\Condition\NotEqualsCondition;
-use Intersect\Database\Query\Builder\QueryConditionResolver;
-use Intersect\Database\Query\Builder\Condition\NullCondition;
-use Intersect\Database\Query\Builder\Condition\NotNullCondition;
-use Intersect\Database\Query\Builder\Condition\InCondition;
-use Intersect\Database\Query\Builder\Condition\BetweenDatesCondition;
 use Intersect\Database\Query\Builder\Condition\BetweenCondition;
-use Intersect\Database\Query\Builder\Condition\LikeCondition;
-use Intersect\Database\Query\QueryParameters;
-use Intersect\Database\Query\AliasFactory;
+use Intersect\Database\Query\Builder\Condition\NotNullCondition;
+use Intersect\Database\Query\Builder\Condition\NotEqualsCondition;
+use Intersect\Database\Query\Builder\Condition\BetweenDatesCondition;
 
 class QueryBuilder {
 
@@ -24,9 +25,12 @@ class QueryBuilder {
     private static $ACTION_INSERT = 'insert';
     private static $ACTION_COLUMNS = 'columns';
 
+    private $alias;
     private $action;
     private $columns = ['*'];
     private $columnData = [];
+    /** @var Connection */
+    private $connection;
     private $joinQueries = [];
     private $limit;
     private $order;
@@ -42,75 +46,79 @@ class QueryBuilder {
     /** @var QueryParameters */
     private $queryParameters;
 
-    /** @return QueryBuilder */
-    public static function select(array $columns = [], QueryParameters $queryParameters = null)
+    public function __construct(Connection $connection)
     {
-        $queryBuilder = new static();
-        $queryBuilder->action = self::$ACTION_SELECT;
-        $queryBuilder->useAliases = true;
+        $this->connection = $connection;
+        $this->queryConditionResolver = new QueryConditionResolver();
+    }
+
+    /**
+     * @return Result
+     */
+    public function get()
+    {
+        return $this->connection->run($this->build());
+    }
+
+    /** @return QueryBuilder */
+    public function select(array $columns = [], QueryParameters $queryParameters = null)
+    {
+        $this->action = self::$ACTION_SELECT;
+        $this->useAliases = true;
 
         if (count($columns) > 0)
         {
-            $queryBuilder->columns = $columns;
+            $this->columns = $columns;
         }
 
         if (!is_null($queryParameters))
         {
-            $queryBuilder->initFromQueryParameters($queryParameters);
+            $this->initFromQueryParameters($queryParameters);
         }
 
-        return $queryBuilder;
+        return $this;
     }
 
     /** @return QueryBuilder */
-    public static function delete(QueryParameters $queryParameters = null)
+    public function delete(QueryParameters $queryParameters = null)
     {
-        $queryBuilder = new static();
-        $queryBuilder->action = self::$ACTION_DELETE;
+        $this->action = self::$ACTION_DELETE;
 
         if (!is_null($queryParameters))
         {
-            $queryBuilder->initFromQueryParameters($queryParameters);
+            $this->initFromQueryParameters($queryParameters);
         }
 
-        return $queryBuilder;
+        return $this;
     }
 
     /** @return QueryBuilder */
-    public static function update(array $columnData, QueryParameters $queryParameters = null)
+    public function update(array $columnData, QueryParameters $queryParameters = null)
     {
-        $queryBuilder = new static();
-        $queryBuilder->action = self::$ACTION_UPDATE;
-        $queryBuilder->columnData = $columnData;
+        $this->action = self::$ACTION_UPDATE;
+        $this->columnData = $columnData;
 
         if (!is_null($queryParameters))
         {
-            $queryBuilder->initFromQueryParameters($queryParameters);
+            $this->initFromQueryParameters($queryParameters);
         }
 
-        return $queryBuilder;
+        return $this;
     }
 
     /** @return QueryBuilder */
-    public static function insert(array $columnData)
+    public function insert(array $columnData)
     {
-        $queryBuilder = new static();
-        $queryBuilder->action = self::$ACTION_INSERT;
-        $queryBuilder->columnData = $columnData;
-        return $queryBuilder;
+        $this->action = self::$ACTION_INSERT;
+        $this->columnData = $columnData;
+        return $this;
     }
 
     /** @return QueryBuilder */
-    public static function columns()
+    public function columns()
     {
-        $queryBuilder = new static();
-        $queryBuilder->action = self::$ACTION_COLUMNS;
-        return $queryBuilder;
-    }
-
-    private function __construct() 
-    {
-        $this->queryConditionResolver = new QueryConditionResolver();
+        $this->action = self::$ACTION_COLUMNS;
+        return $this;
     }
 
     private function initFromQueryParameters(QueryParameters $queryParameters)
@@ -135,10 +143,21 @@ class QueryBuilder {
     }
 
     /** @return QueryBuilder */
-    public function table($tableName)
+    public function table($tableName, $alias = null)
     {
         $this->tableName = $tableName;
+        $this->alias = $alias;
         return $this;
+    }
+
+    public function getAlias()
+    {
+        return $this->alias;
+    }
+
+    public function getLimit()
+    {
+        return (int) $this->limit;
     }
 
     /** @return QueryBuilder */
@@ -242,10 +261,10 @@ class QueryBuilder {
     }
     
     /** @return QueryBuilder */
-    public function joinLeft($joinTableName, $joinColumnName, $originalColumnName, array $joinColumns = [])
+    public function joinLeft($joinTableName, $joinColumnName, $originalColumnName, array $joinColumns = [], $joinTableAlias = null)
     {
         $originalTableAlias = $this->getTableAlias();
-        $joinTableAlias = ($this->useAliases) ? AliasFactory::getAlias($joinTableName) : $joinTableName;
+        $joinTableAlias = ($this->useAliases && !is_null($joinTableAlias)) ? $joinTableAlias : $joinTableName;
         $queryString = 'left join ' . $this->buildTableNameWithAlias($joinTableName, $joinTableAlias) . ' on ' . $originalTableAlias . '.' . $originalColumnName . ' = ' . $joinTableAlias . '.' . $joinColumnName;
         
         $bindParameters = [
@@ -293,7 +312,7 @@ class QueryBuilder {
 
     protected function getTableAlias()
     {
-        return ($this->useAliases) ? AliasFactory::getAlias($this->tableName) : null;
+        return ($this->useAliases) ? $this->alias : null;
     }
 
     private function buildSelectQuery()
