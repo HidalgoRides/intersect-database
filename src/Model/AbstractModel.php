@@ -192,6 +192,11 @@ abstract class AbstractModel implements ModelActions {
         {
             foreach ($this->relationships as $relationship)
             {
+                if (is_null($relationship))
+                {
+                    continue;
+                }
+
                 $isDirty = $relationship->isDirty();
                 if ($isDirty)
                 {
@@ -229,7 +234,7 @@ abstract class AbstractModel implements ModelActions {
             {
                 $value = $this->{$key}();
 
-                if (!is_null($value) && $value instanceOf QueryBuilder)
+                if (!is_null($value) && $value instanceof QueryBuilder)
                 {
                     $value = $this->convertFromQueryBuilder($value);
                 }
@@ -256,7 +261,19 @@ abstract class AbstractModel implements ModelActions {
      */
     public function __set($key, $value)
     {
-        $this->setAttribute($key, $value);
+        if (method_exists($this, $key))
+        {
+            $this->relationships[$key] = $value;
+            if ($value instanceof AbstractModel)
+            {
+                $value->isDirty = true;
+            }
+        }
+        else
+        {
+            $this->setAttribute($key, $value);
+        }
+
         $this->isDirty = true;
     }
 

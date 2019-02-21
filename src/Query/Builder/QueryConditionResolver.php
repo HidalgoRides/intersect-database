@@ -24,42 +24,42 @@ class QueryConditionResolver {
         $column = $queryCondition->getColumn();
         $columnWithAlias = $this->buildColumnWithAlias($queryCondition->getColumn(), $alias);
 
-        if ($queryCondition instanceOf EqualsCondition)
+        if ($queryCondition instanceof EqualsCondition)
         {
             $placeholder = $this->buildPlaceholderWithAlias($column, $alias);
             $queryString = $columnWithAlias . ' = :' . $placeholder;
             $bindParameters = [$placeholder, $queryCondition->getValue()];
         }
-        else if ($queryCondition instanceOf NotEqualsCondition)
+        else if ($queryCondition instanceof NotEqualsCondition)
         {
             $placeholder = $this->buildPlaceholderWithAlias($column, $alias);
             $queryString = $columnWithAlias . ' != :' . $placeholder;
             $bindParameters = [$placeholder, $queryCondition->getValue()];
         }
-        else if ($queryCondition instanceOf NullCondition)
+        else if ($queryCondition instanceof NullCondition)
         {
             $queryString = $columnWithAlias . ' is null';
         }
-        else if ($queryCondition instanceOf NotNullCondition)
+        else if ($queryCondition instanceof NotNullCondition)
         {
             $queryString = $columnWithAlias . ' is not null';
         }
-        else if ($queryCondition instanceOf LikeCondition)
+        else if ($queryCondition instanceof LikeCondition)
         {
             $placeholder = $this->buildPlaceholderWithAlias($column, $alias);
             $queryString = $columnWithAlias . ' like :' . $placeholder;
             $bindParameters = [$placeholder, $queryCondition->getValue()];
         }
-        else if ($queryCondition instanceOf InCondition)
+        else if ($queryCondition instanceof InCondition)
         {
             $queryString = $columnWithAlias . ' in (' . implode(', ', $queryCondition->getValue()) . ')';
         }
-        else if ($queryCondition instanceOf BetweenCondition)
+        else if ($queryCondition instanceof BetweenCondition)
         {
             $values = $queryCondition->getValue();
             $queryString = $columnWithAlias . ' between ' . $values[0] . ' and ' . $values[1];
         }
-        else if ($queryCondition instanceOf BetweenDatesCondition)
+        else if ($queryCondition instanceof BetweenDatesCondition)
         {
             $values = $queryCondition->getValue();
             $queryString = $columnWithAlias . ' between cast(\'' . $values[0] . '\' as datetime) and cast(\'' . $values[1] . '\' as datetime)';
