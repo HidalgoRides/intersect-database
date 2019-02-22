@@ -3,8 +3,9 @@
 namespace Intersect\Database\Response;
 
 use Intersect\Core\Http\Response;
-use Intersect\Core\Http\ResponseHandler;
 use Intersect\Database\Model\Model;
+use Intersect\Core\Http\ResponseHandler;
+use Intersect\Database\Model\ModelHelper;
 
 class ModelResponseHandler implements ResponseHandler {
 
@@ -20,6 +21,19 @@ class ModelResponseHandler implements ResponseHandler {
     {
         /** @var Model $model */
         $model = $response->getBody();
+        $relationships = $model->getRelationships();
+
+        foreach ($relationships as $key => &$relationship)
+        {
+            if (is_array($relationship))
+            {
+                $relationship = ModelHelper::normalizeList($relationship);
+            }
+            else if ($relationship instanceof Model)
+            {
+                $relationship = ModelHelper::normalize($relationship);
+            }
+        }
 
         $modelData = [
             'class' => get_class($model),
@@ -29,7 +43,8 @@ class ModelResponseHandler implements ResponseHandler {
                 'columns' => $model->getColumnList(),
             ],
             'readonlyAttributes' => $model->getReadOnlyAttributes(),
-            'attributes' => $model->getAttributes()
+            'attributes' => $model->getAttributes(),
+            'relationships' => $relationships
         ];
 
         header('Content-Type: application/json');

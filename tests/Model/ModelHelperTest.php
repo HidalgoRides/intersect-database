@@ -10,7 +10,9 @@ class ModelHelperTest extends TestCase {
 
     public function test_normalize_withoutConvertAttributeKeys()
     {
-        $model = User::findOne();
+        $models = User::with(['name']);
+        $model = $models[0];
+        $model->addMetaData('unit', 'test');
         
         $normalizedModel = ModelHelper::normalize($model);
 
@@ -19,7 +21,9 @@ class ModelHelperTest extends TestCase {
 
     public function test_normalize_withConvertAttributeKeys()
     {
-        $model = User::findOne();
+        $models = User::with(['name']);
+        $model = $models[0];
+        $model->addMetaData('unit', 'test');
         
         $normalizedModel = ModelHelper::normalize($model, true);
 
@@ -28,7 +32,9 @@ class ModelHelperTest extends TestCase {
 
     public function test_normalizeList_withoutConvertAttributeKeys()
     {
-        $model = User::findOne();
+        $models = User::with(['name']);
+        $model = $models[0];
+        $model->addMetaData('unit', 'test');
 
         $models = [
             $model,
@@ -45,7 +51,9 @@ class ModelHelperTest extends TestCase {
 
     public function test_normalizeList_withConvertAttributeKeys()
     {
-        $model = User::findOne();
+        $models = User::with(['name']);
+        $model = $models[0];
+        $model->addMetaData('unit', 'test');
 
         $models = [
             $model,
@@ -60,20 +68,46 @@ class ModelHelperTest extends TestCase {
         }
     }
 
-    private function assertNormalizedModelWithoutAttributeKeyConversion($model)
+    private function assertNormalizedModelWithoutAttributeKeyConversion($normalizedModel)
     {
-        $this->assertArrayHasKey('id', $model);
-        $this->assertArrayHasKey('email', $model);
-        $this->assertArrayHasKey('name_id', $model);
-        $this->assertArrayHasKey('phone_id', $model);
+        $this->assertArrayHasKey('id', $normalizedModel);
+        $this->assertArrayHasKey('email', $normalizedModel);
+        $this->assertArrayHasKey('name_id', $normalizedModel);
+        $this->assertArrayHasKey('phone_id', $normalizedModel);
+
+        $this->assertArrayHasKey('name', $normalizedModel);
+        
+        $normalizedName = $normalizedModel['name'];
+        $this->assertIsArray($normalizedName);
+        $this->assertArrayHasKey('id', $normalizedName);
+        $this->assertArrayHasKey('first_name', $normalizedName);
+        $this->assertArrayHasKey('last_name', $normalizedName);
+
+        $this->assertArrayHasKey('meta_data', $normalizedModel);
+
+        $normalizedMetaData = $normalizedModel['meta_data'];
+        $this->assertArrayHasKey('unit', $normalizedMetaData);
     }
 
-    private function assertNormalizedModelWithAttributeKeyConversion($model)
+    private function assertNormalizedModelWithAttributeKeyConversion($normalizedModel)
     {
-        $this->assertArrayHasKey('id', $model);
-        $this->assertArrayHasKey('email', $model);
-        $this->assertArrayHasKey('nameId', $model);
-        $this->assertArrayHasKey('phoneId', $model);
+        $this->assertArrayHasKey('id', $normalizedModel);
+        $this->assertArrayHasKey('email', $normalizedModel);
+        $this->assertArrayHasKey('nameId', $normalizedModel);
+        $this->assertArrayHasKey('phoneId', $normalizedModel);
+
+        $this->assertArrayHasKey('name', $normalizedModel);
+        
+        $normalizedName = $normalizedModel['name'];
+        $this->assertIsArray($normalizedName);
+        $this->assertArrayHasKey('id', $normalizedName);
+        $this->assertArrayHasKey('firstName', $normalizedName);
+        $this->assertArrayHasKey('lastName', $normalizedName);
+
+        $this->assertArrayHasKey('metaData', $normalizedModel);
+
+        $normalizedMetaData = $normalizedModel['metaData'];
+        $this->assertArrayHasKey('unit', $normalizedMetaData);
     }
 
 }

@@ -4,7 +4,6 @@ namespace Tests\Stubs;
 
 use Tests\Stubs\Name;
 use Tests\Stubs\Phone;
-use Intersect\Database\Query\QueryParameters;
 use Intersect\Database\Model\TemporalModel;
 
 class User extends TemporalModel {

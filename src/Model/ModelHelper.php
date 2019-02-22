@@ -11,7 +11,7 @@ class ModelHelper {
         /** @var Model $model */
         foreach ($modelList as $model)
         {
-            $normalizedList[] = $model->normalize($convertAttributeKeys);
+            $normalizedList[] = self::normalize($model, $convertAttributeKeys);
         }
 
         return $normalizedList;

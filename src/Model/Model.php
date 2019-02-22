@@ -247,56 +247,21 @@ abstract class Model extends AbstractModel {
 
     public function normalize($convertAttributeKeys = false)
     {
-        $data = $this->attributes;
+        $normalizedData = [];
 
-        foreach ($data as $attributeKey => $attributeValue)
-        {
-            if ($attributeValue instanceof Model)
-            {
-                $data[$attributeKey] = $attributeValue->normalize();
-            } 
-            else if (is_array($attributeValue))
-            {
-                $normalizeArray = [];
-                foreach ($attributeValue as $key => $value)
-                {
-                    if ($value instanceof Model)
-                    {
-                        $normalizeArray[$key] = $value->normalize();
-                    }
-                    else
-                    {
-                        $normalizeArray[$key] = $value;
-                    }
-                }
-                $data[$attributeKey] = $normalizeArray;
-            }
-            else 
-            {
-                if ($convertAttributeKeys)
-                {
-                    unset($data[$attributeKey]);
-                    $camelCaseKey = $this->convertColumnAttributeToCamelCase($attributeKey);
-                    $data[$camelCaseKey] = $attributeValue;
-                }
-            }
-        }
+        $this->normalizeData($normalizedData, $this->attributes, $convertAttributeKeys);
+        $this->normalizeData($normalizedData, $this->relationships, $convertAttributeKeys);
 
         $metaData = $this->getMetaData();
         if (!is_null($metaData))
         {
-            $metaDataMap = [];
-            foreach ($metaData as $key => $value)
-            {
-                $metaDataMap[$key] = $value;
-            }
+            $metaDataKey = $convertAttributeKeys ? $this->convertColumnAttributeToCamelCase($this->metaDataColumn) : $this->metaDataColumn;
 
-            $metaDataKey = (!$convertAttributeKeys ? 'meta_data' : 'metaData');
-
-            $data[$metaDataKey] = $metaDataMap;
+            $normalizedData[$metaDataKey] = [];
+            $this->normalizeData($normalizedData[$metaDataKey], $metaData, $convertAttributeKeys);
         }
 
-        return $data;
+        return $normalizedData;
     }
 
     protected function isNewModel()
@@ -308,6 +273,27 @@ abstract class Model extends AbstractModel {
     private function convertColumnAttributeToCamelCase($string)
     {
         return lcfirst(str_replace('_', '', ucwords($string, '_')));
+    }
+
+    private function normalizeData(array &$normalizedData, array $dataToNormalize, $convertKeys = false)
+    {
+        foreach ($dataToNormalize as $key => $value)
+        {
+            if ($value instanceof Model)
+            {
+                $normalizedData[$key] = $value->normalize($convertKeys);
+            } 
+            else if (is_array($value))
+            {
+                $normalizedData[$key] = [];
+                $this->normalizeData($normalizedData[$key], $value, $convertKeys);
+            }
+            else 
+            {
+                $key = ($convertKeys) ? $this->convertColumnAttributeToCamelCase($key) : $key;
+                $normalizedData[$key] = $value;
+            }
+        }
     }
 
     /**
