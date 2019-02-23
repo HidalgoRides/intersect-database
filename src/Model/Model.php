@@ -279,6 +279,8 @@ abstract class Model extends AbstractModel {
     {
         foreach ($dataToNormalize as $key => $value)
         {
+            $key = ($convertKeys) ? $this->convertColumnAttributeToCamelCase($key) : $key;
+            
             if ($value instanceof Model)
             {
                 $normalizedData[$key] = $value->normalize($convertKeys);
@@ -290,7 +292,6 @@ abstract class Model extends AbstractModel {
             }
             else 
             {
-                $key = ($convertKeys) ? $this->convertColumnAttributeToCamelCase($key) : $key;
                 $normalizedData[$key] = $value;
             }
         }
