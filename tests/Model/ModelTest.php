@@ -4,9 +4,25 @@ namespace Tests\Model;
 
 use Tests\Stubs\User;
 use PHPUnit\Framework\TestCase;
-use Tests\Stubs\Phone;
+use Tests\Stubs\Address;
+use Intersect\Database\Query\QueryParameters;
 
 class ModelTest extends TestCase {
+
+    public function test_count()
+    {
+        $count = Address::count();
+        $this->assertEquals(2, $count);
+    }
+
+    public function test_count_withQueryParameters()
+    {
+        $queryParameters = new QueryParameters();
+        $queryParameters->equals('zip_code', '12345');
+
+        $count = Address::count($queryParameters);
+        $this->assertEquals(1, $count);
+    }
 
     public function test_find()
     {

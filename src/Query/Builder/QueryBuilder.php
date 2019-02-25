@@ -20,6 +20,7 @@ use Intersect\Database\Query\Builder\Condition\BetweenDatesCondition;
 class QueryBuilder {
 
     private static $ACTION_SELECT = 'select';
+    private static $ACTION_COUNT = 'count';
     private static $ACTION_DELETE = 'delete';
     private static $ACTION_UPDATE = 'update';
     private static $ACTION_INSERT = 'insert';
@@ -71,6 +72,19 @@ class QueryBuilder {
             $this->columns = $columns;
         }
 
+        if (!is_null($queryParameters))
+        {
+            $this->initFromQueryParameters($queryParameters);
+        }
+
+        return $this;
+    }
+
+    /** @return QueryBuilder */
+    public function count(QueryParameters $queryParameters = null)
+    {
+        $this->action = self::$ACTION_COUNT;
+        
         if (!is_null($queryParameters))
         {
             $this->initFromQueryParameters($queryParameters);
@@ -302,6 +316,9 @@ class QueryBuilder {
             case self::$ACTION_DELETE:
                 $query = $this->buildDeleteQuery();
                 break;
+            case self::$ACTION_COUNT:
+                $query = $this->buildCountQuery();
+                break;
             case self::$ACTION_COLUMNS:
                 $query = $this->buildColumnQuery();
                 break;
@@ -313,6 +330,18 @@ class QueryBuilder {
     protected function getTableAlias()
     {
         return ($this->useAliases) ? $this->alias : null;
+    }
+
+    private function buildCountQuery()
+    {
+        $queryString = 'select count(*) as count from ' . $this->wrapTableName($this->tableName);
+
+        $query = new Query($queryString);
+
+        $this->appendWhereConditions($query);
+        $this->appendOptions($query);
+
+        return $query;
     }
 
     private function buildSelectQuery()
@@ -337,6 +366,11 @@ class QueryBuilder {
         foreach ($this->joinQueries as $joinQuery)
         {
             $queryString .= ' ' . $joinQuery['queryString'];
+
+            foreach ($joinQuery['bindParameters'] as $bindParameterKey => $bindParameterValue)
+            {
+                $bindParameters[$bindParameterKey] = $bindParameterValue;
+            }
         }
 
         $query = new Query($queryString, $bindParameters);

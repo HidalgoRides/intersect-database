@@ -16,6 +16,29 @@ class QueryBuilderTest extends TestCase {
         $this->queryBuilder = new QueryBuilder(new NullConnection());
     }
 
+    public function test_buildCountQuery()
+    {
+        $query = $this->queryBuilder->count()
+            ->table('users', $alias)
+            ->build();
+
+        $this->assertEquals("select count(*) as count from `users`", $query->getSql());
+    }
+
+    public function test_buildCountQuery_withWhereConditions()
+    {
+        $query = $this->queryBuilder->count()
+            ->table('users', $alias)
+            ->whereEquals('unit', 'test')
+            ->build();
+
+        $this->assertEquals("select count(*) as count from `users` where unit = :unit", $query->getSql());
+        
+        $bindParameters = $query->getBindParameters();
+        $this->assertArrayHasKey('unit', $bindParameters);
+        $this->assertEquals('test', $bindParameters['unit']);
+    }
+
     public function test_buildSelectQuery_allColumns()
     {
         $alias = 'a0';
@@ -94,6 +117,10 @@ class QueryBuilderTest extends TestCase {
             ->build();
 
         $this->assertEquals("select " . $usersAlias . ".* as '" . $usersAlias . ".*' from `users` as " . $usersAlias . " left join `phones` as " . $phonesAlias . " on " . $usersAlias . ".phone_id = " . $phonesAlias . ".id", $query->getSql());
+
+        $bindParameters = $query->getBindParameters();
+        $this->assertArrayHasKey($usersAlias . '_phone_id', $bindParameters);
+        $this->assertArrayHasKey($phonesAlias . '_id', $bindParameters);
     }
 
     public function test_buildDeleteQuery()

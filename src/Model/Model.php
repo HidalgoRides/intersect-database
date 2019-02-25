@@ -15,6 +15,23 @@ abstract class Model extends AbstractModel {
 
     /**
      * @param QueryParameters|null $queryParameters
+     * @return int
+     * @throws DatabaseException
+     */
+    public static function count(QueryParameters $queryParameters = null)
+    {
+        $modelClass = new static();
+
+        $queryBuilder = new QueryBuilder($modelClass->getConnection());
+        $result = $queryBuilder->table($modelClass->getTableName())
+            ->count($queryParameters)
+            ->get();
+
+        return (int) $result->getFirstRecord()['count'];
+    }
+
+    /**
+     * @param QueryParameters|null $queryParameters
      * @return static[]
      * @throws DatabaseException
      */
