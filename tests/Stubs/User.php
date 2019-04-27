@@ -23,4 +23,10 @@ class User extends TemporalModel {
         return $this->hasMany(Address::class, 'user_id');
     }
 
+    // method expose for testing protected method functionality
+    public function setAttribute($key, $value)
+    {
+        parent::setAttribute($key, $value);
+    }
+
 }

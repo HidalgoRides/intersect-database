@@ -61,6 +61,8 @@ abstract class AbstractModel implements ModelActions {
             }
         }
 
+        $instance->isDirty = false;
+
         return $instance;
     }
 
@@ -299,6 +301,7 @@ abstract class AbstractModel implements ModelActions {
      */
     protected function setAttribute($key, $value)
     {
+        $this->isDirty = true;
         $this->attributes[$key] = $value;
     }
 

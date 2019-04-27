@@ -150,6 +150,18 @@ class ModelTest extends TestCase {
         $this->assertTrue($user->isDirty());
     }
 
+    public function test_isDirty_setAttributeInvoked()
+    {
+        $user = User::findOne();
+
+        $this->assertFalse($user->isDirty());
+
+        $user->setAttribute('email', 'test');
+        
+        $this->assertTrue($user->isDirty());
+        $this->assertEquals('test', $user->email);
+    }
+
     public function test_isDirty_relationshipChanged()
     {
         $user = User::findOne();
