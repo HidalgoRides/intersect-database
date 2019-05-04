@@ -6,6 +6,7 @@ use Tests\Stubs\User;
 use PHPUnit\Framework\TestCase;
 use Tests\Stubs\Address;
 use Intersect\Database\Query\QueryParameters;
+use Tests\Stubs\PartialAssociation;
 
 class ModelTest extends TestCase {
 
@@ -171,6 +172,21 @@ class ModelTest extends TestCase {
 
         $phone->number = 'test';
         $this->assertTrue($user->isDirty());
+    }
+
+    public function test_multiplePrimaryKeyInDBConstraintError()
+    {
+        $partialAssociation = new PartialAssociation();
+        $partialAssociation->key_one = 1;
+        $partialAssociation->key_two = 5;
+
+        $pa = $partialAssociation->save();
+
+        $queryParameters = new QueryParameters();
+        $queryParameters->equals('key_one', 1);
+        $queryParameters->equals('key_two', 5);
+
+        $this->assertNotNull(PartialAssociation::find($queryParameters));
     }
 
 }

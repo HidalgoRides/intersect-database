@@ -2,9 +2,6 @@
 
 namespace Intersect\Database\Model;
 
-use Intersect\Core\Container;
-use Intersect\Core\ClassResolver;
-use Intersect\Core\Registry\ClassRegistry;
 use Intersect\Database\Query\ModelAliasFactory;
 use Intersect\Database\Connection\Connection;
 use Intersect\Database\Connection\NullConnection;

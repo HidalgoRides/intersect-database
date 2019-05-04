@@ -19,7 +19,7 @@ class QueryBuilderTest extends TestCase {
     public function test_buildCountQuery()
     {
         $query = $this->queryBuilder->count()
-            ->table('users', $alias)
+            ->table('users')
             ->build();
 
         $this->assertEquals("select count(*) as count from `users`", $query->getSql());
@@ -28,7 +28,7 @@ class QueryBuilderTest extends TestCase {
     public function test_buildCountQuery_withWhereConditions()
     {
         $query = $this->queryBuilder->count()
-            ->table('users', $alias)
+            ->table('users')
             ->whereEquals('unit', 'test')
             ->build();
 
@@ -117,10 +117,6 @@ class QueryBuilderTest extends TestCase {
             ->build();
 
         $this->assertEquals("select " . $usersAlias . ".* as '" . $usersAlias . ".*' from `users` as " . $usersAlias . " left join `phones` as " . $phonesAlias . " on " . $usersAlias . ".phone_id = " . $phonesAlias . ".id", $query->getSql());
-
-        $bindParameters = $query->getBindParameters();
-        $this->assertArrayHasKey($usersAlias . '_phone_id', $bindParameters);
-        $this->assertArrayHasKey($phonesAlias . '_id', $bindParameters);
     }
 
     public function test_buildDeleteQuery()

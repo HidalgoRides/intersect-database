@@ -98,6 +98,7 @@ class IntegrationTestListener implements TestListener {
           );
 
           CREATE TABLE associations (
+            association_id INT(11) DEFAULT NULL,
             key_one INT(11) NOT NULL,
             key_two INT(11) NOT NULL,
             PRIMARY KEY (key_one, key_two)

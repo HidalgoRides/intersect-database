@@ -280,11 +280,6 @@ class QueryBuilder {
         $originalTableAlias = $this->getTableAlias();
         $joinTableAlias = ($this->useAliases && !is_null($joinTableAlias)) ? $joinTableAlias : $joinTableName;
         $queryString = 'left join ' . $this->buildTableNameWithAlias($joinTableName, $joinTableAlias) . ' on ' . $originalTableAlias . '.' . $originalColumnName . ' = ' . $joinTableAlias . '.' . $joinColumnName;
-        
-        $bindParameters = [
-            $this->buildPlaceholderWithAlias($joinColumnName, $joinTableAlias) => $joinColumnValue,
-            $this->buildPlaceholderWithAlias($originalColumnName, $originalTableAlias) => $originalColumnValue
-        ];
 
         $allNamedColumns = [];
         $this->addNamedColumns($allNamedColumns, $joinColumns, $joinTableAlias);
@@ -292,7 +287,7 @@ class QueryBuilder {
         $this->joinQueries[] = [
             'columns' => $allNamedColumns,
             'queryString' => $queryString,
-            'bindParameters' => $bindParameters
+            'bindParameters' => []
         ];
         return $this;
     }

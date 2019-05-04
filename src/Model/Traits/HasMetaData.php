@@ -55,7 +55,7 @@ trait HasMetaData {
      */
     public function getMetaData()
     {
-        if (is_null($this->metaData))
+        if (is_null($this->metaData) && is_array($this->attributes))
         {
             $metaDataAttribute = (array_key_exists($this->metaDataColumn, $this->attributes)) ? $this->attributes[$this->metaDataColumn] : null;
 

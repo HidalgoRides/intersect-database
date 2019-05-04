@@ -2,7 +2,6 @@
 
 namespace Intersect\Database\Model;
 
-use Intersect\Database\Query\Query;
 use Intersect\Database\Query\QueryParameters;
 use Intersect\Database\Model\Traits\HasMetaData;
 use Intersect\Database\Query\Builder\QueryBuilder;
@@ -360,15 +359,22 @@ abstract class Model extends AbstractModel {
 
         $result = $queryBuilder->get();
 
-        $id = ($isNewModel ? $result->getInsertId() : $primaryKeyValue);
+        $id = (int) ($isNewModel ? $result->getInsertId() : $primaryKeyValue);
 
-        if (!is_null($id))
+        if (!is_null($id) && $id > 0)
         {
             $savedModel = $this->findById($id);
 
-            $this->attributes = $savedModel->attributes;
-            $this->isDirty = false;
+            if (!is_null($savedModel))
+            {
+                $savedModelAttributes = $savedModel->attributes;
+
+                $this->attributes = (!is_null($savedModelAttributes)) ? $savedModelAttributes : $this->attributes;
+            }
         }
+        
+        $this->isDirty = false;
+        
 
         return $this;
     }
