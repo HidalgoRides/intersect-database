@@ -2,9 +2,10 @@
 
 namespace Intersect\Database\Connection;
 
-use Intersect\Database\Exception\DatabaseException;
 use Intersect\Database\Query\Query;
 use Intersect\Database\Query\Result;
+use Intersect\Database\Query\Builder\QueryBuilder;
+use Intersect\Database\Exception\DatabaseException;
 
 abstract class Connection implements ConnectionInterface {
 
@@ -15,7 +16,7 @@ abstract class Connection implements ConnectionInterface {
     /** @var \PDO[] */
     private static $CONNECTIONS = [];
 
-    protected $pdoDriver = null;
+    protected $pdoDriver;
 
     /** @var ConnectionSettings */
     private $connectionSettings;
@@ -29,6 +30,11 @@ abstract class Connection implements ConnectionInterface {
     {
         $this->connectionSettings = $connectionSettings;
     }
+
+    /**
+     * @return QueryBuilder
+     */
+    abstract public function getQueryBuilder();
 
     /**
      * @return \PDO

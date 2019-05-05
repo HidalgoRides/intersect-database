@@ -17,7 +17,7 @@ use Intersect\Database\Query\Builder\Condition\NotNullCondition;
 use Intersect\Database\Query\Builder\Condition\NotEqualsCondition;
 use Intersect\Database\Query\Builder\Condition\BetweenDatesCondition;
 
-class QueryBuilder {
+abstract class QueryBuilder {
 
     private static $ACTION_SELECT = 'select';
     private static $ACTION_COUNT = 'count';
@@ -26,16 +26,17 @@ class QueryBuilder {
     private static $ACTION_INSERT = 'insert';
     private static $ACTION_COLUMNS = 'columns';
 
+    protected $columnData = [];
+    protected $columns = ['*'];
+    protected $joinQueries = [];
+    protected $tableName;
+
     private $alias;
     private $action;
-    private $columns = ['*'];
-    private $columnData = [];
     /** @var Connection */
     private $connection;
-    private $joinQueries = [];
     private $limit;
     private $order;
-    private $tableName;
     private $useAliases = false;
 
     /** @var QueryCondition[] */
@@ -53,12 +54,20 @@ class QueryBuilder {
         $this->queryConditionResolver = new QueryConditionResolver();
     }
 
+     abstract protected function buildSelectQuery();
+     abstract protected function buildInsertQuery();
+     abstract protected function buildUpdateQuery();
+     abstract protected function buildDeleteQuery();
+     abstract protected function buildCountQuery();
+     abstract protected function buildColumnQuery();
+
     /**
      * @return Result
      */
     public function get()
     {
-        return $this->connection->run($this->build());
+        $query = $this->build();
+        return (!is_null($query) ? $this->connection->run($query) : new Result());
     }
 
     /** @return QueryBuilder */
@@ -327,56 +336,7 @@ class QueryBuilder {
         return ($this->useAliases) ? $this->alias : null;
     }
 
-    private function buildCountQuery()
-    {
-        $queryString = 'select count(*) as count from ' . $this->wrapTableName($this->tableName);
-
-        $query = new Query($queryString);
-
-        $this->appendWhereConditions($query);
-        $this->appendOptions($query);
-
-        return $query;
-    }
-
-    private function buildSelectQuery()
-    {
-        $alias = $this->getTableAlias();
-        $columns = $this->columns;
-        $allNamedColumns = [];
-        
-        $this->addNamedColumns($allNamedColumns, $columns, $alias);
-
-        foreach ($this->joinQueries as $joinQuery)
-        {
-            foreach ($joinQuery['columns'] as $column)
-            {
-                $allNamedColumns[] = $column;
-            }
-        }
-
-        $bindParameters = [];
-        $queryString = 'select ' . implode(', ', $allNamedColumns) . ' from ' . $this->buildTableNameWithAlias($this->tableName, $alias);
-
-        foreach ($this->joinQueries as $joinQuery)
-        {
-            $queryString .= ' ' . $joinQuery['queryString'];
-
-            foreach ($joinQuery['bindParameters'] as $bindParameterKey => $bindParameterValue)
-            {
-                $bindParameters[$bindParameterKey] = $bindParameterValue;
-            }
-        }
-
-        $query = new Query($queryString, $bindParameters);
-
-        $this->appendWhereConditions($query);
-        $this->appendOptions($query);
-
-        return $query;
-    }
-
-    private function addNamedColumns(&$allColumns, $columnList, $alias)
+    protected function addNamedColumns(&$allColumns, $columnList, $alias)
     {
         foreach ($columnList as $column)
         {
@@ -384,64 +344,7 @@ class QueryBuilder {
         }
     }
 
-    private function buildDeleteQuery()
-    {
-        $queryString = 'delete from ' . $this->buildTableNameWithAlias($this->tableName);
-
-        $query = new Query($queryString);
-
-        $this->appendWhereConditions($query);
-        $this->appendOptions($query);
-
-        return $query;
-    }
-
-    private function buildUpdateQuery()
-    {
-        $updateValues = [];
-        $bindParameters = [];
-
-        foreach ($this->columnData as $key => $value)
-        {
-            $placeholder = $this->buildPlaceholderWithAlias($key);
-            $updateValues[] = $key . ' = :' . $placeholder;
-            $bindParameters[$placeholder] = $value;
-        }
-
-        $queryString = 'update ' . $this->buildTableNameWithAlias($this->tableName) . ' set ' . implode(', ', $updateValues);
-
-        $query = new Query($queryString, $bindParameters);
-
-        $this->appendWhereConditions($query);
-        $this->appendOptions($query);
-
-        return $query;
-    }
-
-    private function buildInsertQuery()
-    {
-        $columns = [];
-        $values = [];
-
-        foreach ($this->columnData as $key => $value)
-        {
-            $columns[] = $key;
-            $values[] = ':' . $this->buildPlaceholderWithAlias($key);
-        }
-
-        $queryString = 'insert into ' . $this->buildTableNameWithAlias($this->tableName) . ' (' . implode(', ', $columns) . ') value (' . implode(', ', $values) . ')';
-
-        return new Query($queryString, $this->columnData);
-    }
-
-    private function buildColumnQuery()
-    {
-        $queryString = $sql = 'show columns from ' . $this->buildTableNameWithAlias($this->tableName);
-
-        return new Query($queryString);
-    }
-
-    private function appendWhereConditions(Query $query)
+    protected function appendWhereConditions(Query $query)
     {
         $queryConditions = $this->queryConditions;
 
@@ -468,7 +371,7 @@ class QueryBuilder {
         }
     }
 
-    private function appendOptions(Query $query)
+    protected function appendOptions(Query $query)
     {
         $sql = $query->getSql();
         $alias = $this->getTableAlias();
@@ -486,24 +389,24 @@ class QueryBuilder {
         $query->setSql($sql);
     }
 
-    private function buildColumnWithAlias($column, $alias = null)
+    protected function buildColumnWithAlias($column, $alias = null)
     {
         return (!is_null($alias)) ? ($alias . '.' . $column . " as '" . $alias . '.' . $column . "'") : $column;
     }
 
-    private function buildPlaceholderWithAlias($key, $alias = null)
+    protected function buildPlaceholderWithAlias($key, $alias = null)
     {
         return (!is_null($alias)) ? ($alias . '_' . $key) : $key;
     }
 
-    private function buildTableNameWithAlias($tableName, $alias = null)
+    protected function buildTableNameWithAlias($tableName, $alias = null)
     {
         $tableName = $this->wrapTableName($tableName);
 
         return (!is_null($alias)) ? ($tableName . ' as ' . $alias) : $tableName;
     }
 
-    private function wrapTableName($tableName)
+    protected function wrapTableName($tableName)
     {
         return '`' . $tableName . '`';
     }

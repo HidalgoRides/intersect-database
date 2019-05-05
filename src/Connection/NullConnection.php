@@ -5,12 +5,18 @@ namespace Intersect\Database\Connection;
 use Intersect\Database\Query\Query;
 use Intersect\Database\Query\Result;
 use Intersect\Database\Connection\ConnectionSettings;
+use Intersect\Database\Query\Builder\NullQueryBuilder;
 
 class NullConnection extends Connection {
 
     public function __construct(ConnectionSettings $connectionSettings = null) {}
 
     public function getConnection() {}
+
+    public function getQueryBuilder()
+    {
+        return new NullQueryBuilder($this);
+    }
 
     /**
      * @param $databaseName

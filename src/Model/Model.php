@@ -4,7 +4,6 @@ namespace Intersect\Database\Model;
 
 use Intersect\Database\Query\QueryParameters;
 use Intersect\Database\Model\Traits\HasMetaData;
-use Intersect\Database\Query\Builder\QueryBuilder;
 use Intersect\Database\Exception\DatabaseException;
 use Intersect\Database\Exception\ValidationException;
 use Intersect\Database\Query\ModelAliasFactory;
@@ -21,7 +20,7 @@ abstract class Model extends AbstractModel {
     {
         $modelClass = new static();
 
-        $queryBuilder = new QueryBuilder($modelClass->getConnection());
+        $queryBuilder = $modelClass->getConnection()->getQueryBuilder();
         $result = $queryBuilder->table($modelClass->getTableName())
             ->count($queryParameters)
             ->get();
@@ -45,7 +44,7 @@ abstract class Model extends AbstractModel {
         }
 
         $tableAlias = ModelAliasFactory::generateAlias($modelClass);
-        $queryBuilder = new QueryBuilder($modelClass->getConnection());
+        $queryBuilder = $modelClass->getConnection()->getQueryBuilder();
         $result = $queryBuilder->table($modelClass->getTableName(), $tableAlias)
             ->select($modelClass->getColumnList(), $queryParameters)
             ->get();
@@ -164,7 +163,7 @@ abstract class Model extends AbstractModel {
         $joiningClass = new $joiningClassName();
         $joiningTableAlias = ModelAliasFactory::generateAlias($joiningClass);
 
-        $queryBuilder = new QueryBuilder($joiningClass->getConnection());
+        $queryBuilder = $joiningClass->getConnection()->getQueryBuilder();
         $queryBuilder
             ->select($joiningClass->getColumnList())
             ->table($joiningClass->getTableName, $joiningTableAlias)
@@ -192,7 +191,7 @@ abstract class Model extends AbstractModel {
         $joiningClass = new $joiningClassName();
         $joiningTableAlias = ModelAliasFactory::generateAlias($joiningClass);
 
-        $queryBuilder = new QueryBuilder($joiningClass->getConnection());
+        $queryBuilder = $joiningClass->getConnection()->getQueryBuilder();
         $queryBuilder
             ->select($joiningClass->getColumnList())
             ->table($joiningClass->getTableName, $joiningTableAlias)
@@ -255,7 +254,7 @@ abstract class Model extends AbstractModel {
         $queryParameters->equals($this->getPrimaryKey(), $primaryKeyValue);
         $queryParameters->setLimit(1);
 
-        $queryBuilder = new QueryBuilder($this->getConnection());
+        $queryBuilder = $this->getConnection()->getQueryBuilder();
         $result = $queryBuilder->delete($queryParameters)->table($this->getTableName())->get();
 
         return ($result->getAffectedRows() == 1);
@@ -333,7 +332,7 @@ abstract class Model extends AbstractModel {
             unset($this->{$this->metaDataColumn});
         }
 
-        $queryBuilder = new QueryBuilder($this->getConnection());
+        $queryBuilder = $this->getConnection()->getQueryBuilder();
 
         if ($isNewModel)
         {

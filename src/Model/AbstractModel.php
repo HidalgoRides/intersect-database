@@ -87,7 +87,7 @@ abstract class AbstractModel implements ModelActions {
                 return self::$COLUMN_LIST_CACHE[$cacheKey];
             }
 
-            $queryBuilder = new QueryBuilder($this->getConnection());
+            $queryBuilder = $this->getConnection()->getQueryBuilder();
             $result = $queryBuilder->columns()->table($this->tableName)->get();
 
             $columnList = [];

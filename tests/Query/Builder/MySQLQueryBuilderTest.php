@@ -5,15 +5,16 @@ namespace Tests\Query\Builder;
 use PHPUnit\Framework\TestCase;
 use Intersect\Database\Query\Builder\QueryBuilder;
 use Intersect\Database\Connection\NullConnection;
+use Intersect\Database\Query\Builder\MySQLQueryBuilder;
 
-class QueryBuilderTest extends TestCase {
+class MySQLQueryBuilderTest extends TestCase {
 
     /** @var QueryBuilder */
     private $queryBuilder;
 
     protected function setUp()
     {
-        $this->queryBuilder = new QueryBuilder(new NullConnection());
+        $this->queryBuilder = new MySQLQueryBuilder(new NullConnection());
     }
 
     public function test_buildCountQuery()

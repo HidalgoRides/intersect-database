@@ -4,7 +4,6 @@ namespace Intersect\Database\Model;
 
 use Intersect\Database\Query\QueryParameters;
 use Intersect\Database\Query\ModelAliasFactory;
-use Intersect\Database\Query\Builder\QueryBuilder;
 use Intersect\Database\Exception\DatabaseException;
 use Intersect\Database\Model\Validation\Validation;
 
@@ -105,7 +104,7 @@ abstract class AssociativeModel extends AbstractModel implements Validation {
         }
 
         $tableAlias = ModelAliasFactory::generateAlias($modelClass);
-        $queryBuilder = new QueryBuilder($modelClass->getConnection());
+        $queryBuilder = $modelClass->getConnection()->getQueryBuilder();
 
         $result = $queryBuilder->select($modelClass->getColumnList(), $queryParameters)->table($modelClass->getTableName(), $tableAlias)->get();
 
@@ -133,7 +132,7 @@ abstract class AssociativeModel extends AbstractModel implements Validation {
         $queryParameters->equals($this->getColumnTwoName(), $this->getColumnTwoValue());
         $queryParameters->setLimit(1);
 
-        $queryBuilder = new QueryBuilder($this->getConnection());
+        $queryBuilder = $this->getConnection()->getQueryBuilder();
         $result = $queryBuilder->delete($queryParameters)->table($this->getTableName())->get();
 
         return ($result->getAffectedRows() == 1);
@@ -153,7 +152,7 @@ abstract class AssociativeModel extends AbstractModel implements Validation {
         
         $this->validate();
 
-        $queryBuilder = new QueryBuilder($this->getConnection());
+        $queryBuilder = $this->getConnection()->getQueryBuilder();
         
         try {
             $queryBuilder->insert($this->attributes)->table($this->tableName)->get();
