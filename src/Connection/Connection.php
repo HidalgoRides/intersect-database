@@ -2,7 +2,6 @@
 
 namespace Intersect\Database\Connection;
 
-use Intersect\Core\Event;
 use Intersect\Database\Exception\DatabaseException;
 use Intersect\Database\Query\Query;
 use Intersect\Database\Query\Result;
@@ -13,8 +12,8 @@ abstract class Connection implements ConnectionInterface {
     private static $RETRIEVAL_TOKENS = ['select', 'show'];
     private static $MODIFIED_TOKENS = ['insert', 'update', 'delete'];
 
-    /** @var \PDO */
-    private static $CONNECTION;
+    /** @var \PDO[] */
+    private static $CONNECTIONS = [];
 
     protected $pdoDriver = null;
 
@@ -37,12 +36,12 @@ abstract class Connection implements ConnectionInterface {
      */
     public function getConnection()
     {
-        if (is_null(self::$CONNECTION))
+        if (!array_key_exists($this->pdoDriver, self::$CONNECTIONS))
         {
             $this->initConnection($this->connectionSettings);
         }
 
-        return self::$CONNECTION;
+        return self::$CONNECTIONS[$this->pdoDriver];
     }
 
     /**
@@ -80,7 +79,7 @@ abstract class Connection implements ConnectionInterface {
             $cacheString .= $key . $value;
         }
 
-        $cacheKey = md5($cacheString);
+        $cacheKey = md5($this->pdoDriver . '#' . $cacheString);
 
        if (array_key_exists($cacheKey, self::$QUERY_CACHE))
        {
@@ -105,7 +104,6 @@ abstract class Connection implements ConnectionInterface {
         {
             $affectedRows = $statement->rowCount();
             $result->setAffectedRows($affectedRows);
-            $result->setInsertId($this->getConnection()->lastInsertId());
 
             $recordsRetrieved = false;
 
@@ -137,10 +135,29 @@ abstract class Connection implements ConnectionInterface {
                         break;
                     }
                 }
+
+                $result->setInsertId($this->getConnection()->lastInsertId());
             }
         }
 
         return $result;
+    }
+
+    protected function buildDsnMap(ConnectionSettings $connectionSettings)
+    {
+        $map = [
+            'host' => $connectionSettings->getHost(),
+            'port' => $connectionSettings->getPort()
+        ];
+
+        $databaseName = $connectionSettings->getDatabase();
+
+        if (trim($databaseName) != '')
+        {
+            $map['dbname'] = $databaseName;
+        }
+
+        return $map;
     }
 
     /**
@@ -149,13 +166,14 @@ abstract class Connection implements ConnectionInterface {
      * @param $port
      * @return string
      */
-    private function buildDsn($host, $databaseName, $port)
+    private function buildDsn(ConnectionSettings $connectionSettings)
     {
-        $dsn = $this->pdoDriver . ':host=' . $host . ';port=' . $port . ';charset=utf8;';
+        $dsn = $this->pdoDriver . ':';
 
-        if (trim($databaseName) != '')
+        $dsnMap = $this->buildDsnMap($connectionSettings);
+        foreach ($dsnMap as $key => $value)
         {
-            $dsn .= 'dbname=' . $databaseName;
+            $dsn .= $key . '=' . $value . ';';
         }
 
         return $dsn;
@@ -167,10 +185,10 @@ abstract class Connection implements ConnectionInterface {
      */
     private function initConnection(ConnectionSettings $connectionSettings)
     {
-        $dsn = $this->buildDsn($connectionSettings->getHost(), $connectionSettings->getDatabase(), $connectionSettings->getPort());
+        $dsn = $this->buildDsn($connectionSettings);
 
         try {
-            self::$CONNECTION = new \PDO($dsn, $connectionSettings->getUsername(), $connectionSettings->getPassword(), [
+            self::$CONNECTIONS[$this->pdoDriver] = new \PDO($dsn, $connectionSettings->getUsername(), $connectionSettings->getPassword(), [
                 \PDO::ATTR_ERRMODE => \PDO::ERRMODE_EXCEPTION
             ]);
         } catch (\PDOException $e) {

@@ -9,14 +9,16 @@ class ConnectionSettings {
     private $password;
     private $database;
     private $port;
+    private $charset;
 
-    public function __construct($host, $username, $password, $port, $database)
+    public function __construct($host, $username, $password, $port, $database, $charset = 'utf8')
     {
         $this->host = $host;
         $this->username = $username;
         $this->password = $password;
         $this->port = $port;
         $this->database = $database;
+        $this->charset = $charset;
 
         return $this;
     }
@@ -59,6 +61,14 @@ class ConnectionSettings {
     public function getPort()
     {
         return $this->port;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getCharset()
+    {
+        return $this->charset;
     }
 
 }
