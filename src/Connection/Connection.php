@@ -19,7 +19,7 @@ abstract class Connection implements ConnectionInterface {
     protected $pdoDriver;
 
     /** @var ConnectionSettings */
-    private $connectionSettings;
+    protected $connectionSettings;
 
     /**
      * Connection constructor.
@@ -37,12 +37,18 @@ abstract class Connection implements ConnectionInterface {
     abstract public function getQueryBuilder();
 
     /**
+     * @param $databaseName
+     * @throws DatabaseException
+     */
+    abstract public function switchDatabase($databaseName);
+
+    /**
      * @return \PDO
      * @throws DatabaseException
      */
     public function getConnection()
     {
-        if (!array_key_exists($this->pdoDriver, self::$CONNECTIONS))
+        if (!array_key_exists($this->pdoDriver, self::$CONNECTIONS) || is_null(self::$CONNECTIONS[$this->pdoDriver]))
         {
             $this->initConnection($this->connectionSettings);
         }
@@ -50,13 +56,12 @@ abstract class Connection implements ConnectionInterface {
         return self::$CONNECTIONS[$this->pdoDriver];
     }
 
-    /**
-     * @param $databaseName
-     * @throws DatabaseException
-     */
-    public function switchDatabase($databaseName)
+    public function closeConnection()
     {
-        $this->getConnection()->exec('use ' . $databaseName);
+        if (array_key_exists($this->pdoDriver, self::$CONNECTIONS))
+        {
+            self::$CONNECTIONS[$this->pdoDriver] = null;
+        }
     }
 
     /**
@@ -138,12 +143,17 @@ abstract class Connection implements ConnectionInterface {
                             self::$QUERY_CACHE = [];
                         }
 
+                        if ($token == 'insert')
+                        {
+                            $result->setInsertId($this->getConnection()->lastInsertId());
+                        }
+
                         break;
                     }
                 }
-
-                $result->setInsertId($this->getConnection()->lastInsertId());
             }
+
+            $statement = null;
         }
 
         return $result;

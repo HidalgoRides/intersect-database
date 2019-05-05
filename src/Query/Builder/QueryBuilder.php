@@ -31,22 +31,23 @@ abstract class QueryBuilder {
     protected $joinQueries = [];
     protected $tableName;
 
-    private $alias;
-    private $action;
+    protected $alias;
+    protected $action;
     /** @var Connection */
-    private $connection;
-    private $limit;
-    private $order;
-    private $useAliases = false;
+    protected $connection;
+    protected $limit;
+    protected $order;
+    protected $useAliases = false;
+    protected $primaryKey = 'id';
 
     /** @var QueryCondition[] */
-    private $queryConditions = [];
+    protected $queryConditions = [];
 
     /** @var QueryConditionResolver */
-    private $queryConditionResolver;
+    protected $queryConditionResolver;
 
     /** @var QueryParameters */
-    private $queryParameters;
+    protected $queryParameters;
 
     public function __construct(Connection $connection)
     {
@@ -166,9 +167,10 @@ abstract class QueryBuilder {
     }
 
     /** @return QueryBuilder */
-    public function table($tableName, $alias = null)
+    public function table($tableName, $primaryKey = 'id', $alias = null)
     {
         $this->tableName = $tableName;
+        $this->primaryKey = $primaryKey;
         $this->alias = $alias;
         return $this;
     }
@@ -176,6 +178,11 @@ abstract class QueryBuilder {
     public function getAlias()
     {
         return $this->alias;
+    }
+
+    public function getPrimaryKey()
+    {
+        return $this->primaryKey;
     }
 
     public function getLimit()
@@ -193,7 +200,10 @@ abstract class QueryBuilder {
     /** @return QueryBuilder */
     public function orderBy($column, $direction = 'asc')
     {
-        $this->order = $column . ' ' . strtolower($direction);
+        $this->order = [
+            $column,
+            strtolower($direction)
+        ];
         return $this;
     }
 
@@ -378,7 +388,7 @@ abstract class QueryBuilder {
         
         if (!is_null($this->order))
         {
-            $sql .= ' order by ' . ((!is_null($alias)) ? $alias . '.' : '') . $this->order;
+            $sql .= ' order by ' . ((!is_null($alias)) ? $alias . '.' : '') . $this->order[0] . ' ' . $this->order[1];
         }
 
         if (!is_null($this->limit))

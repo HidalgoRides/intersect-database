@@ -9,9 +9,21 @@ class MySQLConnection extends Connection {
 
     protected $pdoDriver = 'mysql';
 
+    /**
+     * @return MySQLQueryBuilder
+     */
     public function getQueryBuilder()
     {
         return new MySQLQueryBuilder($this);
+    }
+
+    /**
+     * @param $databaseName
+     * @throws DatabaseException
+     */
+    public function switchDatabase($databaseName)
+    {
+        $this->getConnection()->exec('use ' . $databaseName);
     }
 
     protected function buildDsnMap(ConnectionSettings $connectionSettings)

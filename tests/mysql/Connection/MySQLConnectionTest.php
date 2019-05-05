@@ -7,7 +7,7 @@ use Intersect\Database\Connection\Connection;
 use Intersect\Database\Connection\ConnectionFactory;
 use Intersect\Database\Connection\ConnectionSettings;
 
-class ConnectionTest extends TestCase {
+class MySQLConnectionTest extends TestCase {
 
     /** @var Connection */
     private $connection;
@@ -27,7 +27,6 @@ class ConnectionTest extends TestCase {
         $record = $result->getRecords()[0];
 
         $id = $record['id'];
-        $originalData = $record['email'];
         $updatedData = 'Updated email ' . uniqid();
 
         $this->connection->query("UPDATE users SET email=:email WHERE id=:id LIMIT 1", [

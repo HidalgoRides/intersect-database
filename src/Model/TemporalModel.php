@@ -19,7 +19,6 @@ abstract class TemporalModel extends Model {
     {
         if (!$this->isDirty() && !$forceSave)
         {
-            
             return $this;
         }
 
@@ -33,6 +32,16 @@ abstract class TemporalModel extends Model {
         }
 
         return parent::save($forceSave);
+    }
+
+    public function getDateCreated()
+    {
+        return $this->getAttribute($this->dateCreatedColumn);
+    }
+
+    public function getDateUpdated()
+    {
+        return $this->getAttribute($this->dateUpdatedColumn);
     }
 
     private function setTemporalAttribute($columnAttributeName)

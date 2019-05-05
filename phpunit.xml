@@ -10,8 +10,13 @@
          stopOnFailure="false"
          verbose="true">
     <testsuites>
-        <testsuite name="Intersect Database Tests">
-            <directory suffix="Test.php">./tests/</directory>
+        <testsuite name="mysql">
+            <directory>./tests</directory>
+            <exclude>./tests/pgsql</exclude>
+        </testsuite>
+        <testsuite name="postgres">
+            <directory>./tests</directory>
+            <exclude>./tests/mysql</exclude>
         </testsuite>
     </testsuites>
     <filter>
@@ -20,7 +25,8 @@
         </whitelist>
     </filter>
     <listeners>
-        <listener class="Tests\IntegrationTestListener" file="./tests/IntegrationTestListener.php" />
+        <listener class="Tests\MySQLTestListener" file="./tests/MySQLTestListener.php" />
+        <listener class="Tests\PostgresTestListener"  file="./tests/PostgresTestListener.php" />
     </listeners>
     <php>
         <ini name="error_reporting" value="E_ALL" />

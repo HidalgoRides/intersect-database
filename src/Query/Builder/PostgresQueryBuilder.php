@@ -5,7 +5,7 @@ namespace Intersect\Database\Query\Builder;
 use Intersect\Database\Query\Query;
 use Intersect\Database\Connection\Connection;
 
-class MySQLQueryBuilder extends QueryBuilder {
+class PostgresQueryBuilder extends QueryBuilder {
 
     public function __construct(Connection $connection)
     {
@@ -63,13 +63,30 @@ class MySQLQueryBuilder extends QueryBuilder {
 
     protected function buildDeleteQuery()
     {
-        $queryString = 'delete from ' . $this->buildTableNameWithAlias($this->tableName);
+        $tableName = $this->buildTableNameWithAlias($this->tableName);
+        $queryString = 'delete from ' . $tableName;
 
         $query = new Query($queryString);
 
-        $this->appendWhereConditions($query);
-        $this->appendOptions($query);
+        if (!is_null($this->order) || !is_null($this->limit))
+        {
+            $subQuery = new Query('select ' . $this->primaryKey . ' from ' . $tableName);
+            $this->appendWhereConditions($subQuery);
+            $this->appendOptions($subQuery);
 
+            $sql = $query->getSql() . ' where ' . $this->primaryKey . ' in ' . '(' . $subQuery->getSql() . ')';
+            $query->setSql($sql);
+
+            foreach ($subQuery->getBindParameters() as $key => $value)
+            {
+                $query->bindParameter($key, $value);
+            }
+        }
+        else 
+        {
+            $this->appendWhereConditions($query);
+        }
+    
         return $query;
     }
 
@@ -77,6 +94,7 @@ class MySQLQueryBuilder extends QueryBuilder {
     {
         $updateValues = [];
         $bindParameters = [];
+        $tableName = $this->buildTableNameWithAlias($this->tableName);
 
         foreach ($this->columnData as $key => $value)
         {
@@ -85,12 +103,28 @@ class MySQLQueryBuilder extends QueryBuilder {
             $bindParameters[$placeholder] = $value;
         }
 
-        $queryString = 'update ' . $this->buildTableNameWithAlias($this->tableName) . ' set ' . implode(', ', $updateValues);
+        $queryString = 'update ' . $tableName . ' set ' . implode(', ', $updateValues);
 
         $query = new Query($queryString, $bindParameters);
 
-        $this->appendWhereConditions($query);
-        $this->appendOptions($query);
+        if (!is_null($this->order) || !is_null($this->limit))
+        {
+            $subQuery = new Query('select ' . $this->primaryKey . ' from ' . $tableName);
+            $this->appendWhereConditions($subQuery);
+            $this->appendOptions($subQuery);
+
+            $sql = $query->getSql() . ' where ' . $this->primaryKey . ' in ' . '(' . $subQuery->getSql() . ')';
+            $query->setSql($sql);
+
+            foreach ($subQuery->getBindParameters() as $key => $value)
+            {
+                $query->bindParameter($key, $value);
+            }
+        }
+        else 
+        {
+            $this->appendWhereConditions($query);
+        }
 
         return $query;
     }
@@ -113,9 +147,19 @@ class MySQLQueryBuilder extends QueryBuilder {
 
     protected function buildColumnQuery()
     {
-        $queryString = $sql = 'show columns from ' . $this->buildTableNameWithAlias($this->tableName);
+        $queryString = 'select column_name as "Field" from information_schema.columns where table_schema = \'public\' and table_name = \'' . $this->buildTableNameWithAlias($this->tableName) . '\'';
 
         return new Query($queryString);
+    }
+
+    protected function buildColumnWithAlias($column, $alias = null)
+    {
+        return (!is_null($alias)) ? ($alias . '.' . $column . " as \"" . $alias . '.' . $column . "\"") : $column;
+    }
+
+    protected function wrapTableName($tableName)
+    {
+        return $tableName;
     }
 
 }

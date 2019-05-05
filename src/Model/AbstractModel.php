@@ -88,7 +88,7 @@ abstract class AbstractModel implements ModelActions {
             }
 
             $queryBuilder = $this->getConnection()->getQueryBuilder();
-            $result = $queryBuilder->columns()->table($this->tableName)->get();
+            $result = $queryBuilder->columns()->table($this->tableName, $this->primaryKey)->get();
 
             $columnList = [];
 

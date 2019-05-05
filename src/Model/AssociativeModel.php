@@ -106,7 +106,7 @@ abstract class AssociativeModel extends AbstractModel implements Validation {
         $tableAlias = ModelAliasFactory::generateAlias($modelClass);
         $queryBuilder = $modelClass->getConnection()->getQueryBuilder();
 
-        $result = $queryBuilder->select($modelClass->getColumnList(), $queryParameters)->table($modelClass->getTableName(), $tableAlias)->get();
+        $result = $queryBuilder->select($modelClass->getColumnList(), $queryParameters)->table($modelClass->getTableName(), $modelClass->getPrimaryKey(), $tableAlias)->get();
 
         $models = [];
 
@@ -133,7 +133,7 @@ abstract class AssociativeModel extends AbstractModel implements Validation {
         $queryParameters->setLimit(1);
 
         $queryBuilder = $this->getConnection()->getQueryBuilder();
-        $result = $queryBuilder->delete($queryParameters)->table($this->getTableName())->get();
+        $result = $queryBuilder->delete($queryParameters)->table($this->tableName, $this->getColumnOneName())->get();
 
         return ($result->getAffectedRows() == 1);
     }
@@ -155,7 +155,7 @@ abstract class AssociativeModel extends AbstractModel implements Validation {
         $queryBuilder = $this->getConnection()->getQueryBuilder();
         
         try {
-            $queryBuilder->insert($this->attributes)->table($this->tableName)->get();
+            $queryBuilder->insert($this->attributes)->table($this->tableName, $this->primaryKey)->get();
         } catch (DatabaseException $e) {
             if (strpos($e->getMessage(), 'Duplicate entry') === false)
             {
