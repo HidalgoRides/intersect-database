@@ -2,12 +2,11 @@
 
 namespace Intersect\Database\Connection;
 
-use Intersect\Core\Event;
 use Intersect\Database\Exception\DatabaseException;
 use Intersect\Database\Query\Query;
 use Intersect\Database\Query\Result;
 
-abstract class Connection implements ConnectionInterface {
+abstract class Connection {
 
     private static $QUERY_CACHE = [];
     private static $RETRIEVAL_TOKENS = ['select', 'show'];
