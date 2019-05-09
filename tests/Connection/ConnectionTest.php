@@ -16,7 +16,7 @@ class ConnectionTest extends TestCase {
     {
         parent::setUp();
 
-        $connectionSettings = ConnectionSettings::builder('db', 'root', 'password')->build();
+        $connectionSettings = ConnectionSettings::builder('db', 'root', 'password')->database('integration_tests')->port(3306)->build();
         $this->connection = ConnectionFactory::get('mysql', $connectionSettings);
     }
 
@@ -27,7 +27,6 @@ class ConnectionTest extends TestCase {
         $record = $result->getRecords()[0];
 
         $id = $record['id'];
-        $originalData = $record['email'];
         $updatedData = 'Updated email ' . uniqid();
 
         $this->connection->query("UPDATE users SET email=:email WHERE id=:id LIMIT 1", [

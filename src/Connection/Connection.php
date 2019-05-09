@@ -12,10 +12,10 @@ abstract class Connection {
     private static $RETRIEVAL_TOKENS = ['select', 'show'];
     private static $MODIFIED_TOKENS = ['insert', 'update', 'delete'];
 
-    /** @var \PDO */
-    private static $CONNECTION;
-
     protected $pdoDriver = null;
+
+    /** @var \PDO */
+    private $connection;
 
     /** @var ConnectionSettings */
     private $connectionSettings;
@@ -36,12 +36,12 @@ abstract class Connection {
      */
     public function getConnection()
     {
-        if (is_null(self::$CONNECTION))
-        {
+        if (is_null($this->connection))
+        {       
             $this->initConnection($this->connectionSettings);
         }
 
-        return self::$CONNECTION;
+        return $this->connection;
     }
 
     /**
@@ -169,7 +169,7 @@ abstract class Connection {
         $dsn = $this->buildDsn($connectionSettings->getHost(), $connectionSettings->getDatabase(), $connectionSettings->getPort());
 
         try {
-            self::$CONNECTION = new \PDO($dsn, $connectionSettings->getUsername(), $connectionSettings->getPassword(), [
+            $this->connection = new \PDO($dsn, $connectionSettings->getUsername(), $connectionSettings->getPassword(), [
                 \PDO::ATTR_ERRMODE => \PDO::ERRMODE_EXCEPTION
             ]);
         } catch (\PDOException $e) {
