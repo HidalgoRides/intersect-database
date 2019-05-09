@@ -16,7 +16,7 @@ class ConnectionTest extends TestCase {
     {
         parent::setUp();
 
-        $connectionSettings = new ConnectionSettings('db', 'root', 'password', 3306, 'app');
+        $connectionSettings = ConnectionSettings::builder('db', 'root', 'password')->build();
         $this->connection = ConnectionFactory::get('mysql', $connectionSettings);
     }
 

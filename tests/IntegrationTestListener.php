@@ -25,7 +25,8 @@ class IntegrationTestListener implements TestListener {
 
     public function __construct()
     {
-        $connectionSettings = new ConnectionSettings('db', 'root', 'password', 3306, 'app');
+        $connectionSettings = ConnectionSettings::builder('db', 'root', 'password')->database('app')->port(3306)->build();
+
         $this->connection = ConnectionFactory::get('mysql', $connectionSettings);
         $this->logger = new ConsoleLogger();
 

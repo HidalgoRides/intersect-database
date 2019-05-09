@@ -2,6 +2,8 @@
 
 namespace Intersect\Database\Connection;
 
+use Intersect\Database\Connection\ConnectionSettingsBuilder;
+
 class ConnectionSettings {
 
     private $host;
@@ -9,16 +11,20 @@ class ConnectionSettings {
     private $password;
     private $database;
     private $port;
+    private $charset = 'utf8';
+    private $schema;
 
-    public function __construct($host, $username, $password, $port, $database)
+    public function __construct() {}
+
+    /**
+     * @param $host
+     * @param $username
+     * @param $password
+     * @return ConnectionSettingsBuilder
+     */
+    public static function builder($host, $username, $password) 
     {
-        $this->host = $host;
-        $this->username = $username;
-        $this->password = $password;
-        $this->port = $port;
-        $this->database = $database;
-
-        return $this;
+        return new ConnectionSettingsBuilder($host, $username, $password);
     }
 
     /**
@@ -29,12 +35,22 @@ class ConnectionSettings {
         return $this->host;
     }
 
+    public function setHost($host)
+    {
+        $this->host = $host;
+    }
+
     /**
      * @return mixed
      */
     public function getUsername()
     {
         return $this->username;
+    }
+
+    public function setUsername($username)
+    {
+        $this->username = $username;
     }
 
     /**
@@ -45,6 +61,11 @@ class ConnectionSettings {
         return $this->password;
     }
 
+    public function setPassword($password)
+    {
+        $this->password = $password;
+    }
+
     /**
      * @return mixed
      */
@@ -53,12 +74,42 @@ class ConnectionSettings {
         return $this->database;
     }
 
+    public function setDatabase($database)
+    {
+        $this->database = $database;
+    }
+
     /**
      * @return mixed
      */
     public function getPort()
     {
         return $this->port;
+    }
+
+    public function setPort($port)
+    {
+        $this->port = $port;
+    }
+
+    public function getCharset()
+    {
+        return $this->charset;
+    }
+
+    public function setCharset($charset)
+    {
+        $this->charset = $charset;
+    }
+
+    public function getSchema()
+    {
+        return $this->schema;
+    }
+
+    public function setSchema($schema)
+    {
+        $this->schema = $schema;
     }
 
 }
