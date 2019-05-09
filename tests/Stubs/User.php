@@ -8,6 +8,8 @@ use Intersect\Database\Model\TemporalModel;
 
 class User extends TemporalModel {
 
+    protected $connectionKey = 'users';
+
     public function phone()
     {
         return $this->hasOne(Phone::class, 'phone_id');

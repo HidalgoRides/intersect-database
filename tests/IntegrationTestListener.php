@@ -11,6 +11,7 @@ use Intersect\Database\Exception\DatabaseException;
 use Intersect\Database\Connection\ConnectionFactory;
 use Intersect\Database\Connection\ConnectionSettings;
 use PHPUnit\Framework\TestListenerDefaultImplementation;
+use Intersect\Database\Connection\ConnectionRepository;
 
 class IntegrationTestListener implements TestListener {
     use TestListenerDefaultImplementation;
@@ -30,7 +31,9 @@ class IntegrationTestListener implements TestListener {
         $this->connection = ConnectionFactory::get('mysql', $connectionSettings);
         $this->logger = new ConsoleLogger();
 
-        Model::setConnection($this->connection);
+        ConnectionRepository::register('default', $this->connection);
+        // registered 'users' connection to simulate models having different connections than default
+        ConnectionRepository::register('users', $this->connection);
     }
 
     public function startTestSuite(TestSuite $suite): void

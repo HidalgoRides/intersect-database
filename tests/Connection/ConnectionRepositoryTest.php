@@ -8,27 +8,19 @@ use Intersect\Database\Connection\NullConnection;
 
 class ConnectionRepositoryTest extends TestCase {
 
-    protected function setUp()
-    {
-        parent::setUp();
-        ConnectionRepository::clearConnections();
-    }
-
     public function test_get()
     {
-        ConnectionRepository::register('test', new NullConnection());
-
-        $this->assertNull(ConnectionRepository::get('invalid'));
-        $this->assertNotNull(ConnectionRepository::get('test'));
+        $key = 'test-get';
+        ConnectionRepository::register($key, new NullConnection());
+        $this->assertNotNull(ConnectionRepository::get($key));
     }
 
     public function test_register()
     {
-        $this->assertCount(0, ConnectionRepository::getConnections());
-
-        ConnectionRepository::register('test', new NullConnection());
-
-        $this->assertCount(1, ConnectionRepository::getConnections());
+        $key = 'test-register';
+        $this->assertNull(ConnectionRepository::get($key));
+        ConnectionRepository::register($key, new NullConnection());
+        $this->assertNotNull(ConnectionRepository::get($key));
     }
 
 }
