@@ -11,7 +11,7 @@ class ConnectionRepositoryTest extends TestCase {
     public function test_get()
     {
         $key = 'test-get';
-        ConnectionRepository::register($key, new NullConnection());
+        ConnectionRepository::register(new NullConnection(), $key);
         $this->assertNotNull(ConnectionRepository::get($key));
     }
 
@@ -19,7 +19,7 @@ class ConnectionRepositoryTest extends TestCase {
     {
         $key = 'test-register';
         $this->assertNull(ConnectionRepository::get($key));
-        ConnectionRepository::register($key, new NullConnection());
+        ConnectionRepository::register(new NullConnection(), $key);
         $this->assertNotNull(ConnectionRepository::get($key));
     }
 
@@ -31,9 +31,9 @@ class ConnectionRepositoryTest extends TestCase {
 
         $connection = new NullConnection();
 
-        ConnectionRepository::register($key, $connection);
+        ConnectionRepository::register($connection, $key);
         ConnectionRepository::registerAlias($alias, $key);
-        
+
         $this->assertNotNull(ConnectionRepository::get($alias));
         $this->assertEquals($connection, ConnectionRepository::get($alias));
     }

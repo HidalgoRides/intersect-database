@@ -31,9 +31,9 @@ class IntegrationTestListener implements TestListener {
         $this->connection = ConnectionFactory::get('mysql', $connectionSettings);
         $this->logger = new ConsoleLogger();
 
-        ConnectionRepository::register('default', $this->connection);
+        ConnectionRepository::register($this->connection);
         // registered 'users' connection to simulate models having different connections than default
-        ConnectionRepository::register('users', $this->connection);
+        ConnectionRepository::register($this->connection, 'users');
     }
 
     public function startTestSuite(TestSuite $suite): void

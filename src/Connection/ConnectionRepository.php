@@ -31,10 +31,10 @@ class ConnectionRepository {
     }
 
     /**
-     * @param $key
      * @param Connection $connection
+     * @param $key
      */
-    public static function register($key, Connection $connection) 
+    public static function register(Connection $connection, $key = 'default') 
     {
         self::$CONNECTIONS[$key] = $connection;
     }
