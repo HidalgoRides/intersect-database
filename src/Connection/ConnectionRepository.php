@@ -39,7 +39,7 @@ class ConnectionRepository {
         self::$CONNECTIONS[$key] = $connection;
     }
 
-    public static function registerAlias($alias, $key)
+    public static function registerAlias($alias, $key = 'default')
     {
         self::$ALIASES[$alias] = $key;
     }
