@@ -23,4 +23,19 @@ class ConnectionRepositoryTest extends TestCase {
         $this->assertNotNull(ConnectionRepository::get($key));
     }
 
+    public function test_registerAlias()
+    {
+        $key = 'test-register';
+        $alias = 'test-alias';
+        $this->assertNull(ConnectionRepository::get($alias));
+
+        $connection = new NullConnection();
+
+        ConnectionRepository::register($key, $connection);
+        ConnectionRepository::registerAlias($alias, $key);
+        
+        $this->assertNotNull(ConnectionRepository::get($alias));
+        $this->assertEquals($connection, ConnectionRepository::get($alias));
+    }
+
 }

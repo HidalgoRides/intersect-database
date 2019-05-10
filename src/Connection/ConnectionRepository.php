@@ -6,6 +6,7 @@ use Intersect\Database\Connection\Connection;
 
 class ConnectionRepository {
 
+    private static $ALIASES = [];
     private static $CONNECTIONS = [];
 
     private function __construct() {}
@@ -21,7 +22,11 @@ class ConnectionRepository {
             return self::$CONNECTIONS[$key];
         }
 
-        // TODO: should this return NullConnection, throw an exception, or return null?
+        if (array_key_exists($key, self::$ALIASES))
+        {
+            return self::get(self::$ALIASES[$key]);
+        }
+
         return null;
     }
 
@@ -34,14 +39,14 @@ class ConnectionRepository {
         self::$CONNECTIONS[$key] = $connection;
     }
 
+    public static function registerAlias($alias, $key)
+    {
+        self::$ALIASES[$alias] = $key;
+    }
+
     public static function getConnections()
     {
         return self::$CONNECTIONS;
-    }
-
-    public static function clearConnections()
-    {
-        self::$CONNECTIONS = [];
     }
 
 }
