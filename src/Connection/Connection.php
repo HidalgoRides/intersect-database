@@ -17,6 +17,7 @@ abstract class Connection {
 
     /** @var \PDO */
     private $connection;
+    private $hash;
 
     /** @var ConnectionSettings */
     protected $connectionSettings;
@@ -90,7 +91,7 @@ abstract class Connection {
             $cacheString .= $key . $value;
         }
 
-        $cacheKey = md5($this->pdoDriver . '#' . $cacheString);
+        $cacheKey = md5($this->hash . '#' . $cacheString);
 
        if (array_key_exists($cacheKey, self::$QUERY_CACHE))
        {
@@ -202,6 +203,8 @@ abstract class Connection {
     private function initConnection(ConnectionSettings $connectionSettings)
     {
         $dsn = $this->buildDsn($connectionSettings);
+
+        $this->hash = sha1($dsn . $connectionSettings->getUsername());
 
         try {
             $this->connection = new \PDO($dsn, $connectionSettings->getUsername(), $connectionSettings->getPassword(), [
