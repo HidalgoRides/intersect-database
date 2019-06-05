@@ -2,15 +2,11 @@
 
 namespace Tests;
 
-use Intersect\Database\Connection\ConnectionFactory;
-use Intersect\Database\Connection\ConnectionSettings;
-
 class PostgresTestListener extends BaseTestListener {
 
     protected function getConnection()
     {
-        $connectionSettings = new ConnectionSettings('db-postgres', 'root', 'password', 5432, 'app');
-        return ConnectionFactory::get('pgsql', $connectionSettings);
+        return TestUtility::getPostgresConnection();
     }
 
     protected function testSuiteToHandle()
@@ -86,8 +82,7 @@ class PostgresTestListener extends BaseTestListener {
     protected function dropDatabase()
     {
         // switch connections before dropping database
-        $postgresConnectionSettings = new ConnectionSettings('db-postgres', 'root', 'password', 5432, 'app');
-        $this->connection = ConnectionFactory::get('pgsql', $postgresConnectionSettings);
+        $this->connection->switchDatabase('app');
 
         parent::dropDatabase();
     }

@@ -4,20 +4,23 @@ namespace Tests\Connection;
 
 use PHPUnit\Framework\TestCase;
 use Intersect\Database\Connection\Connection;
-use Intersect\Database\Connection\ConnectionFactory;
-use Intersect\Database\Connection\ConnectionSettings;
+use Tests\TestUtility;
 
 class MySQLConnectionTest extends TestCase {
 
     /** @var Connection */
     private $connection;
 
-    public function setUp()
+    protected function setUp()
     {
         parent::setUp();
 
-        $connectionSettings = new ConnectionSettings('db', 'root', 'password', 3306, 'app');
-        $this->connection = ConnectionFactory::get('mysql', $connectionSettings);
+        $this->connection = TestUtility::getMySQLConnection('integration_tests');
+    }
+
+    protected function tearDown()
+    {
+        $this->connection->closeConnection();
     }
 
     public function test_query_cacheUpdatedIfDirty()

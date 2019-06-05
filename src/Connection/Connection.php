@@ -2,21 +2,21 @@
 
 namespace Intersect\Database\Connection;
 
+use Intersect\Database\Exception\DatabaseException;
 use Intersect\Database\Query\Query;
 use Intersect\Database\Query\Result;
 use Intersect\Database\Query\Builder\QueryBuilder;
-use Intersect\Database\Exception\DatabaseException;
 
-abstract class Connection implements ConnectionInterface {
+abstract class Connection {
 
     private static $QUERY_CACHE = [];
     private static $RETRIEVAL_TOKENS = ['select', 'show'];
     private static $MODIFIED_TOKENS = ['insert', 'update', 'delete'];
 
-    /** @var \PDO[] */
-    private static $CONNECTIONS = [];
+    protected $pdoDriver = null;
 
-    protected $pdoDriver;
+    /** @var \PDO */
+    private $connection;
 
     /** @var ConnectionSettings */
     protected $connectionSettings;
@@ -48,19 +48,19 @@ abstract class Connection implements ConnectionInterface {
      */
     public function getConnection()
     {
-        if (!array_key_exists($this->pdoDriver, self::$CONNECTIONS) || is_null(self::$CONNECTIONS[$this->pdoDriver]))
-        {
+        if (is_null($this->connection))
+        {       
             $this->initConnection($this->connectionSettings);
         }
 
-        return self::$CONNECTIONS[$this->pdoDriver];
+        return $this->connection;
     }
 
     public function closeConnection()
     {
-        if (array_key_exists($this->pdoDriver, self::$CONNECTIONS))
+        if (!is_null($this->connection))
         {
-            self::$CONNECTIONS[$this->pdoDriver] = null;
+            $this->connection = null;
         }
     }
 
@@ -204,7 +204,7 @@ abstract class Connection implements ConnectionInterface {
         $dsn = $this->buildDsn($connectionSettings);
 
         try {
-            self::$CONNECTIONS[$this->pdoDriver] = new \PDO($dsn, $connectionSettings->getUsername(), $connectionSettings->getPassword(), [
+            $this->connection = new \PDO($dsn, $connectionSettings->getUsername(), $connectionSettings->getPassword(), [
                 \PDO::ATTR_ERRMODE => \PDO::ERRMODE_EXCEPTION
             ]);
         } catch (\PDOException $e) {

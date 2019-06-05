@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "a67fff919dcad6c7ed081834c3e41c1c",
+    "content-hash": "e900f14cde527c0583e431a107b422b1",
     "packages": [
         {
             "name": "hidalgo-rides/intersect-core",
@@ -722,16 +722,16 @@
         },
         {
             "name": "phpunit/phpunit",
-            "version": "7.5.9",
+            "version": "7.5.12",
             "source": {
                 "type": "git",
                 "url": "https://github.com/sebastianbergmann/phpunit.git",
-                "reference": "134669cf0eeac3f79bc7f0c793efbc158bffc160"
+                "reference": "9ba59817745b0fe0c1a5a3032dfd4a6d2994ad1c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/sebastianbergmann/phpunit/zipball/134669cf0eeac3f79bc7f0c793efbc158bffc160",
-                "reference": "134669cf0eeac3f79bc7f0c793efbc158bffc160",
+                "url": "https://api.github.com/repos/sebastianbergmann/phpunit/zipball/9ba59817745b0fe0c1a5a3032dfd4a6d2994ad1c",
+                "reference": "9ba59817745b0fe0c1a5a3032dfd4a6d2994ad1c",
                 "shasum": ""
             },
             "require": {
@@ -802,7 +802,7 @@
                 "testing",
                 "xunit"
             ],
-            "time": "2019-04-19T15:50:46+00:00"
+            "time": "2019-05-28T11:59:40+00:00"
         },
         {
             "name": "sebastian/code-unit-reverse-lookup",
@@ -1521,11 +1521,11 @@
         }
     ],
     "aliases": [],
-    "minimum-stability": "stable",
+    "minimum-stability": "dev",
     "stability-flags": {
         "hidalgo-rides/intersect-core": 20
     },
-    "prefer-stable": false,
+    "prefer-stable": true,
     "prefer-lowest": false,
     "platform": [],
     "platform-dev": []

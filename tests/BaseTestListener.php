@@ -3,14 +3,11 @@
 namespace Tests;
 
 use PHPUnit\Framework\TestSuite;
-use Intersect\Database\Model\Model;
 use PHPUnit\Framework\TestListener;
 use Intersect\Core\Logger\ConsoleLogger;
 use Intersect\Database\Connection\Connection;
-use Intersect\Database\Connection\NullConnection;
 use Intersect\Database\Exception\DatabaseException;
-use Intersect\Database\Connection\ConnectionFactory;
-use Intersect\Database\Connection\ConnectionSettings;
+use Intersect\Database\Connection\ConnectionRepository;
 use PHPUnit\Framework\TestListenerDefaultImplementation;
 
 abstract class BaseTestListener implements TestListener {
@@ -39,7 +36,9 @@ abstract class BaseTestListener implements TestListener {
         {
             $this->logger = new ConsoleLogger();
             $this->connection = $this->getConnection();
-            Model::setConnection($this->connection);
+            
+            ConnectionRepository::register($this->connection);
+            ConnectionRepository::registerAlias('users');
 
             $this->logger->info('');
             $this->logger->info('Starting integration tests');
@@ -59,8 +58,6 @@ abstract class BaseTestListener implements TestListener {
     {
         if ($suite->getName() == $this->testSuiteToHandle())
         {   
-            Model::setConnection(new NullConnection());
-
             $this->logger->info('');
             $this->logger->info('');
             $this->dropDatabase();
@@ -69,26 +66,34 @@ abstract class BaseTestListener implements TestListener {
 
     protected function initDatabase()
     {
-        $this->logger->info('Creating database ' . $this->databaseName);
-        $this->connection->query($this->createDatabaseQuery($this->databaseName));
-
-        $this->logger->info('Switching database to ' . $this->databaseName);
-        $this->connection->switchDatabase($this->databaseName);
-
-        $this->logger->info('Applying database schemas');
-        
-        $queries = $this->createSchemaQueries();
-        foreach ($queries as $query)
-        {
-            $this->connection->query($query);
+        try {
+            $this->logger->info('Creating database ' . $this->databaseName);
+            $this->connection->query($this->createDatabaseQuery($this->databaseName));
+        } catch (DatabaseException $e) {
+            $this->logger->error($e->getMessage());
         }
+        
+        try {
+            $this->logger->info('Switching database to ' . $this->databaseName);
+            $this->connection->switchDatabase($this->databaseName);
 
-        $this->logger->info('Applying database data');
+            $this->logger->info('Applying database schemas');
+            
+            $queries = $this->createSchemaQueries();
+            foreach ($queries as $query)
+            {
+                $this->connection->query($query);
+            }
 
-        $queries = $this->createDataQueries();
-        foreach ($queries as $query)
-        {
-            $this->connection->query($query);
+            $this->logger->info('Applying database data');
+
+            $queries = $this->createDataQueries();
+            foreach ($queries as $query)
+            {
+                $this->connection->query($query);
+            }
+        } catch (DatabaseException $e) {
+            $this->logger->error($e->getMessage());
         }
     }
 

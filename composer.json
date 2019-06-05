@@ -28,6 +28,8 @@
     },
     "config": {
       "discard-changes": true
-    }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
   }
   

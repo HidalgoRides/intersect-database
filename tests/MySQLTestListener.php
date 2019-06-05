@@ -2,15 +2,11 @@
 
 namespace Tests;
 
-use Intersect\Database\Connection\ConnectionFactory;
-use Intersect\Database\Connection\ConnectionSettings;
-
 class MySQLTestListener extends BaseTestListener {
 
     protected function getConnection()
     {
-        $connectionSettings = new ConnectionSettings('db', 'root', 'password', 3306, 'app');
-        return ConnectionFactory::get('mysql', $connectionSettings);
+        return TestUtility::getMySQLConnection();
     }
 
     protected function testSuiteToHandle()

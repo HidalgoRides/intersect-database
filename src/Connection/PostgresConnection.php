@@ -25,7 +25,13 @@ class PostgresConnection extends Connection {
         $cs = $this->connectionSettings;
 
         $this->closeConnection();
-        $this->connectionSettings = new ConnectionSettings($cs->getHost(), $cs->getUsername(), $cs->getPassword(), $cs->getPort(), $databaseName, $cs->getCharset());
+        
+        $this->connectionSettings = ConnectionSettings::builder($cs->getHost(), $cs->getUsername(), $cs->getPassword())
+            ->port($cs->getPort())
+            ->database($databaseName)
+            ->charset($cs->getCharset())
+            ->schema($cs->getSchema())
+            ->build();
     }
 
 }

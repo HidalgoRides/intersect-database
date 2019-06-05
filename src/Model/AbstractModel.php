@@ -4,25 +4,28 @@ namespace Intersect\Database\Model;
 
 use Intersect\Database\Query\ModelAliasFactory;
 use Intersect\Database\Connection\Connection;
-use Intersect\Database\Connection\NullConnection;
 use Intersect\Database\Query\Builder\QueryBuilder;
 use Intersect\Database\Model\Validation\Validation;
 use Intersect\Database\Exception\ValidationException;
 use Intersect\Database\Model\Validation\ModelValidator;
+use Intersect\Database\Connection\ConnectionRepository;
 
 abstract class AbstractModel implements ModelActions {
 
     private static $COLUMN_LIST_CACHE = [];
-    private static $CONNECTION;
 
     protected $attributes = [];
     protected $columns = [];
+    protected $connectionKey = 'default';
     protected $isDirty = false;
     protected $primaryKey = 'id';
     protected $readOnlyAttributes = [];
     /** @var static[] */
     protected $relationships = [];
     protected $tableName;
+
+    /** @var Connection */
+    private $connection;
 
     abstract public function delete();
     abstract public function save();
@@ -112,17 +115,19 @@ abstract class AbstractModel implements ModelActions {
      */
     public function getConnection()
     {
-        if (is_null(self::$CONNECTION))
+        if (is_null($this->connection))
         {
-            return new NullConnection();
+            $connection = ConnectionRepository::get($this->connectionKey);
+
+            if (is_null($connection))
+            {
+                throw new \Exception('Connection could not be found for key: ' . $this->connectionKey . '. Please ensure you register this connection.');
+            }
+
+            $this->connection = $connection;
         }
 
-        return self::$CONNECTION;
-    }
-
-    public static function setConnection(Connection $connection)
-    {
-        self::$CONNECTION = $connection;
+        return $this->connection;
     }
 
     /**

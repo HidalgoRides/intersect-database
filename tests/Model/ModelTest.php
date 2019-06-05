@@ -3,10 +3,10 @@
 namespace Tests\Model;
 
 use Tests\Stubs\User;
-use PHPUnit\Framework\TestCase;
 use Tests\Stubs\Address;
-use Intersect\Database\Query\QueryParameters;
+use PHPUnit\Framework\TestCase;
 use Tests\Stubs\PartialAssociation;
+use Intersect\Database\Query\QueryParameters;
 
 class ModelTest extends TestCase {
 
