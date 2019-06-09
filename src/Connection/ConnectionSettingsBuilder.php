@@ -70,7 +70,6 @@ class ConnectionSettingsBuilder {
         $connectionSettings->setDatabase($this->database);
         $connectionSettings->setPort($this->port);
         $connectionSettings->setCharset($this->charset);
-        $connectionSettings->setSchema($this->schema);
         return $connectionSettings;
     }
 

@@ -30,7 +30,6 @@ class PostgresConnection extends Connection {
             ->port($cs->getPort())
             ->database($databaseName)
             ->charset($cs->getCharset())
-            ->schema($cs->getSchema())
             ->build();
     }
 
