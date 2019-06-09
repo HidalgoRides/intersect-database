@@ -17,7 +17,7 @@ class ModelHelper {
         return $normalizedList;
     }
 
-    public static function normalize(Model $model = null, $convertAttributeKeys = false)
+    public static function normalize(AbstractModel $model = null, $convertAttributeKeys = false)
     {
         $normalizedModel = null;
 
