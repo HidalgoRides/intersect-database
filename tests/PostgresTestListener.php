@@ -60,6 +60,13 @@ class PostgresTestListener extends BaseTestListener {
             PRIMARY KEY (key_one, key_two)
         );";
 
+        $queries[] = "CREATE SCHEMA test;";
+
+        $queries[] = "CREATE TABLE test.units (
+            id SERIAL PRIMARY KEY,
+            number VARCHAR(15) NOT NULL
+        );";
+
         return $queries;
     }
 
@@ -75,6 +82,8 @@ class PostgresTestListener extends BaseTestListener {
         $queries[] = "INSERT INTO associations (key_one, key_two) VALUES (1, 1);";
         $queries[] = "INSERT INTO associations (key_one, key_two) VALUES (1, 2);";
         $queries[] = "INSERT INTO associations (key_one, key_two) VALUES (2, 1);";
+
+        $queries[] = "INSERT INTO test.units (number) VALUES ('20');";
 
         return $queries;
     }

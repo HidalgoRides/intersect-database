@@ -11,7 +11,6 @@ use Intersect\Database\Query\Builder\Condition\InCondition;
 use Intersect\Database\Query\Builder\Condition\BetweenCondition;
 use Intersect\Database\Query\Builder\Condition\BetweenDatesCondition;
 use Intersect\Database\Query\Builder\Condition\LikeCondition;
-use Intersect\Database\Query\Builder\ResolvedQueryCondition;
 
 class QueryConditionResolver {
 

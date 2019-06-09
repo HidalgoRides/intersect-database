@@ -22,6 +22,7 @@ abstract class Model extends AbstractModel {
 
         $queryBuilder = $modelClass->getConnection()->getQueryBuilder();
         $result = $queryBuilder->table($modelClass->getTableName(), $modelClass->getPrimaryKey())
+            ->schema($modelClass->getSchema())
             ->count($queryParameters)
             ->get();
 
@@ -46,6 +47,7 @@ abstract class Model extends AbstractModel {
         $tableAlias = ModelAliasFactory::generateAlias($modelClass);
         $queryBuilder = $modelClass->getConnection()->getQueryBuilder();
         $result = $queryBuilder->table($modelClass->getTableName(), $modelClass->getPrimaryKey(), $tableAlias)
+            ->schema($modelClass->getSchema())
             ->select($modelClass->getColumnList(), $queryParameters)
             ->get();
 
@@ -167,6 +169,7 @@ abstract class Model extends AbstractModel {
         $queryBuilder
             ->select($joiningClass->getColumnList())
             ->table($joiningClass->getTableName, $joiningClass->getPrimaryKey(), $joiningTableAlias)
+            ->schema($joiningClass->getSchema())
             ->whereEquals($joiningClass->getPrimaryKey(), $attributeValue)
             ->limit(1);
 
@@ -195,6 +198,7 @@ abstract class Model extends AbstractModel {
         $queryBuilder
             ->select($joiningClass->getColumnList())
             ->table($joiningClass->getTableName, $joiningClass->getPrimaryKey(), $joiningTableAlias)
+            ->schema($joiningClass->getSchema())
             ->whereEquals($column, $primaryKeyValue);
 
         return $queryBuilder;
@@ -255,7 +259,7 @@ abstract class Model extends AbstractModel {
         $queryParameters->setLimit(1);
 
         $queryBuilder = $this->getConnection()->getQueryBuilder();
-        $result = $queryBuilder->delete($queryParameters)->table($this->tableName, $this->primaryKey)->get();
+        $result = $queryBuilder->delete($queryParameters)->table($this->tableName, $this->primaryKey)->schema($this->schema)->get();
 
         return ($result->getAffectedRows() == 1);
     }
@@ -356,7 +360,7 @@ abstract class Model extends AbstractModel {
             $queryBuilder->update($attributes)->table($this->tableName, $this->primaryKey)->whereEquals($primaryKey, $primaryKeyValue);
         }
 
-        $result = $queryBuilder->get();
+        $result = $queryBuilder->schema($this->schema)->get();
 
         $id = (int) ($isNewModel ? $result->getInsertId() : $primaryKeyValue);
 

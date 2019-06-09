@@ -29,6 +29,7 @@ abstract class QueryBuilder {
     protected $columnData = [];
     protected $columns = ['*'];
     protected $joinQueries = [];
+    protected $schema;
     protected $tableName;
 
     protected $alias;
@@ -204,6 +205,13 @@ abstract class QueryBuilder {
             $column,
             strtolower($direction)
         ];
+        return $this;
+    }
+
+    /** @return QueryBuilder */
+    public function schema($schema)
+    {
+        $this->schema = $schema;
         return $this;
     }
 

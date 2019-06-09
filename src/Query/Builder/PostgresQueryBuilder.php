@@ -147,7 +147,7 @@ class PostgresQueryBuilder extends QueryBuilder {
 
     protected function buildColumnQuery()
     {
-        $queryString = 'select column_name as "Field" from information_schema.columns where table_schema = \'public\' and table_name = \'' . $this->buildTableNameWithAlias($this->tableName) . '\'';
+        $queryString = 'select column_name as "Field" from information_schema.columns where table_schema = \'' . $this->getSchema() . '\' and table_name = \'' . $this->tableName . '\'';
 
         return new Query($queryString);
     }
@@ -159,7 +159,17 @@ class PostgresQueryBuilder extends QueryBuilder {
 
     protected function wrapTableName($tableName)
     {
-        return $tableName;
+        return $this->tableNameWithSchema($tableName);
+    }
+
+    private function tableNameWithSchema($tableName)
+    {
+        return $this->getSchema() . '.' . $tableName;
+    }
+
+    private function getSchema()
+    {
+        return (!is_null($this->schema) ? $this->schema : 'public');
     }
 
 }

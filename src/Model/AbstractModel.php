@@ -22,6 +22,7 @@ abstract class AbstractModel implements ModelActions {
     protected $readOnlyAttributes = [];
     /** @var static[] */
     protected $relationships = [];
+    protected $schema;
     protected $tableName;
 
     /** @var Connection */
@@ -91,7 +92,7 @@ abstract class AbstractModel implements ModelActions {
             }
 
             $queryBuilder = $this->getConnection()->getQueryBuilder();
-            $result = $queryBuilder->columns()->table($this->tableName, $this->primaryKey)->get();
+            $result = $queryBuilder->columns()->table($this->tableName, $this->primaryKey)->schema($this->schema)->get();
 
             $columnList = [];
 
@@ -170,6 +171,14 @@ abstract class AbstractModel implements ModelActions {
     public function getRelationships()
     {
         return $this->relationships;
+    }
+
+    /**
+     * @return mixed|string
+     */
+    public function getSchema()
+    {
+        return $this->schema;
     }
 
     /**

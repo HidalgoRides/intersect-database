@@ -17,6 +17,15 @@ class MySQLQueryBuilderTest extends TestCase {
         $this->queryBuilder = new MySQLQueryBuilder(new NullConnection());
     }
 
+    public function test_buildColumnQuery()
+    {
+        $query = $this->queryBuilder->columns()
+            ->table('users')
+            ->build();
+
+        $this->assertEquals("show columns from `users`", $query->getSql());
+    }
+
     public function test_buildCountQuery()
     {
         $query = $this->queryBuilder->count()

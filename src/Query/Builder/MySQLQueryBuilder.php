@@ -113,7 +113,7 @@ class MySQLQueryBuilder extends QueryBuilder {
 
     protected function buildColumnQuery()
     {
-        $queryString = $sql = 'show columns from ' . $this->buildTableNameWithAlias($this->tableName);
+        $queryString = 'show columns from ' . $this->buildTableNameWithAlias($this->tableName);
 
         return new Query($queryString);
     }
