@@ -5,6 +5,7 @@ namespace Tests\Model;
 use PHPUnit\Framework\TestCase;
 use Intersect\Database\Model\ModelHelper;
 use Tests\Stubs\User;
+use Tests\Stubs\Association;
 
 class ModelHelperTest extends TestCase {
 
@@ -65,6 +66,36 @@ class ModelHelperTest extends TestCase {
         foreach ($normalizedModels as $normalizedModel)
         {
             $this->assertNormalizedModelWithAttributeKeyConversion($normalizedModel);
+        }
+    }
+
+    public function test_normalize_associativeModel()
+    {
+        $model = Association::findAssociation(1, 1);
+        $model->addMetaData('unit', 'test');
+        
+        $normalizedModel = ModelHelper::normalize($model);
+
+        $this->assertArrayHasKey('association_id', $normalizedModel);
+        $this->assertArrayHasKey('key_one', $normalizedModel);
+        $this->assertArrayHasKey('key_two', $normalizedModel);
+
+        $this->assertArrayHasKey('meta_data', $normalizedModel);
+        $normalizedMetaData = $normalizedModel['meta_data'];
+        $this->assertArrayHasKey('unit', $normalizedMetaData);
+    }
+
+    public function test_normalizeList_associativeModels()
+    {
+        $models = Association::findAssociationsForColumnOne(1);
+        
+        $normalizedModels = ModelHelper::normalizeList($models);
+
+        foreach ($normalizedModels as $normalizedModel) 
+        {
+            $this->assertArrayHasKey('association_id', $normalizedModel);
+            $this->assertArrayHasKey('key_one', $normalizedModel);
+            $this->assertArrayHasKey('key_two', $normalizedModel);
         }
     }
 

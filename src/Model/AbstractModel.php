@@ -9,8 +9,10 @@ use Intersect\Database\Model\Validation\Validation;
 use Intersect\Database\Exception\ValidationException;
 use Intersect\Database\Model\Validation\ModelValidator;
 use Intersect\Database\Connection\ConnectionRepository;
+use Intersect\Database\Model\Traits\HasMetaData;
 
 abstract class AbstractModel implements ModelActions {
+    use HasMetaData;
 
     private static $COLUMN_LIST_CACHE = [];
 
@@ -224,9 +226,23 @@ abstract class AbstractModel implements ModelActions {
     /**
      * @return array
      */
-    public function normalize()
+    public function normalize($convertAttributeKeys = false)
     {
-        return $this->attributes;
+        $normalizedData = [];
+
+        $this->normalizeData($normalizedData, $this->attributes, $convertAttributeKeys);
+        $this->normalizeData($normalizedData, $this->relationships, $convertAttributeKeys);
+
+        $metaData = $this->getMetaData();
+        if (!is_null($metaData))
+        {
+            $metaDataKey = $convertAttributeKeys ? $this->convertColumnAttributeToCamelCase($this->metaDataColumn) : $this->metaDataColumn;
+
+            $normalizedData[$metaDataKey] = [];
+            $this->normalizeData($normalizedData[$metaDataKey], $metaData, $convertAttributeKeys);
+        }
+
+        return $normalizedData;
     }
 
     /**
@@ -357,6 +373,33 @@ abstract class AbstractModel implements ModelActions {
         }
 
         return $convertedValue;
+    }
+
+    private function convertColumnAttributeToCamelCase($string)
+    {
+        return lcfirst(str_replace('_', '', ucwords($string, '_')));
+    }
+
+    private function normalizeData(array &$normalizedData, array $dataToNormalize, $convertKeys = false)
+    {
+        foreach ($dataToNormalize as $key => $value)
+        {
+            $key = ($convertKeys) ? $this->convertColumnAttributeToCamelCase($key) : $key;
+            
+            if ($value instanceof AbstractModel)
+            {
+                $normalizedData[$key] = $value->normalize($convertKeys);
+            } 
+            else if (is_array($value))
+            {
+                $normalizedData[$key] = [];
+                $this->normalizeData($normalizedData[$key], $value, $convertKeys);
+            }
+            else 
+            {
+                $normalizedData[$key] = $value;
+            }
+        }
     }
 
     /**

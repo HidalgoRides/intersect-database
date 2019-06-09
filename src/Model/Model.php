@@ -3,13 +3,11 @@
 namespace Intersect\Database\Model;
 
 use Intersect\Database\Query\QueryParameters;
-use Intersect\Database\Model\Traits\HasMetaData;
 use Intersect\Database\Exception\DatabaseException;
 use Intersect\Database\Exception\ValidationException;
 use Intersect\Database\Query\ModelAliasFactory;
 
 abstract class Model extends AbstractModel {
-    use HasMetaData;
 
     /**
      * @param QueryParameters|null $queryParameters
@@ -264,56 +262,10 @@ abstract class Model extends AbstractModel {
         return ($result->getAffectedRows() == 1);
     }
 
-    public function normalize($convertAttributeKeys = false)
-    {
-        $normalizedData = [];
-
-        $this->normalizeData($normalizedData, $this->attributes, $convertAttributeKeys);
-        $this->normalizeData($normalizedData, $this->relationships, $convertAttributeKeys);
-
-        $metaData = $this->getMetaData();
-        if (!is_null($metaData))
-        {
-            $metaDataKey = $convertAttributeKeys ? $this->convertColumnAttributeToCamelCase($this->metaDataColumn) : $this->metaDataColumn;
-
-            $normalizedData[$metaDataKey] = [];
-            $this->normalizeData($normalizedData[$metaDataKey], $metaData, $convertAttributeKeys);
-        }
-
-        return $normalizedData;
-    }
-
     protected function isNewModel()
     {
         $primaryKeyValue = $this->getPrimaryKeyValue();
         return is_null($primaryKeyValue);
-    }
-
-    private function convertColumnAttributeToCamelCase($string)
-    {
-        return lcfirst(str_replace('_', '', ucwords($string, '_')));
-    }
-
-    private function normalizeData(array &$normalizedData, array $dataToNormalize, $convertKeys = false)
-    {
-        foreach ($dataToNormalize as $key => $value)
-        {
-            $key = ($convertKeys) ? $this->convertColumnAttributeToCamelCase($key) : $key;
-            
-            if ($value instanceof Model)
-            {
-                $normalizedData[$key] = $value->normalize($convertKeys);
-            } 
-            else if (is_array($value))
-            {
-                $normalizedData[$key] = [];
-                $this->normalizeData($normalizedData[$key], $value, $convertKeys);
-            }
-            else 
-            {
-                $normalizedData[$key] = $value;
-            }
-        }
     }
 
     /**
