@@ -57,6 +57,7 @@ class PostgresTestListener extends BaseTestListener {
             association_id INT DEFAULT NULL,
             key_one INT NOT NULL,
             key_two INT NOT NULL,
+            data VARCHAR(100),
             PRIMARY KEY (key_one, key_two)
         );";
 

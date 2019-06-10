@@ -9,6 +9,8 @@ use Intersect\Database\Model\Validation\Validation;
 
 abstract class AssociativeModel extends AbstractModel implements Validation {
 
+    protected $updateOnDuplicateKey = true;
+
     private $columnOneName;
     private $columnTwoName;
 
@@ -152,18 +154,36 @@ abstract class AssociativeModel extends AbstractModel implements Validation {
         
         $this->validate();
 
+        $columnOneName = $this->getColumnOneName();
+        $columnTwoName = $this->getColumnTwoName();
+        $columnOneValue = $this->getColumnOneValue();
+        $columnTwoValue = $this->getColumnTwoValue();
+
         $queryBuilder = $this->getConnection()->getQueryBuilder();
         
         try {
             $queryBuilder->insert($this->attributes)->table($this->tableName, $this->primaryKey)->get();
         } catch (DatabaseException $e) {
-            if (strpos($e->getMessage(), 'Duplicate entry') === false)
+            if (strpos($e->getMessage(), 'Duplicate entry') === false && strpos($e->getMessage(), 'duplicate key') === false)
             {
                 throw $e;
             }
+            else if ($this->updateOnDuplicateKey)
+            {
+                $updateAttributes = $this->attributes;
+                unset($updateAttributes[$columnOneName]);
+                unset($updateAttributes[$columnTwoName]);
+
+                $queryBuilder = $this->getConnection()->getQueryBuilder();
+                $queryBuilder->update($updateAttributes)
+                    ->table($this->tableName)
+                    ->whereEquals($columnOneName, $columnOneValue)
+                    ->whereEquals($columnTwoName, $columnTwoValue)
+                    ->get();
+            }
         }
 
-        return $this->findAssociation($this->getColumnOneValue(), $this->getColumnTwoValue());
+        return $this->findAssociation($columnOneValue, $columnTwoValue);
     }
 
     private function getColumnOneValue()
