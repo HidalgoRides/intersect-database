@@ -51,4 +51,22 @@ class AssociativeModelTest extends TestCase {
         $this->assertNotNull($newAssociation);
     }
 
+    public function test_save_duplicateKeyGetsUpdated()
+    {
+        $association = new Association();
+        $association->key_one = 5;
+        $association->key_two = 5;
+        $association->data = 'unit';
+
+        $newAssociation = $association->save();
+        $this->assertNotNull($newAssociation);
+        $this->assertEquals('unit', $newAssociation->data);
+
+        $association->data = 'test';
+
+        $newAssociation = $association->save();
+        $this->assertNotNull($newAssociation);
+        $this->assertEquals('test', $newAssociation->data);
+    }
+
 }

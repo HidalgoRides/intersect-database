@@ -101,6 +101,7 @@ class IntegrationTestListener implements TestListener {
             association_id INT(11) DEFAULT NULL,
             key_one INT(11) NOT NULL,
             key_two INT(11) NOT NULL,
+            data VARCHAR(100),
             PRIMARY KEY (key_one, key_two)
           );
           
