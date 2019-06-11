@@ -7,6 +7,7 @@ use Intersect\Core\Storage\FileStorage;
 use Intersect\Database\Connection\Connection;
 use Intersect\Database\Query\QueryParameters;
 use Intersect\Database\Exception\DatabaseException;
+use Intersect\Database\Schema\SchemaBuilder;
 
 class Runner {
 
@@ -130,6 +131,7 @@ class Runner {
             return;
         }
 
+        SchemaBuilder::setConnection($this->connection);
         $class->setConnection($this->connection);
 
         $class->up();

@@ -6,6 +6,7 @@ use PHPUnit\Framework\TestCase;
 use Intersect\Database\Query\Builder\QueryBuilder;
 use Intersect\Database\Connection\NullConnection;
 use Intersect\Database\Query\Builder\MySQLQueryBuilder;
+use Intersect\Database\Schema\Blueprint;
 
 class MySQLQueryBuilderTest extends TestCase {
 
@@ -175,6 +176,27 @@ class MySQLQueryBuilderTest extends TestCase {
         $bindParameters = $query->getBindParameters();
         $this->assertArrayHasKey('id', $bindParameters);
         $this->assertEquals(1, $bindParameters['id']);
+    }
+
+    public function test_buildCreateTableQuery()
+    {
+        $blueprint = new Blueprint('users');
+        $blueprint->increments('id');
+        $blueprint->string('email', 100)->unique();
+        $blueprint->integer('age')->nullable();
+        $blueprint->text('bio')->nullable();
+        $blueprint->timestamp('created_at');
+
+        $query = $this->queryBuilder->createTable($blueprint)->build();
+
+        $this->assertEquals("create table `users` (`id` int not null auto_increment primary key, `email` varchar(100) not null unique, `age` int, `bio` text, `created_at` timestamp not null)", $query->getSql());
+    }
+
+    public function test_buildDropTableQuery()
+    {
+        $query = $this->queryBuilder->dropTable('users')->build();
+
+        $this->assertEquals("drop table `users`", $query->getSql());
     }
     
 }

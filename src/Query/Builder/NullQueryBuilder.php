@@ -11,6 +11,11 @@ class NullQueryBuilder extends QueryBuilder {
         parent::__construct($connection);
     }
 
+    protected function getColumnDefinitionResolver()
+    {
+        return NullColumnDefinitionResolver();
+    }
+
     protected function buildCountQuery()
     {
         return null;

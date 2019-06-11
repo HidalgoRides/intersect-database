@@ -15,7 +15,7 @@ class ConnectionRepository {
      * @param $key
      * @return Connection|null
      */
-    public static function get($key) 
+    public static function get($key = 'default') 
     {
         if (array_key_exists($key, self::$CONNECTIONS))
         {

@@ -4,12 +4,18 @@ namespace Intersect\Database\Query\Builder;
 
 use Intersect\Database\Query\Query;
 use Intersect\Database\Connection\Connection;
+use Intersect\Database\Schema\PostgresColumnDefinitionResolver;
 
 class PostgresQueryBuilder extends QueryBuilder {
 
     public function __construct(Connection $connection)
     {
         parent::__construct($connection);
+    }
+
+    protected function getColumnDefinitionResolver()
+    {
+        return new PostgresColumnDefinitionResolver();
     }
 
     protected function buildCountQuery()

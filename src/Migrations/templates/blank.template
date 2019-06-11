@@ -1,5 +1,7 @@
 <?php
 
+use Intersect\Database\Schema\Blueprint;
+use Intersect\Database\Schema\SchemaBuilder;
 use Intersect\Database\Migrations\AbstractMigration;
 
 class {{CLASS_NAME}} extends AbstractMigration {
@@ -9,7 +11,11 @@ class {{CLASS_NAME}} extends AbstractMigration {
      */
     public function up()
     {
-        //
+        SchemaBuilder::createTable('sample', function(Blueprint $blueprint) {
+            $blueprint->increments('id');
+            $blueprint->string('email', 100);
+            $blueprint->integer('age')->nullable();
+        });
     }
 
     /**
@@ -17,7 +23,7 @@ class {{CLASS_NAME}} extends AbstractMigration {
      */
     public function down()
     {
-        //
+        SchemaBuilder::dropTable('sample');
     }
 
 }

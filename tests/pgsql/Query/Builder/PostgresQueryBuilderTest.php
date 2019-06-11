@@ -3,6 +3,7 @@
 namespace Tests\Query\Builder;
 
 use PHPUnit\Framework\TestCase;
+use Intersect\Database\Schema\Blueprint;
 use Intersect\Database\Connection\NullConnection;
 use Intersect\Database\Query\Builder\QueryBuilder;
 use Intersect\Database\Query\Builder\PostgresQueryBuilder;
@@ -250,6 +251,48 @@ class PostgresQueryBuilderTest extends TestCase {
         $bindParameters = $query->getBindParameters();
         $this->assertArrayHasKey('id', $bindParameters);
         $this->assertEquals(1, $bindParameters['id']);
+    }
+
+    public function test_buildCreateTableQuery()
+    {
+        $blueprint = new Blueprint('users');
+        $blueprint->increments('id');
+        $blueprint->string('email', 100)->unique();
+        $blueprint->integer('age')->nullable();
+        $blueprint->text('bio')->nullable();
+        $blueprint->timestamp('created_at');
+
+        $query = $this->queryBuilder->createTable($blueprint)->build();
+
+        $this->assertEquals("create table public.users (id serial primary key, email varchar(100) not null unique, age integer, bio text, created_at timestamp not null)", $query->getSql());
+    }
+
+    public function test_buildCreateTableQuery_withSchema()
+    {
+        $blueprint = new Blueprint('users');
+        $blueprint->increments('id');
+        $blueprint->string('email', 100);
+        $blueprint->integer('age')->nullable();
+        $blueprint->text('bio')->nullable();
+        $blueprint->timestamp('created_at');
+
+        $query = $this->queryBuilder->createTable($blueprint)->schema('users')->build();
+
+        $this->assertEquals("create table users.users (id serial primary key, email varchar(100) not null, age integer, bio text, created_at timestamp not null)", $query->getSql());
+    }
+
+    public function test_buildDropTableQuery()
+    {
+        $query = $this->queryBuilder->dropTable('users')->build();
+
+        $this->assertEquals("drop table public.users", $query->getSql());
+    }
+
+    public function test_buildDropTableQuery_withSchema()
+    {
+        $query = $this->queryBuilder->dropTable('users')->schema('users')->build();
+
+        $this->assertEquals("drop table users.users", $query->getSql());
     }
     
 }

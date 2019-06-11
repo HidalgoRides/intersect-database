@@ -4,6 +4,7 @@ namespace Intersect\Database\Query\Builder;
 
 use Intersect\Database\Query\Query;
 use Intersect\Database\Query\Result;
+use Intersect\Database\Schema\Blueprint;
 use Intersect\Database\Connection\Connection;
 use Intersect\Database\Query\QueryParameters;
 use Intersect\Database\Query\Builder\Condition\InCondition;
@@ -16,6 +17,7 @@ use Intersect\Database\Query\Builder\Condition\BetweenCondition;
 use Intersect\Database\Query\Builder\Condition\NotNullCondition;
 use Intersect\Database\Query\Builder\Condition\NotEqualsCondition;
 use Intersect\Database\Query\Builder\Condition\BetweenDatesCondition;
+use Intersect\Database\Schema\ColumnDefinitionResolver;
 
 abstract class QueryBuilder {
 
@@ -25,6 +27,8 @@ abstract class QueryBuilder {
     private static $ACTION_UPDATE = 'update';
     private static $ACTION_INSERT = 'insert';
     private static $ACTION_COLUMNS = 'columns';
+    private static $ACTION_CREATE_TABLE = 'createTable';
+    private static $ACTION_DROP_TABLE = 'dropTable';
 
     protected $columnData = [];
     protected $columns = ['*'];
@@ -34,6 +38,8 @@ abstract class QueryBuilder {
 
     protected $alias;
     protected $action;
+    /** @var Blueprint */
+    protected $blueprint;
     /** @var Connection */
     protected $connection;
     protected $limit;
@@ -63,6 +69,9 @@ abstract class QueryBuilder {
      abstract protected function buildCountQuery();
      abstract protected function buildColumnQuery();
 
+     /** @return ColumnDefinitionResolver */
+     abstract protected function getColumnDefinitionResolver();
+
     /**
      * @return Result
      */
@@ -70,6 +79,22 @@ abstract class QueryBuilder {
     {
         $query = $this->build();
         return (!is_null($query) ? $this->connection->run($query) : new Result());
+    }
+
+    /** @return QueryBuilder */
+    public function createTable(Blueprint $blueprint)
+    {
+        $this->action = self::$ACTION_CREATE_TABLE;
+        $this->blueprint = $blueprint;
+        return $this;
+    }
+
+    /** @return QueryBuilder */
+    public function dropTable($tableName)
+    {
+        $this->action = self::$ACTION_DROP_TABLE;
+        $this->tableName = $tableName;
+        return $this;
     }
 
     /** @return QueryBuilder */
@@ -344,6 +369,12 @@ abstract class QueryBuilder {
             case self::$ACTION_COLUMNS:
                 $query = $this->buildColumnQuery();
                 break;
+            case self::$ACTION_CREATE_TABLE:
+                $query = $this->buildCreateTableQuery($this->blueprint);
+                break;
+            case self::$ACTION_DROP_TABLE:
+                $query = $this->buildDropTableQuery();
+                break;
         }
 
         return $query;
@@ -405,6 +436,30 @@ abstract class QueryBuilder {
         }
 
         $query->setSql($sql);
+    }
+
+    protected function buildCreateTableQuery(Blueprint $blueprint)
+    {
+        $columnDefinitionStrings = [];
+        $columnDefinitionResolver = $this->getColumnDefinitionResolver();
+
+        foreach ($blueprint->getColumnDefinitions() as $columnDefinition)
+        {
+            $columnDefinitionStrings[] = $columnDefinitionResolver->resolve($columnDefinition);
+        }
+
+        $queryString = 'create table ' . $this->wrapTableName($blueprint->getTableName()) . ' (';
+        $queryString .= implode(', ', $columnDefinitionStrings);
+        $queryString .= ')';
+
+        return new Query($queryString);
+    }
+
+    protected function buildDropTableQuery()
+    {
+        $queryString = 'drop table ' . $this->wrapTableName($this->tableName);
+
+        return new Query($queryString);
     }
 
     protected function buildColumnWithAlias($column, $alias = null)
