@@ -2,14 +2,16 @@
 
 namespace Intersect\Database\Model;
 
-use Intersect\Database\Query\ModelAliasFactory;
 use Intersect\Database\Connection\Connection;
+use Intersect\Database\Query\QueryParameters;
+use Intersect\Database\Query\ModelAliasFactory;
+use Intersect\Database\Model\Traits\HasMetaData;
 use Intersect\Database\Query\Builder\QueryBuilder;
+use Intersect\Database\Exception\DatabaseException;
 use Intersect\Database\Model\Validation\Validation;
 use Intersect\Database\Exception\ValidationException;
-use Intersect\Database\Model\Validation\ModelValidator;
 use Intersect\Database\Connection\ConnectionRepository;
-use Intersect\Database\Model\Traits\HasMetaData;
+use Intersect\Database\Model\Validation\ModelValidator;
 
 abstract class AbstractModel implements ModelActions {
     use HasMetaData;
@@ -36,6 +38,17 @@ abstract class AbstractModel implements ModelActions {
     public function __construct()
     {
         $this->tableName = $this->getTableName();
+    }
+
+    /**
+     * @param QueryParameters|null $queryParameters
+     * @return static[]
+     * @throws DatabaseException
+     */
+    public static function find(QueryParameters $queryParameters = null)
+    {
+        $modelClass = new static();
+        return $modelClass->findInstances($queryParameters);
     }
 
     /**
@@ -304,6 +317,36 @@ abstract class AbstractModel implements ModelActions {
         }
 
         $this->isDirty = true;
+    }
+
+    /**
+     * @param QueryParameters $queryParameters
+     * @return static[]
+     */
+    protected function findInstances(QueryParameters $queryParameters = null) 
+    {
+        $isColumnOverride = (!is_null($queryParameters) && count($queryParameters->getColumns()) > 0);
+
+        if ($isColumnOverride)
+        {
+            $this->columns = $queryParameters->getColumns();
+        }
+
+        $tableAlias = ModelAliasFactory::generateAlias($this);
+        $queryBuilder = $this->getConnection()->getQueryBuilder();
+        $result = $queryBuilder->table($this->getTableName(), $this->getPrimaryKey(), $tableAlias)
+            ->schema($this->getSchema())
+            ->select($this->getColumnList(), $queryParameters)
+            ->get();
+
+        $models = [];
+
+        foreach ($result->getRecords() as $record)
+        {
+            $models[] = self::newInstance($record);
+        }
+
+        return $models;
     }
 
     /**

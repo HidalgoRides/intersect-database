@@ -29,38 +29,6 @@ abstract class Model extends AbstractModel {
 
     /**
      * @param QueryParameters|null $queryParameters
-     * @return static[]
-     * @throws DatabaseException
-     */
-    public static function find(QueryParameters $queryParameters = null)
-    {
-        $modelClass = new static();
-        $isColumnOverride = (!is_null($queryParameters) && count($queryParameters->getColumns()) > 0);
-
-        if ($isColumnOverride)
-        {
-            $modelClass->columns = $queryParameters->getColumns();
-        }
-
-        $tableAlias = ModelAliasFactory::generateAlias($modelClass);
-        $queryBuilder = $modelClass->getConnection()->getQueryBuilder();
-        $result = $queryBuilder->table($modelClass->getTableName(), $modelClass->getPrimaryKey(), $tableAlias)
-            ->schema($modelClass->getSchema())
-            ->select($modelClass->getColumnList(), $queryParameters)
-            ->get();
-
-        $models = [];
-
-        foreach ($result->getRecords() as $record)
-        {
-            $models[] = self::newInstance($record);
-        }
-
-        return $models;
-    }
-
-    /**
-     * @param QueryParameters|null $queryParameters
      * @return static|null
      * @throws DatabaseException
      */
@@ -99,7 +67,7 @@ abstract class Model extends AbstractModel {
         $queryParameters->equals($modelClass->getPrimaryKey(), $id);
         $queryParameters->setLimit(1);
 
-        $models = self::find($queryParameters);
+        $models = $modelClass->findInstances($queryParameters);
 
         if (count($models) == 1)
         {
