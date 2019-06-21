@@ -3,7 +3,6 @@
 namespace Intersect\Database\Model;
 
 use Intersect\Database\Query\QueryParameters;
-use Intersect\Database\Query\ModelAliasFactory;
 use Intersect\Database\Exception\DatabaseException;
 use Intersect\Database\Model\Validation\Validation;
 
@@ -49,7 +48,7 @@ abstract class AssociativeModel extends AbstractModel implements Validation {
         $queryParameters->equals($modelClass->getColumnTwoName(), $columnTwoValue);
         $queryParameters->setLimit(1);
 
-        $models = self::find($queryParameters);
+        $models = $modelClass->findInstances($queryParameters);
 
         if (count($models) == 1)
         {
@@ -67,12 +66,11 @@ abstract class AssociativeModel extends AbstractModel implements Validation {
     {
         /** @var AssociativeModel $modelClass */
         $modelClass = new static();
-        $model = null;
-
+        
         $queryParameters = new QueryParameters();
         $queryParameters->equals($modelClass->getColumnOneName(), $columnOneValue);
 
-        return self::find($queryParameters);
+        return $modelClass->findInstances($queryParameters);
     }
 
     /**
@@ -83,41 +81,11 @@ abstract class AssociativeModel extends AbstractModel implements Validation {
     {
         /** @var AssociativeModel $modelClass */
         $modelClass = new static();
-        $model = null;
 
         $queryParameters = new QueryParameters();
         $queryParameters->equals($modelClass->getColumnTwoName(), $columnTwoValue);
 
-        return self::find($queryParameters);
-    }
-
-    /**
-     * @param QueryParameters $queryParameters
-     * @return static[]
-     */
-    private static function find(QueryParameters $queryParameters)
-    {
-        $modelClass = new static();
-        $isColumnOverride = (!is_null($queryParameters) && count($queryParameters->getColumns()) > 0);
-
-        if ($isColumnOverride)
-        {
-            $modelClass->columns = $queryParameters->getColumns();
-        }
-
-        $tableAlias = ModelAliasFactory::generateAlias($modelClass);
-        $queryBuilder = $modelClass->getConnection()->getQueryBuilder();
-
-        $result = $queryBuilder->select($modelClass->getColumnList(), $queryParameters)->table($modelClass->getTableName(), $modelClass->getPrimaryKey(), $tableAlias)->get();
-
-        $models = [];
-
-        foreach ($result->getRecords() as $record)
-        {
-            $models[] = self::newInstance($record);
-        }
-
-        return $models;
+        return $modelClass->findInstances($queryParameters);
     }
 
     /**
@@ -135,7 +103,7 @@ abstract class AssociativeModel extends AbstractModel implements Validation {
         $queryParameters->setLimit(1);
 
         $queryBuilder = $this->getConnection()->getQueryBuilder();
-        $result = $queryBuilder->delete($queryParameters)->table($this->tableName, $this->getColumnOneName())->get();
+        $result = $queryBuilder->delete($queryParameters)->table($this->tableName, $this->getColumnOneName())->schema($this->schema)->get();
 
         return ($result->getAffectedRows() == 1);
     }
@@ -162,7 +130,7 @@ abstract class AssociativeModel extends AbstractModel implements Validation {
         $queryBuilder = $this->getConnection()->getQueryBuilder();
         
         try {
-            $queryBuilder->insert($this->attributes)->table($this->tableName, $this->primaryKey)->get();
+            $queryBuilder->insert($this->attributes)->table($this->tableName, $this->primaryKey)->schema($this->schema)->get();
         } catch (DatabaseException $e) {
             if (strpos($e->getMessage(), 'Duplicate entry') === false && strpos($e->getMessage(), 'duplicate key') === false)
             {
@@ -177,6 +145,7 @@ abstract class AssociativeModel extends AbstractModel implements Validation {
                 $queryBuilder = $this->getConnection()->getQueryBuilder();
                 $queryBuilder->update($updateAttributes)
                     ->table($this->tableName)
+                    ->schema($this->schema)
                     ->whereEquals($columnOneName, $columnOneValue)
                     ->whereEquals($columnTwoName, $columnTwoValue)
                     ->get();
