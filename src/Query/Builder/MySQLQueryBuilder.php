@@ -5,6 +5,7 @@ namespace Intersect\Database\Query\Builder;
 use Intersect\Database\Query\Query;
 use Intersect\Database\Connection\Connection;
 use Intersect\Database\Schema\MySQLColumnDefinitionResolver;
+use Intersect\Database\Schema\Constraint\ForeignKey;
 
 class MySQLQueryBuilder extends QueryBuilder {
 
@@ -122,6 +123,11 @@ class MySQLQueryBuilder extends QueryBuilder {
         $queryString = 'show columns from ' . $this->buildTableNameWithAlias($this->tableName);
 
         return new Query($queryString);
+    }
+
+    protected function buildForeignKeyDefinition($keyName, ForeignKey $foreignKey)
+    {
+        return 'constraint ' . $keyName . ' foreign key (`' . $foreignKey->getFromColumn() . '`) references ' . $this->wrapTableName($foreignKey->getOnTable()) . ' (`' . $foreignKey->getToColumn() . '`)';
     }
 
     protected function buildPrimaryKeyDefinition($keyName, array $columnNames)

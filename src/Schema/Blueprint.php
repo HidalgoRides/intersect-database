@@ -3,6 +3,7 @@
 namespace Intersect\Database\Schema;
 
 use Intersect\Database\Schema\ColumnDefinition;
+use Intersect\Database\Schema\Constraint\ForeignKey;
 
 class Blueprint {
 
@@ -10,6 +11,8 @@ class Blueprint {
     private $columnDefinitions = [];
     private $uniqueKeys = [];
     private $primaryKeys = [];
+    /** @var ForeignKey[] */
+    private $foreignKeys = [];
 
     private $tableName;
 
@@ -167,7 +170,6 @@ class Blueprint {
         $keyName = (!is_null($keyName) ? $keyName : 'unique_' . $this->tableName . '_' . implode('_', $names));
 
         $this->uniqueKeys[$keyName] = $names;
-        return $this;
     }
 
     public function getPrimaryKeys()
@@ -185,7 +187,19 @@ class Blueprint {
         $keyName = (!is_null($keyName) ? $keyName : 'primary_' . $this->tableName . '_' . implode('_', $names));
 
         $this->primaryKeys[$keyName] = $names;
-        return $this;
+    }
+
+    /** @return ForeignKey[] */
+    public function getForeignKeys()
+    {
+        return $this->foreignKeys;
+    }
+
+    public function foreign($fromColumn, $toColumn, $onTable, $keyName = null)
+    {
+        $keyName = (!is_null($keyName) ? $keyName : 'foreign_' . $fromColumn . '_' . $onTable . '_' . $toColumn);
+
+        $this->foreignKeys[$keyName] = new ForeignKey($fromColumn, $toColumn, $onTable);
     }
 
     private function addColumnDefinition(ColumnDefinition $columnDefinition)

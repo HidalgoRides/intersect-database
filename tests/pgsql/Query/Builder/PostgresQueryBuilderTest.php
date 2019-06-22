@@ -267,10 +267,11 @@ class PostgresQueryBuilderTest extends TestCase {
         $blueprint->datetime('date_created')->nullable();
 
         $blueprint->unique('email');
+        $blueprint->foreign('user_id', 'id', 'alt_users');
 
         $query = $this->queryBuilder->createTable($blueprint)->build();
 
-        $this->assertEquals("create table public.users (id serial, email varchar(100) not null, age integer default '2', sint smallint, bint bigint, price numeric(5,2), bio text, created_at timestamp, date_created timestamp, constraint unique_users_email unique (email), constraint primary_users_id primary key (id))", $query->getSql());
+        $this->assertEquals("create table public.users (id serial, email varchar(100) not null, age integer default '2', sint smallint, bint bigint, price numeric(5,2), bio text, created_at timestamp, date_created timestamp, constraint unique_users_email unique (email), constraint primary_users_id primary key (id), constraint foreign_user_id_alt_users_id foreign key (user_id) references public.alt_users (id))", $query->getSql());
     }
 
     public function test_buildCreateTableQuery_withSchema()
@@ -287,10 +288,11 @@ class PostgresQueryBuilderTest extends TestCase {
         $blueprint->datetime('date_created')->nullable();
 
         $blueprint->unique('email');
+        $blueprint->foreign('user_id', 'id', 'alt_users');
 
         $query = $this->queryBuilder->createTable($blueprint)->schema('users')->build();
 
-        $this->assertEquals("create table users.users (id serial, email varchar(100) not null, age integer default '2', sint smallint, bint bigint, price numeric(5,2), bio text, created_at timestamp, date_created timestamp, constraint unique_users_email unique (email), constraint primary_users_id primary key (id))", $query->getSql());
+        $this->assertEquals("create table users.users (id serial, email varchar(100) not null, age integer default '2', sint smallint, bint bigint, price numeric(5,2), bio text, created_at timestamp, date_created timestamp, constraint unique_users_email unique (email), constraint primary_users_id primary key (id), constraint foreign_user_id_alt_users_id foreign key (user_id) references public.alt_users (id))", $query->getSql());
     }
 
     public function test_buildCreateTableQuery_withMultipleUniqueKeys()

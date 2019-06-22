@@ -196,10 +196,11 @@ class MySQLQueryBuilderTest extends TestCase {
         $blueprint->datetime('date_created')->nullable();
 
         $blueprint->unique('email');
+        $blueprint->foreign('user_id', 'id', 'alt_users');
 
         $query = $this->queryBuilder->createTable($blueprint)->build();
 
-        $this->assertEquals("create table `users` (`id` int not null auto_increment, `email` varchar(100) not null, `age` int unsigned, `tint` tinyint default '2', `sint` smallint, `mint` mediumint, `bint` bigint, `price` decimal(5,2), `bio` text, `mtext` mediumtext, `ltext` longtext, `created_at` timestamp, `date_created` datetime, unique key unique_users_email (`email`), primary key (`id`))", $query->getSql());
+        $this->assertEquals("create table `users` (`id` int not null auto_increment, `email` varchar(100) not null, `age` int unsigned, `tint` tinyint default '2', `sint` smallint, `mint` mediumint, `bint` bigint, `price` decimal(5,2), `bio` text, `mtext` mediumtext, `ltext` longtext, `created_at` timestamp, `date_created` datetime, unique key unique_users_email (`email`), primary key (`id`), constraint foreign_user_id_alt_users_id foreign key (`user_id`) references `alt_users` (`id`))", $query->getSql());
     }
 
     public function test_buildCreateTableQuery_withMultipleUniqueKeys()
