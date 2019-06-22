@@ -199,7 +199,33 @@ class MySQLQueryBuilderTest extends TestCase {
 
         $query = $this->queryBuilder->createTable($blueprint)->build();
 
-        $this->assertEquals("create table `users` (`id` int not null auto_increment primary key, `email` varchar(100) not null, `age` int unsigned, `tint` tinyint default '2', `sint` smallint, `mint` mediumint, `bint` bigint, `price` decimal(5,2), `bio` text, `mtext` mediumtext, `ltext` longtext, `created_at` timestamp, `date_created` datetime, unique key unique_users_email (email))", $query->getSql());
+        $this->assertEquals("create table `users` (`id` int not null auto_increment, `email` varchar(100) not null, `age` int unsigned, `tint` tinyint default '2', `sint` smallint, `mint` mediumint, `bint` bigint, `price` decimal(5,2), `bio` text, `mtext` mediumtext, `ltext` longtext, `created_at` timestamp, `date_created` datetime, unique key unique_users_email (`email`), primary key (`id`))", $query->getSql());
+    }
+
+    public function test_buildCreateTableQuery_withMultipleUniqueKeys()
+    {
+        $blueprint = new Blueprint('users');
+        $blueprint->integer('column_one');
+        $blueprint->integer('column_two');
+
+        $blueprint->unique(['column_one', 'column_two']);
+
+        $query = $this->queryBuilder->createTable($blueprint)->build();
+
+        $this->assertEquals("create table `users` (`column_one` int not null, `column_two` int not null, unique key unique_users_column_one_column_two (`column_one`, `column_two`))", $query->getSql());
+    }
+
+    public function test_buildCreateTableQuery_withMultiplePrimaryKeys()
+    {
+        $blueprint = new Blueprint('users');
+        $blueprint->integer('column_one');
+        $blueprint->integer('column_two');
+
+        $blueprint->primary(['column_one', 'column_two']);
+
+        $query = $this->queryBuilder->createTable($blueprint)->build();
+
+        $this->assertEquals("create table `users` (`column_one` int not null, `column_two` int not null, primary key (`column_one`, `column_two`))", $query->getSql());
     }
 
     public function test_buildDropTableQuery()

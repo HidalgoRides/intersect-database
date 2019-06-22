@@ -270,7 +270,7 @@ class PostgresQueryBuilderTest extends TestCase {
 
         $query = $this->queryBuilder->createTable($blueprint)->build();
 
-        $this->assertEquals("create table public.users (id serial primary key, email varchar(100) not null, age integer default '2', sint smallint, bint bigint, price numeric(5,2), bio text, created_at timestamp, date_created timestamp, constraint unique_users_email unique (email))", $query->getSql());
+        $this->assertEquals("create table public.users (id serial, email varchar(100) not null, age integer default '2', sint smallint, bint bigint, price numeric(5,2), bio text, created_at timestamp, date_created timestamp, constraint unique_users_email unique (email), constraint primary_users_id primary key (id))", $query->getSql());
     }
 
     public function test_buildCreateTableQuery_withSchema()
@@ -290,7 +290,33 @@ class PostgresQueryBuilderTest extends TestCase {
 
         $query = $this->queryBuilder->createTable($blueprint)->schema('users')->build();
 
-        $this->assertEquals("create table users.users (id serial primary key, email varchar(100) not null, age integer default '2', sint smallint, bint bigint, price numeric(5,2), bio text, created_at timestamp, date_created timestamp, constraint unique_users_email unique (email))", $query->getSql());
+        $this->assertEquals("create table users.users (id serial, email varchar(100) not null, age integer default '2', sint smallint, bint bigint, price numeric(5,2), bio text, created_at timestamp, date_created timestamp, constraint unique_users_email unique (email), constraint primary_users_id primary key (id))", $query->getSql());
+    }
+
+    public function test_buildCreateTableQuery_withMultipleUniqueKeys()
+    {
+        $blueprint = new Blueprint('users');
+        $blueprint->integer('column_one');
+        $blueprint->integer('column_two');
+
+        $blueprint->unique(['column_one', 'column_two']);
+
+        $query = $this->queryBuilder->createTable($blueprint)->build();
+
+        $this->assertEquals("create table public.users (column_one integer not null, column_two integer not null, constraint unique_users_column_one_column_two unique (column_one, column_two))", $query->getSql());
+    }
+
+    public function test_buildCreateTableQuery_withMultiplePrimaryKeys()
+    {
+        $blueprint = new Blueprint('users');
+        $blueprint->integer('column_one');
+        $blueprint->integer('column_two');
+
+        $blueprint->primary(['column_one', 'column_two']);
+
+        $query = $this->queryBuilder->createTable($blueprint)->build();
+
+        $this->assertEquals("create table public.users (column_one integer not null, column_two integer not null, constraint primary_users_column_one_column_two primary key (column_one, column_two))", $query->getSql());
     }
 
     public function test_buildDropTableQuery()

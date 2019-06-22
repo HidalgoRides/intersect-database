@@ -163,9 +163,14 @@ class PostgresQueryBuilder extends QueryBuilder {
         return (!is_null($alias)) ? ($alias . '.' . $column . " as \"" . $alias . '.' . $column . "\"") : $column;
     }
 
+    protected function buildPrimaryKeyDefinition($keyName, array $columnNames)
+    {
+        return 'constraint ' . $keyName . ' primary key (' . implode(', ', $columnNames) . ')';
+    }
+
     protected function buildUniqueKeyDefinition($keyName, array $columnNames)
     {
-        return 'constraint ' . $keyName . ' unique (' . implode(',', $columnNames) . ')';
+        return 'constraint ' . $keyName . ' unique (' . implode(', ', $columnNames) . ')';
     }
 
     protected function wrapTableName($tableName)

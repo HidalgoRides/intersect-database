@@ -9,6 +9,7 @@ class Blueprint {
     /** @var ColumnDefinition[] */
     private $columnDefinitions = [];
     private $uniqueKeys = [];
+    private $primaryKeys = [];
 
     private $tableName;
 
@@ -54,6 +55,7 @@ class Blueprint {
         $columnDefinition->primary();
         $columnDefinition->autoIncrement();
 
+        $this->primary($name);
         $this->addColumnDefinition($columnDefinition);
 
         return $columnDefinition;
@@ -165,6 +167,24 @@ class Blueprint {
         $keyName = (!is_null($keyName) ? $keyName : 'unique_' . $this->tableName . '_' . implode('_', $names));
 
         $this->uniqueKeys[$keyName] = $names;
+        return $this;
+    }
+
+    public function getPrimaryKeys()
+    {
+        return $this->primaryKeys;
+    }
+
+    public function primary($names, $keyName = null)
+    {
+        if (!is_array($names))
+        {
+            $names = [$names];
+        }
+
+        $keyName = (!is_null($keyName) ? $keyName : 'primary_' . $this->tableName . '_' . implode('_', $names));
+
+        $this->primaryKeys[$keyName] = $names;
         return $this;
     }
 

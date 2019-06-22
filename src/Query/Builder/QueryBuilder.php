@@ -69,6 +69,7 @@ abstract class QueryBuilder {
      abstract protected function buildDeleteQuery();
      abstract protected function buildCountQuery();
      abstract protected function buildColumnQuery();
+     abstract protected function buildPrimaryKeyDefinition($keyName, array $columnNames);
      abstract protected function buildUniqueKeyDefinition($keyName, array $columnNames);
 
      /** @return ColumnDefinitionResolver */
@@ -467,12 +468,25 @@ abstract class QueryBuilder {
             $uniqueKeyDefinitionStrings[] = $this->buildUniqueKeyDefinition($keyName, $columnNames);
         }
 
+        $primaryKeyDefinitionStrings = [];
+        foreach ($blueprint->getPrimaryKeys() as $keyName => $columnNames)
+        {
+            $primaryKeyDefinitionStrings[] = $this->buildPrimaryKeyDefinition($keyName, $columnNames);
+        }
+
         $queryString = 'create table ' . $this->wrapTableName($blueprint->getTableName()) . ' (';
         $queryString .= implode(', ', $columnDefinitionStrings);
+        
         if (count($uniqueKeyDefinitionStrings) > 0)
         {
             $queryString .= ', ' . implode(', ', $uniqueKeyDefinitionStrings);
         }
+
+        if (count($primaryKeyDefinitionStrings) > 0)
+        {
+            $queryString .= ', ' . implode(', ', $primaryKeyDefinitionStrings);
+        }
+
         $queryString .= ')';
 
         return new Query($queryString);

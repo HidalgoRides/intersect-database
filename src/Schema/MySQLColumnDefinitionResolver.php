@@ -13,7 +13,6 @@ class MySQLColumnDefinitionResolver implements ColumnDefinitionResolver {
         $length = (!is_null($columnDefinition->getLength()) ? '(' . $columnDefinition->getLength() . ')' : '');
         $notNullable = (!$columnDefinition->isNullable() ? ' not null' : '');
         $autoIncrement = ($columnDefinition->isAutoIncrement() ? ' auto_increment' : '');
-        $primaryKey = ($columnDefinition->isPrimary() ? ' primary key' : '');
         $defaultValue = (!is_null($columnDefinition->getDefaultValue()) ? ' default \'' . $columnDefinition->getDefaultValue() . '\'' : '');
 
         if ($type == 'decimal')
@@ -23,7 +22,7 @@ class MySQLColumnDefinitionResolver implements ColumnDefinitionResolver {
 
         $unsigned = ((in_array($type, ['int', 'tinyint', 'smallint', 'mediumint', 'bigint']) && $columnDefinition->isUnsigned()) ? ' unsigned' : '');
 
-        return '`' . $columnDefinition->getName() . '` ' . $type . $length . $notNullable . $autoIncrement . $primaryKey . $unsigned . $defaultValue;
+        return '`' . $columnDefinition->getName() . '` ' . $type . $length . $notNullable . $autoIncrement . $unsigned . $defaultValue;
     }
 
     private function getType($columnDefinitionType)

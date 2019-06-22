@@ -124,9 +124,24 @@ class MySQLQueryBuilder extends QueryBuilder {
         return new Query($queryString);
     }
 
+    protected function buildPrimaryKeyDefinition($keyName, array $columnNames)
+    {
+        foreach ($columnNames as &$columnName)
+        {
+            $columnName = '`' . $columnName . '`';
+        }
+
+        return 'primary key (' . implode(', ', $columnNames) . ')';
+    }
+
     protected function buildUniqueKeyDefinition($keyName, array $columnNames)
     {
-        return 'unique key ' . $keyName . ' (' . implode(',', $columnNames) . ')';
+        foreach ($columnNames as &$columnName)
+        {
+            $columnName = '`' . $columnName . '`';
+        }
+
+        return 'unique key ' . $keyName . ' (' . implode(', ', $columnNames) . ')';
     }
 
 }
