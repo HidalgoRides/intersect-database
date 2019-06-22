@@ -183,13 +183,21 @@ class MySQLQueryBuilderTest extends TestCase {
         $blueprint = new Blueprint('users');
         $blueprint->increments('id');
         $blueprint->string('email', 100)->unique();
-        $blueprint->integer('age')->nullable();
+        $blueprint->integer('age')->nullable()->unsigned();
+        $blueprint->tinyInteger('tint')->nullable()->default(2);
+        $blueprint->smallInteger('sint')->nullable();
+        $blueprint->mediumInteger('mint')->nullable();
+        $blueprint->bigInteger('bint')->nullable();
+        $blueprint->numeric('price', 5, 2)->nullable();
         $blueprint->text('bio')->nullable();
-        $blueprint->timestamp('created_at');
+        $blueprint->mediumText('mtext')->nullable();
+        $blueprint->longText('ltext')->nullable();
+        $blueprint->timestamp('created_at')->nullable();
+        $blueprint->datetime('date_created')->nullable();
 
         $query = $this->queryBuilder->createTable($blueprint)->build();
 
-        $this->assertEquals("create table `users` (`id` int not null auto_increment primary key, `email` varchar(100) not null unique, `age` int, `bio` text, `created_at` timestamp not null)", $query->getSql());
+        $this->assertEquals("create table `users` (`id` int not null auto_increment primary key, `email` varchar(100) not null unique, `age` int unsigned, `tint` tinyint default '2', `sint` smallint, `mint` mediumint, `bint` bigint, `price` decimal(5,2), `bio` text, `mtext` mediumtext, `ltext` longtext, `created_at` timestamp, `date_created` datetime)", $query->getSql());
     }
 
     public function test_buildDropTableQuery()
@@ -197,6 +205,13 @@ class MySQLQueryBuilderTest extends TestCase {
         $query = $this->queryBuilder->dropTable('users')->build();
 
         $this->assertEquals("drop table `users`", $query->getSql());
+    }
+
+    public function test_buildDropTableIfExistsQuery()
+    {
+        $query = $this->queryBuilder->dropTableIfExists('users')->build();
+
+        $this->assertEquals("drop table if exists `users`", $query->getSql());
     }
     
 }

@@ -27,6 +27,26 @@ class Blueprint {
         return $this->tableName;
     }
 
+    public function datetime($name)
+    {
+        $columnDefinition = new ColumnDefinition($name, 'datetime');
+
+        $this->addColumnDefinition($columnDefinition);
+
+        return $columnDefinition;
+    }
+
+    public function numeric($name, $precision, $scale)
+    {
+        $columnDefinition = new ColumnDefinition($name, 'numeric');
+        $columnDefinition->precision($precision);
+        $columnDefinition->scale($scale);
+
+        $this->addColumnDefinition($columnDefinition);
+
+        return $columnDefinition;
+    }
+
     public function increments($name)
     {
         $columnDefinition = new ColumnDefinition($name, 'integer');
@@ -38,10 +58,45 @@ class Blueprint {
         return $columnDefinition;
     }
 
-    public function integer($name, int $length = null)
+    public function tinyInteger($name)
+    {
+        $columnDefinition = new ColumnDefinition($name, 'tinyint');
+
+        $this->addColumnDefinition($columnDefinition);
+
+        return $columnDefinition;
+    }
+
+    public function smallInteger($name)
+    {
+        $columnDefinition = new ColumnDefinition($name, 'smallint');
+
+        $this->addColumnDefinition($columnDefinition);
+
+        return $columnDefinition;
+    }
+
+    public function mediumInteger($name)
+    {
+        $columnDefinition = new ColumnDefinition($name, 'mediumint');
+
+        $this->addColumnDefinition($columnDefinition);
+
+        return $columnDefinition;
+    }
+
+    public function integer($name)
     {
         $columnDefinition = new ColumnDefinition($name, 'integer');
-        $columnDefinition->length($length);
+
+        $this->addColumnDefinition($columnDefinition);
+
+        return $columnDefinition;
+    }
+
+    public function bigInteger($name)
+    {
+        $columnDefinition = new ColumnDefinition($name, 'bigint');
 
         $this->addColumnDefinition($columnDefinition);
 
@@ -52,6 +107,24 @@ class Blueprint {
     {
         $columnDefinition = new ColumnDefinition($name, 'string');
         $columnDefinition->length($length);
+
+        $this->addColumnDefinition($columnDefinition);
+
+        return $columnDefinition;
+    }
+
+    public function mediumText($name)
+    {
+        $columnDefinition = new ColumnDefinition($name, 'mediumtext');
+
+        $this->addColumnDefinition($columnDefinition);
+
+        return $columnDefinition;
+    }
+
+    public function longText($name)
+    {
+        $columnDefinition = new ColumnDefinition($name, 'longtext');
 
         $this->addColumnDefinition($columnDefinition);
 

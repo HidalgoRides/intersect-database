@@ -29,6 +29,7 @@ abstract class QueryBuilder {
     private static $ACTION_COLUMNS = 'columns';
     private static $ACTION_CREATE_TABLE = 'createTable';
     private static $ACTION_DROP_TABLE = 'dropTable';
+    private static $ACTION_DROP_TABLE_IF_EXISTS = 'dropTableIfExists';
 
     protected $columnData = [];
     protected $columns = ['*'];
@@ -93,6 +94,14 @@ abstract class QueryBuilder {
     public function dropTable($tableName)
     {
         $this->action = self::$ACTION_DROP_TABLE;
+        $this->tableName = $tableName;
+        return $this;
+    }
+
+    /** @return QueryBuilder */
+    public function dropTableIfExists($tableName)
+    {
+        $this->action = self::$ACTION_DROP_TABLE_IF_EXISTS;
         $this->tableName = $tableName;
         return $this;
     }
@@ -375,6 +384,9 @@ abstract class QueryBuilder {
             case self::$ACTION_DROP_TABLE:
                 $query = $this->buildDropTableQuery();
                 break;
+            case self::$ACTION_DROP_TABLE_IF_EXISTS:
+                $query = $this->buildDropTableIfExistsQuery();
+                break;
         }
 
         return $query;
@@ -458,6 +470,13 @@ abstract class QueryBuilder {
     protected function buildDropTableQuery()
     {
         $queryString = 'drop table ' . $this->wrapTableName($this->tableName);
+
+        return new Query($queryString);
+    }
+
+    protected function buildDropTableIfExistsQuery()
+    {
+        $queryString = 'drop table if exists ' . $this->wrapTableName($this->tableName);
 
         return new Query($queryString);
     }

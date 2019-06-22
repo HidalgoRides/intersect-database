@@ -32,4 +32,9 @@ class SchemaBuilder {
         self::$CONNECTION->getQueryBuilder()->dropTable($tableName)->get();
     }
 
+    public static function dropTableIfExists($tableName)
+    {
+        self::$CONNECTION->getQueryBuilder()->dropTableIfExists($tableName)->get();
+    }
+
 }

@@ -7,9 +7,13 @@ class ColumnDefinition {
     private $isAutoIncrement = false;
     private $length;
     private $name;
+    private $precision;
+    private $scale;
+    private $defaultValue;
     private $isNullable = false;
     private $isPrimary = false;
     private $isUnique = false;
+    private $isUnsigned = false;
     private $type;
 
     public function __construct($name, $type)
@@ -37,6 +41,16 @@ class ColumnDefinition {
     {
         $this->isAutoIncrement = true;
         return $this;
+    }
+
+    public function getDefaultValue()
+    {
+        return $this->defaultValue;
+    }
+
+    public function default($value)
+    {
+        $this->defaultValue = $value;
     }
 
     public function getLength()
@@ -80,6 +94,39 @@ class ColumnDefinition {
     public function unique()
     {
         $this->isUnique = true;
+        return $this;
+    }
+
+    public function getPrecision()
+    {
+        return $this->precision;
+    }
+
+    public function precision($precision)
+    {
+        $this->precision = $precision;
+        return $this;
+    }
+
+    public function getScale()
+    {
+        return $this->scale;
+    }
+
+    public function scale($scale)
+    {
+        $this->scale = $scale;
+        return $this;
+    }
+
+    public function isUnsigned()
+    {
+        return $this->isUnsigned;
+    }
+
+    public function unsigned()
+    {
+        $this->isUnsigned = true;
         return $this;
     }
 

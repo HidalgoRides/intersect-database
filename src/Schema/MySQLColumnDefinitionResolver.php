@@ -15,8 +15,16 @@ class MySQLColumnDefinitionResolver implements ColumnDefinitionResolver {
         $autoIncrement = ($columnDefinition->isAutoIncrement() ? ' auto_increment' : '');
         $primaryKey = ($columnDefinition->isPrimary() ? ' primary key' : '');
         $unique = ($columnDefinition->isUnique() ? ' unique' : '');
+        $defaultValue = (!is_null($columnDefinition->getDefaultValue()) ? ' default \'' . $columnDefinition->getDefaultValue() . '\'' : '');
 
-        return '`' . $columnDefinition->getName() . '` ' . $type . $length . $notNullable . $autoIncrement . $primaryKey . $unique;
+        if ($type == 'decimal')
+        {
+            $type = $type . '(' . $columnDefinition->getPrecision() . ',' . $columnDefinition->getScale() . ')';
+        }
+
+        $unsigned = ((in_array($type, ['int', 'tinyint', 'smallint', 'mediumint', 'bigint']) && $columnDefinition->isUnsigned()) ? ' unsigned' : '');
+
+        return '`' . $columnDefinition->getName() . '` ' . $type . $length . $notNullable . $autoIncrement . $primaryKey . $unique . $unsigned . $defaultValue;
     }
 
     private function getType($columnDefinitionType)
@@ -30,6 +38,9 @@ class MySQLColumnDefinitionResolver implements ColumnDefinitionResolver {
                 break;
             case 'string':
                 $type = 'varchar';
+                break;
+            case 'numeric':
+                $type = 'decimal';
                 break;
             default:
                 $type = $columnDefinitionType;

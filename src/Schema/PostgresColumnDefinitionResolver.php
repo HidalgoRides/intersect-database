@@ -15,6 +15,7 @@ class PostgresColumnDefinitionResolver implements ColumnDefinitionResolver {
         $autoIncrement = ($columnDefinition->isAutoIncrement() ? ' auto_increment' : '');
         $primaryKey = ($columnDefinition->isPrimary() ? ' primary key' : '');
         $unique = ($columnDefinition->isUnique() ? ' unique' : '');
+        $defaultValue = (!is_null($columnDefinition->getDefaultValue()) ? ' default \'' . $columnDefinition->getDefaultValue() . '\'' : '');
 
         if ($columnDefinition->isPrimary())
         {
@@ -24,7 +25,12 @@ class PostgresColumnDefinitionResolver implements ColumnDefinitionResolver {
             $autoIncrement = null;
         }
 
-        return $columnDefinition->getName() . ' ' . $type . $length . $notNullable . $autoIncrement . $primaryKey . $unique;
+        if ($type == 'numeric')
+        {
+            $type = $type . '(' . $columnDefinition->getPrecision() . ',' . $columnDefinition->getScale() . ')';
+        }
+
+        return $columnDefinition->getName() . ' ' . $type . $length . $notNullable . $autoIncrement . $primaryKey . $unique . $defaultValue;
     }
 
     private function getType($columnDefinitionType)
@@ -35,6 +41,9 @@ class PostgresColumnDefinitionResolver implements ColumnDefinitionResolver {
         {
             case 'string':
                 $type = 'varchar';
+                break;
+            case 'datetime':
+                $type = 'timestamp';
                 break;
             default:
                 $type = $columnDefinitionType;
