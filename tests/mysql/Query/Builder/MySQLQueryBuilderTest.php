@@ -182,7 +182,7 @@ class MySQLQueryBuilderTest extends TestCase {
     {
         $blueprint = new Blueprint('users');
         $blueprint->increments('id');
-        $blueprint->string('email', 100)->unique();
+        $blueprint->string('email', 100);
         $blueprint->integer('age')->nullable()->unsigned();
         $blueprint->tinyInteger('tint')->nullable()->default(2);
         $blueprint->smallInteger('sint')->nullable();
@@ -195,9 +195,11 @@ class MySQLQueryBuilderTest extends TestCase {
         $blueprint->timestamp('created_at')->nullable();
         $blueprint->datetime('date_created')->nullable();
 
+        $blueprint->unique('email');
+
         $query = $this->queryBuilder->createTable($blueprint)->build();
 
-        $this->assertEquals("create table `users` (`id` int not null auto_increment primary key, `email` varchar(100) not null unique, `age` int unsigned, `tint` tinyint default '2', `sint` smallint, `mint` mediumint, `bint` bigint, `price` decimal(5,2), `bio` text, `mtext` mediumtext, `ltext` longtext, `created_at` timestamp, `date_created` datetime)", $query->getSql());
+        $this->assertEquals("create table `users` (`id` int not null auto_increment primary key, `email` varchar(100) not null, `age` int unsigned, `tint` tinyint default '2', `sint` smallint, `mint` mediumint, `bint` bigint, `price` decimal(5,2), `bio` text, `mtext` mediumtext, `ltext` longtext, `created_at` timestamp, `date_created` datetime, unique key unique_users_email (email))", $query->getSql());
     }
 
     public function test_buildDropTableQuery()

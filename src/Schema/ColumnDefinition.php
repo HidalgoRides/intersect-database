@@ -2,6 +2,8 @@
 
 namespace Intersect\Database\Schema;
 
+use Intersect\Database\Schema\Blueprint;
+
 class ColumnDefinition {
 
     private $isAutoIncrement = false;
@@ -12,7 +14,6 @@ class ColumnDefinition {
     private $defaultValue;
     private $isNullable = false;
     private $isPrimary = false;
-    private $isUnique = false;
     private $isUnsigned = false;
     private $type;
 
@@ -83,17 +84,6 @@ class ColumnDefinition {
     public function primary()
     {
         $this->isPrimary = true;
-        return $this;
-    }
-
-    public function isUnique()
-    {
-        return $this->isUnique;
-    }
-
-    public function unique()
-    {
-        $this->isUnique = true;
         return $this;
     }
 

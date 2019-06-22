@@ -257,7 +257,7 @@ class PostgresQueryBuilderTest extends TestCase {
     {
         $blueprint = new Blueprint('users');
         $blueprint->increments('id');
-        $blueprint->string('email', 100)->unique();
+        $blueprint->string('email', 100);
         $blueprint->integer('age')->nullable()->default(2);
         $blueprint->smallInteger('sint')->nullable();
         $blueprint->bigInteger('bint')->nullable();
@@ -266,16 +266,18 @@ class PostgresQueryBuilderTest extends TestCase {
         $blueprint->timestamp('created_at')->nullable();
         $blueprint->datetime('date_created')->nullable();
 
+        $blueprint->unique('email');
+
         $query = $this->queryBuilder->createTable($blueprint)->build();
 
-        $this->assertEquals("create table public.users (id serial primary key, email varchar(100) not null unique, age integer default '2', sint smallint, bint bigint, price numeric(5,2), bio text, created_at timestamp, date_created timestamp)", $query->getSql());
+        $this->assertEquals("create table public.users (id serial primary key, email varchar(100) not null, age integer default '2', sint smallint, bint bigint, price numeric(5,2), bio text, created_at timestamp, date_created timestamp, constraint unique_users_email unique (email))", $query->getSql());
     }
 
     public function test_buildCreateTableQuery_withSchema()
     {
         $blueprint = new Blueprint('users');
         $blueprint->increments('id');
-        $blueprint->string('email', 100)->unique();
+        $blueprint->string('email', 100);
         $blueprint->integer('age')->nullable()->default(2);
         $blueprint->smallInteger('sint')->nullable();
         $blueprint->bigInteger('bint')->nullable();
@@ -284,9 +286,11 @@ class PostgresQueryBuilderTest extends TestCase {
         $blueprint->timestamp('created_at')->nullable();
         $blueprint->datetime('date_created')->nullable();
 
+        $blueprint->unique('email');
+
         $query = $this->queryBuilder->createTable($blueprint)->schema('users')->build();
 
-        $this->assertEquals("create table users.users (id serial primary key, email varchar(100) not null unique, age integer default '2', sint smallint, bint bigint, price numeric(5,2), bio text, created_at timestamp, date_created timestamp)", $query->getSql());
+        $this->assertEquals("create table users.users (id serial primary key, email varchar(100) not null, age integer default '2', sint smallint, bint bigint, price numeric(5,2), bio text, created_at timestamp, date_created timestamp, constraint unique_users_email unique (email))", $query->getSql());
     }
 
     public function test_buildDropTableQuery()

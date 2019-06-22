@@ -124,4 +124,9 @@ class MySQLQueryBuilder extends QueryBuilder {
         return new Query($queryString);
     }
 
+    protected function buildUniqueKeyDefinition($keyName, array $columnNames)
+    {
+        return 'unique key ' . $keyName . ' (' . implode(',', $columnNames) . ')';
+    }
+
 }

@@ -8,6 +8,7 @@ class Blueprint {
 
     /** @var ColumnDefinition[] */
     private $columnDefinitions = [];
+    private $uniqueKeys = [];
 
     private $tableName;
 
@@ -147,6 +148,24 @@ class Blueprint {
         $this->addColumnDefinition($columnDefinition);
 
         return $columnDefinition;
+    }
+
+    public function getUniqueKeys()
+    {
+        return $this->uniqueKeys;
+    }
+
+    public function unique($names, $keyName = null)
+    {
+        if (!is_array($names))
+        {
+            $names = [$names];
+        }
+
+        $keyName = (!is_null($keyName) ? $keyName : 'unique_' . $this->tableName . '_' . implode('_', $names));
+
+        $this->uniqueKeys[$keyName] = $names;
+        return $this;
     }
 
     private function addColumnDefinition(ColumnDefinition $columnDefinition)

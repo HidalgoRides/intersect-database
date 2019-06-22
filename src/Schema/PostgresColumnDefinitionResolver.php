@@ -14,7 +14,6 @@ class PostgresColumnDefinitionResolver implements ColumnDefinitionResolver {
         $notNullable = (!$columnDefinition->isNullable() ? ' not null' : '');
         $autoIncrement = ($columnDefinition->isAutoIncrement() ? ' auto_increment' : '');
         $primaryKey = ($columnDefinition->isPrimary() ? ' primary key' : '');
-        $unique = ($columnDefinition->isUnique() ? ' unique' : '');
         $defaultValue = (!is_null($columnDefinition->getDefaultValue()) ? ' default \'' . $columnDefinition->getDefaultValue() . '\'' : '');
 
         if ($columnDefinition->isPrimary())
@@ -30,7 +29,7 @@ class PostgresColumnDefinitionResolver implements ColumnDefinitionResolver {
             $type = $type . '(' . $columnDefinition->getPrecision() . ',' . $columnDefinition->getScale() . ')';
         }
 
-        return $columnDefinition->getName() . ' ' . $type . $length . $notNullable . $autoIncrement . $primaryKey . $unique . $defaultValue;
+        return $columnDefinition->getName() . ' ' . $type . $length . $notNullable . $autoIncrement . $primaryKey . $defaultValue;
     }
 
     private function getType($columnDefinitionType)

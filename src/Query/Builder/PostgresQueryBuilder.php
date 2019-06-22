@@ -163,6 +163,11 @@ class PostgresQueryBuilder extends QueryBuilder {
         return (!is_null($alias)) ? ($alias . '.' . $column . " as \"" . $alias . '.' . $column . "\"") : $column;
     }
 
+    protected function buildUniqueKeyDefinition($keyName, array $columnNames)
+    {
+        return 'constraint ' . $keyName . ' unique (' . implode(',', $columnNames) . ')';
+    }
+
     protected function wrapTableName($tableName)
     {
         return $this->tableNameWithSchema($tableName);
