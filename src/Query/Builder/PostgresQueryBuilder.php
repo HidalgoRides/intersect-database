@@ -5,7 +5,8 @@ namespace Intersect\Database\Query\Builder;
 use Intersect\Database\Query\Query;
 use Intersect\Database\Connection\Connection;
 use Intersect\Database\Schema\PostgresColumnDefinitionResolver;
-use Intersect\Database\Schema\Constraint\ForeignKey;
+use Intersect\Database\Schema\ForeignKey;
+use Intersect\Database\Schema\Index;
 
 class PostgresQueryBuilder extends QueryBuilder {
 
@@ -162,6 +163,11 @@ class PostgresQueryBuilder extends QueryBuilder {
     protected function buildColumnWithAlias($column, $alias = null)
     {
         return (!is_null($alias)) ? ($alias . '.' . $column . " as \"" . $alias . '.' . $column . "\"") : $column;
+    }
+
+    protected function buildIndexDefinition(Index $index)
+    {
+        throw new \Exception('Not implemented');
     }
 
     protected function buildForeignKeyDefinition($keyName, ForeignKey $foreignKey)

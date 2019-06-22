@@ -295,6 +295,23 @@ class PostgresQueryBuilderTest extends TestCase {
         $this->assertEquals("create table users.users (id serial, email varchar(100) not null, age integer default '2', sint smallint, bint bigint, price numeric(5,2), bio text, created_at timestamp, date_created timestamp, constraint unique_users_email unique (email), constraint primary_users_id primary key (id), constraint foreign_user_id_alt_users_id foreign key (user_id) references public.alt_users (id))", $query->getSql());
     }
 
+    public function test_buildCreateTableQuery_indexNotSupported()
+    {
+        $blueprint = new Blueprint('users');
+        $blueprint->increments('id');
+
+        $blueprint->index('test');
+
+        try {
+            $this->queryBuilder->createTable($blueprint)->build();
+        } catch (\Exception $e) {
+            $this->assertEquals('Not implemented', $e->getMessage());
+            return;
+        }
+
+        $this->fail('Defining an index should have thrown an exception');        
+    }
+
     public function test_buildCreateTableQuery_withMultipleUniqueKeys()
     {
         $blueprint = new Blueprint('users');

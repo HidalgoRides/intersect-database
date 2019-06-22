@@ -18,7 +18,8 @@ use Intersect\Database\Query\Builder\Condition\NotNullCondition;
 use Intersect\Database\Query\Builder\Condition\NotEqualsCondition;
 use Intersect\Database\Query\Builder\Condition\BetweenDatesCondition;
 use Intersect\Database\Schema\ColumnDefinitionResolver;
-use Intersect\Database\Schema\Constraint\ForeignKey;
+use Intersect\Database\Schema\ForeignKey;
+use Intersect\Database\Schema\Index;
 
 abstract class QueryBuilder {
 
@@ -70,6 +71,7 @@ abstract class QueryBuilder {
      abstract protected function buildDeleteQuery();
      abstract protected function buildCountQuery();
      abstract protected function buildColumnQuery();
+     abstract protected function buildIndexDefinition(Index $index);
      abstract protected function buildForeignKeyDefinition($keyName, ForeignKey $foreignKey);
      abstract protected function buildPrimaryKeyDefinition($keyName, array $columnNames);
      abstract protected function buildUniqueKeyDefinition($keyName, array $columnNames);
@@ -482,6 +484,12 @@ abstract class QueryBuilder {
             $foreignKeyDefinitionStrings[] = $this->buildForeignKeyDefinition($keyName, $foreignKey);
         }
 
+        $indexDefinitionStrings = [];
+        foreach ($blueprint->getIndexes() as $index)
+        {
+            $indexDefinitionStrings[] = $this->buildIndexDefinition($index);
+        }
+
         $queryString = 'create table ' . $this->wrapTableName($blueprint->getTableName()) . ' (';
         $queryString .= implode(', ', $columnDefinitionStrings);
         
@@ -498,6 +506,11 @@ abstract class QueryBuilder {
         if (count($foreignKeyDefinitionStrings) > 0)
         {
             $queryString .= ', ' . implode(', ', $foreignKeyDefinitionStrings);
+        }
+
+        if (count($indexDefinitionStrings) > 0)
+        {
+            $queryString .= ', ' . implode(', ', $indexDefinitionStrings);
         }
 
         $queryString .= ')';

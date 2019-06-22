@@ -3,7 +3,7 @@
 namespace Intersect\Database\Schema;
 
 use Intersect\Database\Schema\ColumnDefinition;
-use Intersect\Database\Schema\Constraint\ForeignKey;
+use Intersect\Database\Schema\ForeignKey;
 
 class Blueprint {
 
@@ -13,6 +13,8 @@ class Blueprint {
     private $primaryKeys = [];
     /** @var ForeignKey[] */
     private $foreignKeys = [];
+    /** @var Index[] */
+    private $indexes = [];
 
     private $tableName;
 
@@ -200,6 +202,17 @@ class Blueprint {
         $keyName = (!is_null($keyName) ? $keyName : 'foreign_' . $fromColumn . '_' . $onTable . '_' . $toColumn);
 
         $this->foreignKeys[$keyName] = new ForeignKey($fromColumn, $toColumn, $onTable);
+    }
+
+    /** @return Index[] */
+    public function getIndexes()
+    {
+        return $this->indexes;
+    }
+
+    public function index($column)
+    {
+        $this->indexes[] = new Index($column);
     }
 
     private function addColumnDefinition(ColumnDefinition $columnDefinition)

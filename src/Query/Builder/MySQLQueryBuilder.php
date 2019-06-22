@@ -5,7 +5,8 @@ namespace Intersect\Database\Query\Builder;
 use Intersect\Database\Query\Query;
 use Intersect\Database\Connection\Connection;
 use Intersect\Database\Schema\MySQLColumnDefinitionResolver;
-use Intersect\Database\Schema\Constraint\ForeignKey;
+use Intersect\Database\Schema\ForeignKey;
+use Intersect\Database\Schema\Index;
 
 class MySQLQueryBuilder extends QueryBuilder {
 
@@ -123,6 +124,18 @@ class MySQLQueryBuilder extends QueryBuilder {
         $queryString = 'show columns from ' . $this->buildTableNameWithAlias($this->tableName);
 
         return new Query($queryString);
+    }
+
+    protected function buildIndexDefinition(Index $index)
+    {
+        $columns = $index->getColumns();
+
+        foreach ($columns as &$column)
+        {
+            $column = '`' . $column . '`';
+        }
+
+        return 'index (' . implode(', ', $columns) . ')';
     }
 
     protected function buildForeignKeyDefinition($keyName, ForeignKey $foreignKey)

@@ -197,10 +197,25 @@ class MySQLQueryBuilderTest extends TestCase {
 
         $blueprint->unique('email');
         $blueprint->foreign('user_id', 'id', 'alt_users');
+        $blueprint->index('email');
 
         $query = $this->queryBuilder->createTable($blueprint)->build();
 
-        $this->assertEquals("create table `users` (`id` int not null auto_increment, `email` varchar(100) not null, `age` int unsigned, `tint` tinyint default '2', `sint` smallint, `mint` mediumint, `bint` bigint, `price` decimal(5,2), `bio` text, `mtext` mediumtext, `ltext` longtext, `created_at` timestamp, `date_created` datetime, unique key unique_users_email (`email`), primary key (`id`), constraint foreign_user_id_alt_users_id foreign key (`user_id`) references `alt_users` (`id`))", $query->getSql());
+        $this->assertEquals("create table `users` (`id` int not null auto_increment, `email` varchar(100) not null, `age` int unsigned, `tint` tinyint default '2', `sint` smallint, `mint` mediumint, `bint` bigint, `price` decimal(5,2), `bio` text, `mtext` mediumtext, `ltext` longtext, `created_at` timestamp, `date_created` datetime, unique key unique_users_email (`email`), primary key (`id`), constraint foreign_user_id_alt_users_id foreign key (`user_id`) references `alt_users` (`id`), index (`email`))", $query->getSql());
+    }
+
+    public function test_buildCreateTableQuery_withMultipleIndexes()
+    {
+        $blueprint = new Blueprint('users');
+        $blueprint->integer('id');
+        $blueprint->string('email');
+        $blueprint->string('age');
+
+        $blueprint->index(['email', 'age']);
+
+        $query = $this->queryBuilder->createTable($blueprint)->build();
+
+        $this->assertEquals("create table `users` (`id` int not null, `email` varchar(255) not null, `age` varchar(255) not null, index (`email`, `age`))", $query->getSql());
     }
 
     public function test_buildCreateTableQuery_withMultipleUniqueKeys()

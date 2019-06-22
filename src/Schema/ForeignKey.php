@@ -1,6 +1,6 @@
 <?php
 
-namespace Intersect\Database\Schema\Constraint;
+namespace Intersect\Database\Schema;
 
 class ForeignKey {
 
