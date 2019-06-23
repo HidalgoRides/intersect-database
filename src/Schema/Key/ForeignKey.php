@@ -1,16 +1,20 @@
 <?php
 
-namespace Intersect\Database\Schema;
+namespace Intersect\Database\Schema\Key;
 
-class ForeignKey {
+class ForeignKey extends Key {
+
+    protected $prefix = 'foreign_';
 
     private $fromColumn;
     private $toColumn;
     private $onTable;
     private $tableSchema;
 
-    public function __construct($fromColumn, $toColumn, $onTable, $tableSchema = 'public')
+    public function __construct($keyName, $fromColumn, $toColumn, $onTable, $tableSchema = 'public')
     {
+        parent::__construct([$fromColumn], $keyName);
+
         $this->fromColumn = $fromColumn;
         $this->toColumn = $toColumn;
         $this->onTable = $onTable;

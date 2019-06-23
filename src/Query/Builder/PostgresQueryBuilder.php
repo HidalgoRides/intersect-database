@@ -3,10 +3,12 @@
 namespace Intersect\Database\Query\Builder;
 
 use Intersect\Database\Query\Query;
+use Intersect\Database\Schema\Key\Index;
+use Intersect\Database\Schema\Key\UniqueKey;
 use Intersect\Database\Connection\Connection;
+use Intersect\Database\Schema\Key\ForeignKey;
+use Intersect\Database\Schema\Key\PrimaryKey;
 use Intersect\Database\Schema\PostgresColumnDefinitionResolver;
-use Intersect\Database\Schema\ForeignKey;
-use Intersect\Database\Schema\Index;
 
 class PostgresQueryBuilder extends QueryBuilder {
 
@@ -170,19 +172,19 @@ class PostgresQueryBuilder extends QueryBuilder {
         throw new \Exception('Not implemented');
     }
 
-    protected function buildForeignKeyDefinition($keyName, ForeignKey $foreignKey)
+    protected function buildForeignKeyDefinition(ForeignKey $foreignKey)
     {
-        return 'constraint ' . $keyName . ' foreign key (' . $foreignKey->getFromColumn() . ') references ' . $foreignKey->getTableSchema() . '.' . $foreignKey->getOnTable() . ' (' . $foreignKey->getToColumn() . ')';
+        return 'constraint ' . $foreignKey->getName() . ' foreign key (' . $foreignKey->getFromColumn() . ') references ' . $foreignKey->getTableSchema() . '.' . $foreignKey->getOnTable() . ' (' . $foreignKey->getToColumn() . ')';
     }
 
-    protected function buildPrimaryKeyDefinition($keyName, array $columnNames)
+    protected function buildPrimaryKeyDefinition(PrimaryKey $primaryKey)
     {
-        return 'constraint ' . $keyName . ' primary key (' . implode(', ', $columnNames) . ')';
+        return 'constraint ' . $primaryKey->getName() . ' primary key (' . implode(', ', $primaryKey->getColumns()) . ')';
     }
 
-    protected function buildUniqueKeyDefinition($keyName, array $columnNames)
+    protected function buildUniqueKeyDefinition(UniqueKey $uniqueKey)
     {
-        return 'constraint ' . $keyName . ' unique (' . implode(', ', $columnNames) . ')';
+        return 'constraint ' . $uniqueKey->getName() . ' unique (' . implode(', ', $uniqueKey->getColumns()) . ')';
     }
 
     protected function wrapTableName($tableName)

@@ -5,8 +5,13 @@ namespace Intersect\Database\Query\Builder;
 use Intersect\Database\Query\Query;
 use Intersect\Database\Query\Result;
 use Intersect\Database\Schema\Blueprint;
+use Intersect\Database\Schema\Key\Index;
+use Intersect\Database\Schema\Key\UniqueKey;
 use Intersect\Database\Connection\Connection;
 use Intersect\Database\Query\QueryParameters;
+use Intersect\Database\Schema\Key\ForeignKey;
+use Intersect\Database\Schema\Key\PrimaryKey;
+use Intersect\Database\Schema\ColumnDefinitionResolver;
 use Intersect\Database\Query\Builder\Condition\InCondition;
 use Intersect\Database\Query\Builder\QueryConditionResolver;
 use Intersect\Database\Query\Builder\Condition\LikeCondition;
@@ -17,9 +22,6 @@ use Intersect\Database\Query\Builder\Condition\BetweenCondition;
 use Intersect\Database\Query\Builder\Condition\NotNullCondition;
 use Intersect\Database\Query\Builder\Condition\NotEqualsCondition;
 use Intersect\Database\Query\Builder\Condition\BetweenDatesCondition;
-use Intersect\Database\Schema\ColumnDefinitionResolver;
-use Intersect\Database\Schema\ForeignKey;
-use Intersect\Database\Schema\Index;
 
 abstract class QueryBuilder {
 
@@ -72,9 +74,9 @@ abstract class QueryBuilder {
      abstract protected function buildCountQuery();
      abstract protected function buildColumnQuery();
      abstract protected function buildIndexDefinition(Index $index);
-     abstract protected function buildForeignKeyDefinition($keyName, ForeignKey $foreignKey);
-     abstract protected function buildPrimaryKeyDefinition($keyName, array $columnNames);
-     abstract protected function buildUniqueKeyDefinition($keyName, array $columnNames);
+     abstract protected function buildForeignKeyDefinition(ForeignKey $foreignKey);
+     abstract protected function buildPrimaryKeyDefinition(PrimaryKey $primaryKey);
+     abstract protected function buildUniqueKeyDefinition(UniqueKey $uniqueKey);
 
      /** @return ColumnDefinitionResolver */
      abstract protected function getColumnDefinitionResolver();
@@ -466,51 +468,33 @@ abstract class QueryBuilder {
             $columnDefinitionStrings[] = $columnDefinitionResolver->resolve($columnDefinition);
         }
 
-        $uniqueKeyDefinitionStrings = [];
-        foreach ($blueprint->getUniqueKeys() as $keyName => $columnNames)
+        $keyDefinitionStrings = [];
+        foreach ($blueprint->getKeys() as $key)
         {
-            $uniqueKeyDefinitionStrings[] = $this->buildUniqueKeyDefinition($keyName, $columnNames);
-        }
-
-        $primaryKeyDefinitionStrings = [];
-        foreach ($blueprint->getPrimaryKeys() as $keyName => $columnNames)
-        {
-            $primaryKeyDefinitionStrings[] = $this->buildPrimaryKeyDefinition($keyName, $columnNames);
-        }
-
-        $foreignKeyDefinitionStrings = [];
-        foreach ($blueprint->getForeignKeys() as $keyName => $foreignKey)
-        {
-            $foreignKeyDefinitionStrings[] = $this->buildForeignKeyDefinition($keyName, $foreignKey);
-        }
-
-        $indexDefinitionStrings = [];
-        foreach ($blueprint->getIndexes() as $index)
-        {
-            $indexDefinitionStrings[] = $this->buildIndexDefinition($index);
+            if ($key instanceof UniqueKey)
+            {
+                $keyDefinitionStrings[] = $this->buildUniqueKeyDefinition($key);
+            }
+            else if ($key instanceof PrimaryKey)
+            {
+                $keyDefinitionStrings[] = $this->buildPrimaryKeyDefinition($key);
+            }
+            else if ($key instanceof ForeignKey)
+            {
+                $keyDefinitionStrings[] = $this->buildForeignKeyDefinition($key);
+            }
+            else if ($key instanceof Index)
+            {
+                $keyDefinitionStrings[] = $this->buildIndexDefinition($key);
+            }
         }
 
         $queryString = 'create table ' . $this->wrapTableName($blueprint->getTableName()) . ' (';
         $queryString .= implode(', ', $columnDefinitionStrings);
-        
-        if (count($uniqueKeyDefinitionStrings) > 0)
-        {
-            $queryString .= ', ' . implode(', ', $uniqueKeyDefinitionStrings);
-        }
 
-        if (count($primaryKeyDefinitionStrings) > 0)
+        if (count($keyDefinitionStrings) > 0)
         {
-            $queryString .= ', ' . implode(', ', $primaryKeyDefinitionStrings);
-        }
-
-        if (count($foreignKeyDefinitionStrings) > 0)
-        {
-            $queryString .= ', ' . implode(', ', $foreignKeyDefinitionStrings);
-        }
-
-        if (count($indexDefinitionStrings) > 0)
-        {
-            $queryString .= ', ' . implode(', ', $indexDefinitionStrings);
+            $queryString .= ', ' . implode(', ', $keyDefinitionStrings);
         }
 
         $queryString .= ')';

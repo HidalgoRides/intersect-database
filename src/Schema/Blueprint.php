@@ -2,19 +2,19 @@
 
 namespace Intersect\Database\Schema;
 
+use Intersect\Database\Schema\Key\Index;
+use Intersect\Database\Schema\Key\ForeignKey;
 use Intersect\Database\Schema\ColumnDefinition;
-use Intersect\Database\Schema\ForeignKey;
+use Intersect\Database\Schema\Key\PrimaryKey;
+use Intersect\Database\Schema\Key\UniqueKey;
 
 class Blueprint {
 
     /** @var ColumnDefinition[] */
     private $columnDefinitions = [];
-    private $uniqueKeys = [];
-    private $primaryKeys = [];
-    /** @var ForeignKey[] */
-    private $foreignKeys = [];
-    /** @var Index[] */
-    private $indexes = [];
+
+    /** @var Key[] */
+    private $keys = [];
 
     private $tableName;
 
@@ -157,62 +157,32 @@ class Blueprint {
         return $columnDefinition;
     }
 
-    public function getUniqueKeys()
+    public function unique($columnNames, $keyName = null)
     {
-        return $this->uniqueKeys;
+        $this->keys[] = new UniqueKey($columnNames, $keyName);
     }
 
-    public function unique($names, $keyName = null)
+    public function primary($columnNames, $keyName = null)
     {
-        if (!is_array($names))
-        {
-            $names = [$names];
-        }
-
-        $keyName = (!is_null($keyName) ? $keyName : 'unique_' . $this->tableName . '_' . implode('_', $names));
-
-        $this->uniqueKeys[$keyName] = $names;
-    }
-
-    public function getPrimaryKeys()
-    {
-        return $this->primaryKeys;
-    }
-
-    public function primary($names, $keyName = null)
-    {
-        if (!is_array($names))
-        {
-            $names = [$names];
-        }
-
-        $keyName = (!is_null($keyName) ? $keyName : 'primary_' . $this->tableName . '_' . implode('_', $names));
-
-        $this->primaryKeys[$keyName] = $names;
-    }
-
-    /** @return ForeignKey[] */
-    public function getForeignKeys()
-    {
-        return $this->foreignKeys;
+        $this->keys[] = new PrimaryKey($columnNames, $keyName);
     }
 
     public function foreign($fromColumn, $toColumn, $onTable, $keyName = null)
     {
         $keyName = (!is_null($keyName) ? $keyName : 'foreign_' . $fromColumn . '_' . $onTable . '_' . $toColumn);
 
-        $this->foreignKeys[$keyName] = new ForeignKey($fromColumn, $toColumn, $onTable);
+        $this->keys[] = new ForeignKey($keyName, $fromColumn, $toColumn, $onTable);
     }
 
-    /** @return Index[] */
-    public function getIndexes()
+    public function index($columns)
     {
-        return $this->indexes;
+        $this->keys[] = new Index($columns);
     }
 
-    public function index($column)
+    /** @return Key[] */
+    public function getKeys()
     {
-        $this->indexes[] = new Index($column);
+        return $this->keys;
     }
 
     private function addColumnDefinition(ColumnDefinition $columnDefinition)

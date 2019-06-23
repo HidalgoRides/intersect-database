@@ -3,10 +3,12 @@
 namespace Intersect\Database\Query\Builder;
 
 use Intersect\Database\Query\Query;
+use Intersect\Database\Schema\Key\Index;
+use Intersect\Database\Schema\Key\UniqueKey;
 use Intersect\Database\Connection\Connection;
+use Intersect\Database\Schema\Key\ForeignKey;
+use Intersect\Database\Schema\Key\PrimaryKey;
 use Intersect\Database\Schema\MySQLColumnDefinitionResolver;
-use Intersect\Database\Schema\ForeignKey;
-use Intersect\Database\Schema\Index;
 
 class MySQLQueryBuilder extends QueryBuilder {
 
@@ -138,29 +140,33 @@ class MySQLQueryBuilder extends QueryBuilder {
         return 'index (' . implode(', ', $columns) . ')';
     }
 
-    protected function buildForeignKeyDefinition($keyName, ForeignKey $foreignKey)
+    protected function buildForeignKeyDefinition(ForeignKey $foreignKey)
     {
-        return 'constraint ' . $keyName . ' foreign key (`' . $foreignKey->getFromColumn() . '`) references ' . $this->wrapTableName($foreignKey->getOnTable()) . ' (`' . $foreignKey->getToColumn() . '`)';
+        return 'constraint ' . $foreignKey->getName() . ' foreign key (`' . $foreignKey->getFromColumn() . '`) references ' . $this->wrapTableName($foreignKey->getOnTable()) . ' (`' . $foreignKey->getToColumn() . '`)';
     }
 
-    protected function buildPrimaryKeyDefinition($keyName, array $columnNames)
+    protected function buildPrimaryKeyDefinition(PrimaryKey $primaryKey)
     {
-        foreach ($columnNames as &$columnName)
+        $columns = $primaryKey->getColumns();
+
+        foreach ($columns as &$column)
         {
-            $columnName = '`' . $columnName . '`';
+            $column = '`' . $column . '`';
         }
 
-        return 'primary key (' . implode(', ', $columnNames) . ')';
+        return 'primary key (' . implode(', ', $columns) . ')';
     }
 
-    protected function buildUniqueKeyDefinition($keyName, array $columnNames)
+    protected function buildUniqueKeyDefinition(UniqueKey $uniqueKey)
     {
-        foreach ($columnNames as &$columnName)
+        $columns = $uniqueKey->getColumns();
+
+        foreach ($columns as &$column)
         {
-            $columnName = '`' . $columnName . '`';
+            $column = '`' . $column . '`';
         }
 
-        return 'unique key ' . $keyName . ' (' . implode(', ', $columnNames) . ')';
+        return 'unique key ' . $uniqueKey->getName() . ' (' . implode(', ', $columns) . ')';
     }
 
 }
