@@ -2,8 +2,6 @@
 
 namespace Intersect\Database\Schema;
 
-use Intersect\Database\Schema\Blueprint;
-
 class ColumnDefinition {
 
     private $isAutoIncrement = false;
@@ -52,6 +50,7 @@ class ColumnDefinition {
     public function default($value)
     {
         $this->defaultValue = $value;
+        return $this;
     }
 
     public function getLength()
