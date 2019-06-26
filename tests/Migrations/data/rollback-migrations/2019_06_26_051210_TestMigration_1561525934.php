@@ -3,17 +3,16 @@
 use Intersect\Database\Schema\Blueprint;
 use Intersect\Database\Migrations\AbstractMigration;
 
-class {{CLASS_NAME}} extends AbstractMigration {
+class TestMigration1561525934 extends AbstractMigration {
 
     /**
      * Run the migration
      */
     public function up()
     {
-        $this->schema->createTable('sample', function(Blueprint $blueprint) {
+        $this->schema->createTable('test_migration_four', function(Blueprint $blueprint) {
             $blueprint->increments('id');
             $blueprint->string('email', 100);
-            $blueprint->integer('age')->nullable();
         });
     }
 
@@ -22,7 +21,7 @@ class {{CLASS_NAME}} extends AbstractMigration {
      */
     public function down()
     {
-        $this->schema->dropTable('sample');
+        $this->schema->dropTable('test_migration_four');
     }
 
 }

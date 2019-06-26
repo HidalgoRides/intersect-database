@@ -43,6 +43,14 @@ class PostgresColumnDefinitionResolver implements ColumnDefinitionResolver {
             case 'datetime':
                 $type = 'timestamp';
                 break;
+            case 'tinyint':
+            case 'mediumint':
+                $type = 'integer';
+                break;
+            case 'mediumtext':
+            case 'longtext':
+                $type = 'text';
+                break;
             default:
                 $type = $columnDefinitionType;
         }

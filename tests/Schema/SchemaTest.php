@@ -5,11 +5,11 @@ namespace Tests\Schema;
 use PHPUnit\Framework\TestCase;
 use Intersect\Database\Query\Result;
 use Intersect\Database\Schema\Blueprint;
-use Intersect\Database\Schema\SchemaBuilder;
 use Intersect\Database\Connection\Connection;
 use Intersect\Database\Query\Builder\QueryBuilder;
+use Intersect\Database\Schema\Schema;
 
-class SchemaBuilderTest extends TestCase {
+class SchemaTest extends TestCase {
 
     /** @var Connection */
     private $connectionMock;
@@ -23,8 +23,6 @@ class SchemaBuilderTest extends TestCase {
         $this->queryBuilderMock = $this->createMock(QueryBuilder::class);
 
         $this->connectionMock->method('getQueryBuilder')->willReturn($this->queryBuilderMock);
-        
-        SchemaBuilder::setConnection($this->connectionMock);
     }
 
     public function test_createTable()
@@ -37,11 +35,15 @@ class SchemaBuilderTest extends TestCase {
             return $queryBuilder;
         });
         
-        $queryBuilder->method('get')->willReturn(new Result());
+        $expectedResult = new Result();
+        $queryBuilder->method('get')->willReturn($expectedResult);
 
-        SchemaBuilder::createTable('test', function(Blueprint $b) {
+        $schema = new Schema($this->connectionMock);
+        $result = $schema->createTable('test', function(Blueprint $b) {
             $b->string('unit');
         });
+
+        $this->assertEquals($expectedResult, $result);
     }
 
     public function test_dropTable()
@@ -53,9 +55,13 @@ class SchemaBuilderTest extends TestCase {
             return $queryBuilder;
         });
         
-        $queryBuilder->method('get')->willReturn(new Result());
+        $expectedResult = new Result();
+        $queryBuilder->method('get')->willReturn($expectedResult);
 
-        SchemaBuilder::dropTable('test');
+        $schema = new Schema($this->connectionMock);
+        $result = $schema->dropTable('test');
+
+        $this->assertEquals($expectedResult, $result);
     }
 
     public function test_dropTableIfExists()
@@ -67,9 +73,13 @@ class SchemaBuilderTest extends TestCase {
             return $queryBuilder;
         });
         
-        $queryBuilder->method('get')->willReturn(new Result());
+        $expectedResult = new Result();
+        $queryBuilder->method('get')->willReturn($expectedResult);
 
-        SchemaBuilder::dropTableIfExists('test');
+        $schema = new Schema($this->connectionMock);
+        $result = $schema->dropTableIfExists('test');
+
+        $this->assertEquals($expectedResult, $result);
     }
 
 }

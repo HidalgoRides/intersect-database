@@ -201,7 +201,7 @@ class MySQLQueryBuilderTest extends TestCase {
 
         $query = $this->queryBuilder->createTable($blueprint)->build();
 
-        $this->assertEquals("create table `users` (`id` int not null auto_increment, `email` varchar(100) not null, `age` int unsigned, `tint` tinyint default '2', `sint` smallint, `mint` mediumint, `bint` bigint, `price` decimal(5,2), `bio` text, `mtext` mediumtext, `ltext` longtext, `created_at` timestamp, `date_created` datetime, primary key (`id`), unique key unique_email (`email`), constraint foreign_user_id_alt_users_id foreign key (`user_id`) references `alt_users` (`id`), index (`email`))", $query->getSql());
+        $this->assertEquals("create table `users` (`id` int not null auto_increment, `email` varchar(100) not null, `age` int unsigned, `tint` tinyint default '2', `sint` smallint, `mint` mediumint, `bint` bigint, `price` decimal(5,2), `bio` text, `mtext` mediumtext, `ltext` longtext, `created_at` timestamp, `date_created` datetime, primary key (`id`), unique key unique_users_email (`email`), constraint foreign_user_id_alt_users_id foreign key (`user_id`) references `alt_users` (`id`), index (`email`))", $query->getSql());
     }
 
     public function test_buildCreateTableQuery_withMultipleIndexes()
@@ -228,7 +228,7 @@ class MySQLQueryBuilderTest extends TestCase {
 
         $query = $this->queryBuilder->createTable($blueprint)->build();
 
-        $this->assertEquals("create table `users` (`column_one` int not null, `column_two` int not null, unique key unique_column_one_column_two (`column_one`, `column_two`))", $query->getSql());
+        $this->assertEquals("create table `users` (`column_one` int not null, `column_two` int not null, unique key unique_users_column_one_column_two (`column_one`, `column_two`))", $query->getSql());
     }
 
     public function test_buildCreateTableQuery_withMultiplePrimaryKeys()
@@ -256,6 +256,13 @@ class MySQLQueryBuilderTest extends TestCase {
         $query = $this->queryBuilder->dropTableIfExists('users')->build();
 
         $this->assertEquals("drop table if exists `users`", $query->getSql());
+    }
+
+    public function test_buildSelectMaxQuery()
+    {
+        $query = $this->queryBuilder->table('users')->selectMax('score')->build();
+
+        $this->assertEquals("select max(score) as max_value from `users`", $query->getSql());
     }
     
 }

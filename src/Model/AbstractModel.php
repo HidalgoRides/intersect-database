@@ -52,6 +52,21 @@ abstract class AbstractModel implements ModelActions {
     }
 
     /**
+     * @param QueryParameters|null $queryParameters
+     * @return mixed|null
+     * @throws DatabaseException
+     */
+    public static function getMaxValue($column, QueryParameters $queryParameters = null)
+    {
+        $modelClass = new static();
+
+        $queryBuilder = $modelClass->getConnection()->getQueryBuilder();
+        $result = $queryBuilder->table($modelClass->getTableName())->selectMax($column, $queryParameters)->get();
+
+        return $result->getFirstRecord()['max_value'];
+    }
+
+    /**
      * @param array $properties
      * @return static
      */

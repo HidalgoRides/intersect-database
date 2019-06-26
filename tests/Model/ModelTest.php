@@ -25,6 +25,21 @@ class ModelTest extends TestCase {
         $this->assertEquals(1, $count);
     }
 
+    public function test_getMaxValue()
+    {
+        $maxValue = Address::getMaxValue('id');
+        $this->assertEquals(2, $maxValue);
+    }
+
+    public function test_getMaxValue_withQueryParameters()
+    {
+        $queryParameters = new QueryParameters();
+        $queryParameters->equals('zip_code', '12345');
+
+        $maxValue = Address::getMaxValue('id', $queryParameters);
+        $this->assertEquals(1, $maxValue);
+    }
+
     public function test_find()
     {
         $users = User::find();

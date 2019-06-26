@@ -159,12 +159,12 @@ class Blueprint {
 
     public function unique($columnNames, $keyName = null)
     {
-        $this->keys[] = new UniqueKey($columnNames, $keyName);
+        $this->keys[] = new UniqueKey($this->tableName, $columnNames, $keyName);
     }
 
     public function primary($columnNames, $keyName = null)
     {
-        $this->keys[] = new PrimaryKey($columnNames, $keyName);
+        $this->keys[] = new PrimaryKey($this->tableName, $columnNames, $keyName);
     }
 
     public function foreign($fromColumn, $toColumn, $onTable, $keyName = null)
@@ -176,7 +176,7 @@ class Blueprint {
 
     public function index($columns)
     {
-        $this->keys[] = new Index($columns);
+        $this->keys[] = new Index($this->tableName, $columns);
     }
 
     /** @return Key[] */

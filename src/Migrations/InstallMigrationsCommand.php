@@ -4,6 +4,8 @@ namespace Intersect\Database\Migrations;
 
 use Intersect\Core\Command\AbstractCommand;
 use Intersect\Database\Connection\Connection;
+use Intersect\Database\Schema\Schema;
+use Intersect\Database\Schema\Blueprint;
 
 class InstallMigrationsCommand extends AbstractCommand {
 
@@ -23,13 +25,16 @@ class InstallMigrationsCommand extends AbstractCommand {
 
     public function execute($data = [])
     {
-        $this->connection->query("CREATE TABLE ic_migrations (
-            id INT(11) AUTO_INCREMENT PRIMARY KEY,
-            name VARCHAR(255) NOT NULL,
-            status TINYINT(2) NOT NULL DEFAULT 1,
-            date_created DATETIME NOT NULL,
-            date_updated DATETIME
-        )");
+        $schema = new Schema($this->connection);
+
+        $schema->createTable('ic_migrations', function(Blueprint $blueprint) {
+            $blueprint->increments('id');
+            $blueprint->string('name');
+            $blueprint->tinyInteger('status')->default(1);
+            $blueprint->integer('batch_id');
+            $blueprint->datetime('date_created');
+            $blueprint->datetime('date_updated')->nullable();
+        });
     }
 
 }

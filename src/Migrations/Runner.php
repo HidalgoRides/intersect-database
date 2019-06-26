@@ -7,9 +7,10 @@ use Intersect\Core\Storage\FileStorage;
 use Intersect\Database\Connection\Connection;
 use Intersect\Database\Query\QueryParameters;
 use Intersect\Database\Exception\DatabaseException;
-use Intersect\Database\Schema\SchemaBuilder;
 
 class Runner {
+
+    private $currentAction = 'up';
 
     /** @var Connection */
     private $connection;
@@ -19,6 +20,8 @@ class Runner {
 
     /** @var Logger */
     private $logger;
+
+    private $currentBatchId;
 
     private $migrationDirectory;
 
@@ -35,10 +38,12 @@ class Runner {
         $this->migrationDirectory = $migrationDirectory;
     }
 
-    /**
-     * @throws DatabaseException
-     */
-    public function run()
+    public function getCurrentBatchId()
+    {
+        return $this->currentBatchId;
+    }
+
+    public function migrate()
     {
         $this->checkForMigrationTable();
 
@@ -46,7 +51,7 @@ class Runner {
 
         $migrationPaths = $this->fileStorage->glob(rtrim($this->migrationDirectory, '/') . '/*_*.php');
 
-        $filteredMigrationPaths = $this->filterMigrationPaths($migrationPaths);
+        $filteredMigrationPaths = $this->getFilteredMigrationPaths($migrationPaths);
 
         if (count($filteredMigrationPaths) == 0)
         {
@@ -54,10 +59,13 @@ class Runner {
             return;
         }
 
+        $lastBatchId = $this->getLastBatchId();
+        $this->currentBatchId = ($lastBatchId + 1);
+
         foreach ($filteredMigrationPaths as $path)
         {
             try {
-                $this->migrate($path);
+                $this->migratePath($path);
             } catch (\Exception $e) {
                 $this->logger->error('An error occurred during migration of file: ' . $path);
                 $this->logger->error(' * ' . $e->getMessage());
@@ -66,6 +74,35 @@ class Runner {
         }
 
         $this->logger->info('Finished migration');
+    }
+
+    public function rollbackLastBatch()
+    {
+        $this->checkForMigrationTable();
+        $lastBatchId = $this->getLastBatchId();
+        $this->rollback($lastBatchId);
+    }
+
+    public function rollback($batchId = null)
+    {
+        $this->checkForMigrationTable();
+
+        $this->logger->info('Starting rollback' . (!is_null($batchId) ? ' for batch id: ' . $batchId : ''));
+
+        $migrationsToRollback = $this->getMigrationsToRollback($batchId);
+
+        if (count($migrationsToRollback) == 0)
+        {
+            $this->logger->warn('Nothing to rollback!');
+            return;
+        }
+
+        foreach ($migrationsToRollback as $migration)
+        {
+            $this->rollbackMigration($migration);
+        }
+
+        $this->logger->info('Finished rollback');
     }
 
     private function checkForMigrationTable()
@@ -85,7 +122,7 @@ class Runner {
      * @return array
      * @throws DatabaseException
      */
-    private function filterMigrationPaths($migrationFiles)
+    private function getFilteredMigrationPaths($migrationFiles)
     {
         $migrationParameters = new QueryParameters();
         $migrationParameters->equals('status', 1);
@@ -110,20 +147,35 @@ class Runner {
         return $filteredMigrationPaths;
     }
 
+    /** @return Migration[] */
+    private function getMigrationsToRollback($batchId = null)
+    {
+        $migrationParameters = new QueryParameters();
+        $migrationParameters->equals('status', 1);
+        $migrationParameters->setOrder('id desc');
+
+        if (!is_null($batchId))
+        {
+            $migrationParameters->equals('batch_id', $batchId);
+        }
+
+        return Migration::find($migrationParameters);
+    }
+
 
     /**
      * @param $path
      * @throws DatabaseException
      * @throws \Intersect\Database\Exception\ValidationException
      */
-    private function migrate($path)
+    private function migratePath($path)
     {
         $this->logger->info('Migrating file: ' . $path);
 
         $this->fileStorage->requireOnce($path);
 
         $className = MigrationHelper::resolveClassNameFromPath($path);
-        $class = new $className();
+        $class = new $className($this->connection);
 
         if (!$class instanceof AbstractMigration)
         {
@@ -131,16 +183,44 @@ class Runner {
             return;
         }
 
-        SchemaBuilder::setConnection($this->connection);
-        $class->setConnection($this->connection);
-
         $class->up();
 
         $pathParts = explode('/', $path);
 
         $migration = new Migration();
         $migration->name = end($pathParts);
+        $migration->batch_id = $this->currentBatchId;
         $migration->save();
+    }
+
+    private function rollbackMigration(Migration $migration)
+    {
+        $migrationFile = $migration->name;
+        $migrationFileFullPath = $this->migrationDirectory . '/' . $migrationFile;
+
+        $this->logger->info('Rolling back file: ' . $migrationFile);
+
+        $this->fileStorage->requireOnce($migrationFileFullPath);
+
+        $className = MigrationHelper::resolveClassNameFromPath($migrationFile);
+        $class = new $className($this->connection);
+
+        if (!$class instanceof AbstractMigration)
+        {
+            $this->logger->error($migrationFileFullPath . ' is not an instance of Migration. Skipping file');
+            return;
+        }
+
+        $class->down();
+
+        $migration->status = 2;
+        $migration->save();
+    }
+
+    private function getLastBatchId()
+    {
+        $result = $this->connection->getQueryBuilder()->selectMax('batch_id')->table('ic_migrations')->get();
+        return (int) ($result->getFirstRecord()['max_value']);
     }
 
 }

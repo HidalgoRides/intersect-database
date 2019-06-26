@@ -6,11 +6,14 @@ class Key {
 
     protected $prefix = 'key_';
 
-    private $name;
     private $columns;
+    private $name;
+    private $tableName;
 
-    public function __construct($columns, $name = null)
+    public function __construct($tableName, $columns, $name = null)
     {
+        $this->tableName = $tableName;
+
         if (!is_array($columns))
         {
             $columns = [$columns];
@@ -20,7 +23,7 @@ class Key {
         {
             $name = $this->generateName($columns);
         }
-        
+
         $this->columns = $columns;
         $this->name = $name;
     }
@@ -35,9 +38,14 @@ class Key {
         return $this->name;
     }
 
+    public function getTableName()
+    {
+        return $this->tableName;
+    }
+
     private function generateName(array $columns)
     {
-        return $this->prefix . implode('_', $columns);
+        return $this->prefix . $this->tableName . '_' . implode('_', $columns);
     }
 
 }

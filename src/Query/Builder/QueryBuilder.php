@@ -26,6 +26,7 @@ use Intersect\Database\Query\Builder\Condition\BetweenDatesCondition;
 abstract class QueryBuilder {
 
     private static $ACTION_SELECT = 'select';
+    private static $ACTION_SELECT_MAX = 'selectMax';
     private static $ACTION_COUNT = 'count';
     private static $ACTION_DELETE = 'delete';
     private static $ACTION_UPDATE = 'update';
@@ -124,6 +125,20 @@ abstract class QueryBuilder {
         {
             $this->columns = $columns;
         }
+
+        if (!is_null($queryParameters))
+        {
+            $this->initFromQueryParameters($queryParameters);
+        }
+
+        return $this;
+    }
+
+    public function selectMax($column, QueryParameters $queryParameters = null)
+    {
+        $this->action = self::$ACTION_SELECT_MAX;
+
+        $this->columns = [$column];
 
         if (!is_null($queryParameters))
         {
@@ -371,6 +386,9 @@ abstract class QueryBuilder {
             case self::$ACTION_SELECT:
                 $query = $this->buildSelectQuery();
                 break;
+            case self::$ACTION_SELECT_MAX:
+                $query = $this->buildSelectMaxQuery();
+                break;
             case self::$ACTION_INSERT:
                 $query = $this->buildInsertQuery();
                 break;
@@ -456,6 +474,16 @@ abstract class QueryBuilder {
         }
 
         $query->setSql($sql);
+    }
+
+    protected function buildSelectMaxQuery()
+    {
+        $query = new Query('select max(' . $this->columns[0] . ') as max_value from ' . $this->wrapTableName($this->tableName));
+
+        $this->appendWhereConditions($query);
+        $this->appendOptions($query);
+
+        return $query;
     }
 
     protected function buildCreateTableQuery(Blueprint $blueprint)

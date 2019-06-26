@@ -2,28 +2,20 @@
 
 namespace Intersect\Database\Migrations;
 
+use Intersect\Database\Schema\Schema;
 use Intersect\Database\Connection\Connection;
 
 abstract class AbstractMigration {
 
-    /** @var Connection */
-    private $connection;
+    /** @var Schema */
+    protected $schema;
+
+    public function __construct(Connection $connection)
+    {
+        $this->schema = new Schema($connection);
+    }
 
     abstract public function up();
-
     abstract public function down();
-
-    /**
-     * @return Connection
-     */
-    public function getConnection() 
-    {
-        return $this->connection;
-    }
-
-    public function setConnection(Connection $connection)
-    {
-        $this->connection = $connection;
-    }
 
 }
