@@ -202,7 +202,7 @@ class Runner {
 
         $this->logger->info('Migrating file: ' . $fileName);
 
-        $this->fileStorage->requireOnce($fileName);
+        $this->fileStorage->requireOnce($this->migrationDirectory . '/' . $fileName);
 
         $className = MigrationHelper::resolveClassNameFromPath($fileName);
         $class = new $className($this->connection);
