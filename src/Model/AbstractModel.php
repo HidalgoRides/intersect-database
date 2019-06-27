@@ -40,6 +40,19 @@ abstract class AbstractModel implements ModelActions {
         $this->tableName = $this->getTableName();
     }
 
+    public static function bulkCreate(array $modelData)
+    {
+        $models = [];
+
+        foreach ($modelData as $data)
+        {
+            $model = self::newInstance($data);
+            $models[] = $model->save(true);
+        }
+
+        return $models;
+    }
+
     /**
      * @param QueryParameters|null $queryParameters
      * @return static[]

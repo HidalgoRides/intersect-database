@@ -3,6 +3,7 @@
 namespace Tests\Model;
 
 use Tests\Stubs\User;
+use Tests\Stubs\Phone;
 use Tests\Stubs\Address;
 use PHPUnit\Framework\TestCase;
 use Tests\Stubs\PartialAssociation;
@@ -202,6 +203,22 @@ class ModelTest extends TestCase {
         $queryParameters->equals('key_two', 5);
 
         $this->assertNotNull(PartialAssociation::find($queryParameters));
+    }
+
+    public function test_bulkCreate()
+    {
+        $models = Phone::bulkCreate([
+            ['number' => '123'],
+            ['number' => '456'],
+            ['number' => '789']
+        ]);
+        
+        $this->assertCount(3, $models);
+
+        foreach ($models as $model)
+        {
+            $this->assertNotNull($model->id);
+        }
     }
 
 }
