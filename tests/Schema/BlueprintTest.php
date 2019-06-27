@@ -8,6 +8,7 @@ use Intersect\Database\Schema\Key\PrimaryKey;
 use Intersect\Database\Schema\Key\UniqueKey;
 use Intersect\Database\Schema\Key\Index;
 use Intersect\Database\Schema\Key\ForeignKey;
+use Intersect\Database\Schema\ColumnType;
 
 class BlueprintTest extends TestCase {
 
@@ -28,7 +29,7 @@ class BlueprintTest extends TestCase {
 
         $this->assertNotNull($definition);
         $this->assertEquals('date_added', $definition->getName());
-        $this->assertEquals('datetime', $definition->getType());
+        $this->assertEquals(ColumnType::DATETIME, $definition->getType());
     }
 
     public function test_numeric()
@@ -39,7 +40,7 @@ class BlueprintTest extends TestCase {
 
         $this->assertNotNull($definition);
         $this->assertEquals('price', $definition->getName());
-        $this->assertEquals('numeric', $definition->getType());
+        $this->assertEquals(ColumnType::NUMERIC, $definition->getType());
         $this->assertEquals(4, $definition->getPrecision());
         $this->assertEquals(2, $definition->getScale());
     }
@@ -54,7 +55,7 @@ class BlueprintTest extends TestCase {
 
         $this->assertNotNull($definition);
         $this->assertEquals('id', $definition->getName());
-        $this->assertEquals('integer', $definition->getType());
+        $this->assertEquals(ColumnType::INTEGER, $definition->getType());
         $this->assertTrue($definition->isPrimary());
         $this->assertTrue($definition->isAutoIncrement());
     }
@@ -67,7 +68,7 @@ class BlueprintTest extends TestCase {
 
         $this->assertNotNull($definition);
         $this->assertEquals('age', $definition->getName());
-        $this->assertEquals('tinyint', $definition->getType());
+        $this->assertEquals(ColumnType::TINY_INT, $definition->getType());
     }
 
     public function test_smallInteger()
@@ -78,7 +79,7 @@ class BlueprintTest extends TestCase {
 
         $this->assertNotNull($definition);
         $this->assertEquals('age', $definition->getName());
-        $this->assertEquals('smallint', $definition->getType());
+        $this->assertEquals(ColumnType::SMALL_INT, $definition->getType());
     }
 
     public function test_mediumInteger()
@@ -89,7 +90,7 @@ class BlueprintTest extends TestCase {
 
         $this->assertNotNull($definition);
         $this->assertEquals('age', $definition->getName());
-        $this->assertEquals('mediumint', $definition->getType());
+        $this->assertEquals(ColumnType::MEDIUM_INT, $definition->getType());
     }
 
     public function test_bigInteger()
@@ -100,7 +101,7 @@ class BlueprintTest extends TestCase {
 
         $this->assertNotNull($definition);
         $this->assertEquals('age', $definition->getName());
-        $this->assertEquals('bigint', $definition->getType());
+        $this->assertEquals(ColumnType::BIG_INT, $definition->getType());
     }
 
     public function test_integer()
@@ -111,7 +112,7 @@ class BlueprintTest extends TestCase {
 
         $this->assertNotNull($definition);
         $this->assertEquals('age', $definition->getName());
-        $this->assertEquals('integer', $definition->getType());
+        $this->assertEquals(ColumnType::INTEGER, $definition->getType());
     }
 
     public function test_string_defaultLength()
@@ -122,7 +123,7 @@ class BlueprintTest extends TestCase {
 
         $this->assertNotNull($definition);
         $this->assertEquals('email', $definition->getName());
-        $this->assertEquals('string', $definition->getType());
+        $this->assertEquals(ColumnType::STRING, $definition->getType());
         $this->assertEquals(255, $definition->getLength());
     }
 
@@ -134,7 +135,7 @@ class BlueprintTest extends TestCase {
 
         $this->assertNotNull($definition);
         $this->assertEquals('email', $definition->getName());
-        $this->assertEquals('string', $definition->getType());
+        $this->assertEquals(ColumnType::STRING, $definition->getType());
         $this->assertEquals(45, $definition->getLength());
     }
 
@@ -146,7 +147,7 @@ class BlueprintTest extends TestCase {
 
         $this->assertNotNull($definition);
         $this->assertEquals('description', $definition->getName());
-        $this->assertEquals('text', $definition->getType());
+        $this->assertEquals(ColumnType::TEXT, $definition->getType());
     }
 
     public function test_mediumText()
@@ -157,7 +158,7 @@ class BlueprintTest extends TestCase {
 
         $this->assertNotNull($definition);
         $this->assertEquals('description', $definition->getName());
-        $this->assertEquals('mediumtext', $definition->getType());
+        $this->assertEquals(ColumnType::MEDIUM_TEXT, $definition->getType());
     }
 
     public function test_longText()
@@ -168,7 +169,7 @@ class BlueprintTest extends TestCase {
 
         $this->assertNotNull($definition);
         $this->assertEquals('description', $definition->getName());
-        $this->assertEquals('longtext', $definition->getType());
+        $this->assertEquals(ColumnType::LONG_TEXT, $definition->getType());
     }
 
     public function test_timestamp()
@@ -179,7 +180,7 @@ class BlueprintTest extends TestCase {
 
         $this->assertNotNull($definition);
         $this->assertEquals('created_at', $definition->getName());
-        $this->assertEquals('timestamp', $definition->getType());
+        $this->assertEquals(ColumnType::TIMESTAMP, $definition->getType());
     }
 
     public function test_primary()

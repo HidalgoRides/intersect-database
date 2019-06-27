@@ -11,7 +11,7 @@ use Intersect\Database\Connection\Connection;
 use Intersect\Database\Query\QueryParameters;
 use Intersect\Database\Schema\Key\ForeignKey;
 use Intersect\Database\Schema\Key\PrimaryKey;
-use Intersect\Database\Schema\ColumnDefinitionResolver;
+use Intersect\Database\Schema\Resolver\ColumnDefinitionResolver;
 use Intersect\Database\Query\Builder\Condition\InCondition;
 use Intersect\Database\Query\Builder\QueryConditionResolver;
 use Intersect\Database\Query\Builder\Condition\LikeCondition;

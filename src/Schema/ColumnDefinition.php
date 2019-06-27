@@ -31,14 +31,20 @@ class ColumnDefinition {
         return $this->type;
     }
 
+    public function setType($type)
+    {
+        $this->type = $type;
+        return $this;
+    }
+
     public function isAutoIncrement()
     {
         return $this->isAutoIncrement;
     }
 
-    public function autoIncrement()
+    public function autoIncrement($value = true)
     {
-        $this->isAutoIncrement = true;
+        $this->isAutoIncrement = $value;
         return $this;
     }
 
@@ -69,9 +75,9 @@ class ColumnDefinition {
         return $this->isNullable;
     }
 
-    public function nullable()
+    public function nullable($value = true)
     {
-        $this->isNullable = true;
+        $this->isNullable = $value;
         return $this;
     }
 
@@ -80,9 +86,9 @@ class ColumnDefinition {
         return $this->isPrimary;
     }
 
-    public function primary()
+    public function primary($value = true)
     {
-        $this->isPrimary = true;
+        $this->isPrimary = $value;
         return $this;
     }
 
@@ -113,9 +119,9 @@ class ColumnDefinition {
         return $this->isUnsigned;
     }
 
-    public function unsigned()
+    public function unsigned($value = true)
     {
-        $this->isUnsigned = true;
+        $this->isUnsigned = $value;
         return $this;
     }
 

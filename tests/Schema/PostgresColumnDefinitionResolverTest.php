@@ -3,7 +3,7 @@
 namespace Tests\Schema;
 
 use PHPUnit\Framework\TestCase;
-use Intersect\Database\Schema\PostgresColumnDefinitionResolver;
+use Intersect\Database\Schema\Resolver\PostgresColumnDefinitionResolver;
 use Intersect\Database\Schema\ColumnDefinition;
 
 class PostgresColumnDefinitionResolverTest extends TestCase {

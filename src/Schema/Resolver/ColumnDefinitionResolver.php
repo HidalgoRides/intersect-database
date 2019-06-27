@@ -1,6 +1,6 @@
 <?php
 
-namespace Intersect\Database\Schema;
+namespace Intersect\Database\Schema\Resolver;
 
 use Intersect\Database\Schema\ColumnDefinition;
 

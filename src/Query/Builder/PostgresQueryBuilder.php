@@ -8,7 +8,7 @@ use Intersect\Database\Schema\Key\UniqueKey;
 use Intersect\Database\Connection\Connection;
 use Intersect\Database\Schema\Key\ForeignKey;
 use Intersect\Database\Schema\Key\PrimaryKey;
-use Intersect\Database\Schema\PostgresColumnDefinitionResolver;
+use Intersect\Database\Schema\Resolver\PostgresColumnDefinitionResolver;
 
 class PostgresQueryBuilder extends QueryBuilder {
 

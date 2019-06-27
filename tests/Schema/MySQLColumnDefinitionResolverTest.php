@@ -4,7 +4,7 @@ namespace Tests\Schema;
 
 use PHPUnit\Framework\TestCase;
 use Intersect\Database\Schema\ColumnDefinition;
-use Intersect\Database\Schema\MySQLColumnDefinitionResolver;
+use Intersect\Database\Schema\Resolver\MySQLColumnDefinitionResolver;
 
 class MySQLColumnDefinitionResolverTest extends TestCase {
 

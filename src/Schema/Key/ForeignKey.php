@@ -13,7 +13,7 @@ class ForeignKey extends Key {
 
     public function __construct($keyName, $fromColumn, $toColumn, $onTable, $tableSchema = 'public')
     {
-        parent::__construct(null, [$fromColumn], $keyName);
+        parent::__construct(null, [$fromColumn], $this->prefix . $keyName);
 
         $this->fromColumn = $fromColumn;
         $this->toColumn = $toColumn;
