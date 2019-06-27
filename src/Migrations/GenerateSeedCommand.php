@@ -5,7 +5,7 @@ namespace Intersect\Database\Migrations;
 use Intersect\Core\Storage\FileStorage;
 use Intersect\Core\Command\AbstractCommand;
 
-class GenerateMigrationCommand extends AbstractCommand {
+class GenerateSeedCommand extends AbstractCommand {
 
     /** @var Generator */
     private $generator;
@@ -18,7 +18,7 @@ class GenerateMigrationCommand extends AbstractCommand {
 
     public function getDescription()
     {
-        return 'Generates a migration file based on a blank template';
+        return 'Generates a seed file based on a blank template';
     }
 
     public function getParameters()
@@ -36,7 +36,7 @@ class GenerateMigrationCommand extends AbstractCommand {
             exit();
         }
 
-        $this->generator->generate($data[0], 'blank-migration');
+        $this->generator->generate($data[0], 'blank-seed');
     }
 
 }

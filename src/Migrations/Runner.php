@@ -6,11 +6,10 @@ use Intersect\Core\Logger\Logger;
 use Intersect\Core\Storage\FileStorage;
 use Intersect\Database\Connection\Connection;
 use Intersect\Database\Query\QueryParameters;
+use Intersect\Database\Migrations\AbstractSeed;
 use Intersect\Database\Exception\DatabaseException;
 
 class Runner {
-
-    private $currentAction = 'up';
 
     /** @var Connection */
     private $connection;
@@ -24,6 +23,8 @@ class Runner {
     private $currentBatchId;
 
     private $migrationDirectory;
+
+    private $seedMigrationsEnabled;
 
     public function __construct(Connection $connection, FileStorage $fileStorage, Logger $logger, $migrationsPath)
     {
@@ -43,17 +44,18 @@ class Runner {
         return $this->currentBatchId;
     }
 
-    public function migrate()
+    public function migrate($seedMigrationsEnabled = false)
     {
         $this->checkForMigrationTable();
+        $this->seedMigrationsEnabled = $seedMigrationsEnabled;
 
         $this->logger->info('Starting migration');
 
         $migrationPaths = $this->fileStorage->glob(rtrim($this->migrationDirectory, '/') . '/*_*.php');
 
-        $filteredMigrationPaths = $this->getFilteredMigrationPaths($migrationPaths);
+        $migrationsToRun = $this->getMigrationToRun($migrationPaths);
 
-        if (count($filteredMigrationPaths) == 0)
+        if (count($migrationsToRun) == 0)
         {
             $this->logger->warn('Nothing to migrate!');
             return;
@@ -62,10 +64,11 @@ class Runner {
         $lastBatchId = $this->getLastBatchId();
         $this->currentBatchId = ($lastBatchId + 1);
 
-        foreach ($filteredMigrationPaths as $path)
+        /** @var Migration $migration */
+        foreach ($migrationsToRun as $migration)
         {
             try {
-                $this->migratePath($path);
+                $this->runMigration($migration);
             } catch (\Exception $e) {
                 $this->logger->error('An error occurred during migration of file: ' . $path);
                 $this->logger->error(' * ' . $e->getMessage());
@@ -119,32 +122,57 @@ class Runner {
 
     /**
      * @param $migrationFiles
-     * @return array
+     * @return Migration[]
      * @throws DatabaseException
      */
-    private function getFilteredMigrationPaths($migrationFiles)
+    private function getMigrationToRun(array $migrationFiles)
     {
+        if (count($migrationFiles) == 0)
+        {
+            return [];
+        }
+
         $migrationParameters = new QueryParameters();
-        $migrationParameters->equals('status', 1);
-
         $existingMigrations = Migration::find($migrationParameters);
-        $existingMigrationNames = array_column($existingMigrations, 'name');
 
-        $filteredMigrationPaths = [];
+        $existingMigrationsWithKeys = [];
+        foreach ($existingMigrations as $existingMigration)
+        {
+            $existingMigrationsWithKeys[md5($existingMigration->name)] = $existingMigration;
+        }
+
+        $migrationsToRun = [];
+
         foreach ($migrationFiles as $migrationFile)
         {
             $migrationFileParts = explode('/', $migrationFile);
             $migrationFileName = end($migrationFileParts);
 
-            if (in_array($migrationFileName, $existingMigrationNames))
+            $migrationToRun = null;
+
+            $migrationFileNameHash = md5($migrationFileName);
+            if (array_key_exists($migrationFileNameHash, $existingMigrationsWithKeys))
             {
-                continue;
+                $migration = $existingMigrationsWithKeys[$migrationFileNameHash];
+
+                if ($migration->status != 1)
+                {
+                    $migrationToRun = $migration;
+                }
+            }
+            else
+            {
+                $migrationToRun = new Migration();
+                $migrationToRun->name = $migrationFileName;
             }
 
-            $filteredMigrationPaths[] = $migrationFile;
+            if (!is_null($migrationToRun))
+            {
+                $migrationsToRun[] = $migrationToRun;
+            }
         }
 
-        return $filteredMigrationPaths;
+        return $migrationsToRun;
     }
 
     /** @return Migration[] */
@@ -164,32 +192,38 @@ class Runner {
 
 
     /**
-     * @param $path
+     * @param Migration $migration
      * @throws DatabaseException
      * @throws \Intersect\Database\Exception\ValidationException
      */
-    private function migratePath($path)
+    private function runMigration(Migration $migration)
     {
-        $this->logger->info('Migrating file: ' . $path);
+        $fileName = $migration->name;
 
-        $this->fileStorage->requireOnce($path);
+        $this->logger->info('Migrating file: ' . $fileName);
 
-        $className = MigrationHelper::resolveClassNameFromPath($path);
+        $this->fileStorage->requireOnce($fileName);
+
+        $className = MigrationHelper::resolveClassNameFromPath($fileName);
         $class = new $className($this->connection);
 
-        if (!$class instanceof AbstractMigration)
+        if (!$class instanceof AbstractMigration && !$class instanceof AbstractSeed)
         {
-            $this->logger->error($path . ' is not an instance of Migration. Skipping file');
+            $this->logger->error($fileName . ' is not an instance of AbstractMigration or AbstractSeed. Skipping file');
             return;
         }
 
-        $class->up();
+        if ($class instanceof AbstractMigration)
+        {
+            $class->up();
+        }
+        else if ($class instanceof AbstractSeed)
+        {
+            $class->populate();
+        }
 
-        $pathParts = explode('/', $path);
-
-        $migration = new Migration();
-        $migration->name = end($pathParts);
         $migration->batch_id = $this->currentBatchId;
+        $migration->status = 1;
         $migration->save();
     }
 
@@ -200,18 +234,27 @@ class Runner {
 
         $this->logger->info('Rolling back file: ' . $migrationFile);
 
+        if (!$this->fileStorage->fileExists($migrationFileFullPath))
+        {
+            $this->logger->error($migrationFileFullPath . ' not found. Aborting rollback');
+            die();
+        }
+
         $this->fileStorage->requireOnce($migrationFileFullPath);
 
         $className = MigrationHelper::resolveClassNameFromPath($migrationFile);
         $class = new $className($this->connection);
 
-        if (!$class instanceof AbstractMigration)
+        if (!$class instanceof AbstractMigration && !$class instanceof AbstractSeed)
         {
-            $this->logger->error($migrationFileFullPath . ' is not an instance of Migration. Skipping file');
+            $this->logger->error($migrationFileFullPath . ' is not an instance of AbstractMigration or AbstractSeed. Skipping file');
             return;
         }
 
-        $class->down();
+        if ($class instanceof AbstractMigration)
+        {
+            $class->down();
+        }
 
         $migration->status = 2;
         $migration->save();

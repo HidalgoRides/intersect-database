@@ -24,7 +24,7 @@ class Generator {
         $this->migrationsPath = rtrim($migrationsPath, '/');
     }
 
-    public function generate($name, $templateName = 'blank')
+    public function generate($name, $templateName)
     {
         $migrationsPath = $this->getMigrationsPath();
         if (!$this->fileStorage->directoryExists($migrationsPath))
@@ -43,7 +43,7 @@ class Generator {
 
         if ($this->fileStorage->fileExists($path))
         {
-            throw new \InvalidArgumentException('Cannot generate migration file, file already exists: ' . $path);
+            throw new \InvalidArgumentException('Cannot generate file, file already exists: ' . $path);
         }
 
         $templateContents = null;
@@ -59,7 +59,7 @@ class Generator {
 
         $this->fileStorage->writeFile($path, $templateContents);
 
-        $this->logger->info('Generated migration file: ' . $path);
+        $this->logger->info('Generated file: ' . $path);
     }
 
     private function generateFullPath($name)

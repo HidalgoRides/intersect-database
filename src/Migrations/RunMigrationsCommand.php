@@ -24,7 +24,25 @@ class RunMigrationsCommand extends AbstractCommand {
 
     public function execute($data = [])
     {
-        $this->runner->run();
+        $action = $data[0];
+
+        if (isset($data[0]))
+        {
+            $action = $data[0];
+        }
+
+        if ($action == '--rollback')
+        {
+            $this->runner->rollback();
+        } 
+        if ($action == '--rollbackLast')
+        {
+            $this->runner->rollbackLastBatch();
+        }
+        else
+        {
+            $this->runner->migrate();
+        }
     }
 
 }

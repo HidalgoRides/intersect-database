@@ -1,0 +1,15 @@
+<?php
+
+use Intersect\Database\Migrations\AbstractSeed;
+
+class {{CLASS_NAME}} extends AbstractSeed {
+
+    /**
+     * Populate seed data
+     */
+    public function populate()
+    {
+        // populate data using model classes
+    }
+
+}
