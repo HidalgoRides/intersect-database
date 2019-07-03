@@ -82,4 +82,24 @@ class SchemaTest extends TestCase {
         $this->assertEquals($expectedResult, $result);
     }
 
+    public function test_dropColumns()
+    {
+        $queryBuilder = $this->queryBuilderMock;
+
+        $queryBuilder->method('table')->willReturnCallback(function($tableName) use ($queryBuilder) {
+            $this->assertEquals('test', $tableName);
+            return $queryBuilder;
+        });
+
+        $queryBuilder->method('dropColumns')->willReturn($queryBuilder);
+        
+        $expectedResult = new Result();
+        $queryBuilder->method('get')->willReturn($expectedResult);
+
+        $schema = new Schema($this->connectionMock);
+        $result = $schema->dropColumns('test', ['email']);
+
+        $this->assertEquals($expectedResult, $result);
+    }
+
 }

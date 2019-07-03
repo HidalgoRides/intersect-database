@@ -2,9 +2,10 @@
 
 namespace Tests\Connection;
 
-use PHPUnit\Framework\TestCase;
-use Intersect\Database\Connection\Connection;
 use Tests\TestUtility;
+use PHPUnit\Framework\TestCase;
+use Intersect\Database\Schema\Blueprint;
+use Intersect\Database\Connection\Connection;
 
 class MySQLConnectionTest extends TestCase {
 
@@ -54,6 +55,29 @@ class MySQLConnectionTest extends TestCase {
             SELECT * FROM users
         ");
         $this->assertTrue($result->getCount() > 0);
+    }
+
+    public function test_queryBuilder_dropColumns()
+    {
+        $tableName = 'test_querybuilder_dropcolumns';
+
+        $blueprint = new Blueprint($tableName);
+        $blueprint->integer('id');
+        $blueprint->string('name');
+
+        $this->connection->getQueryBuilder()->createTable($blueprint)->get();
+
+        $result = $this->connection->getQueryBuilder()->table($tableName)->columns()->get(true);
+        $columns = array_column($result->getRecords(), 'Field');
+
+        $this->assertCount(2, $columns);
+
+        $this->connection->getQueryBuilder()->table($tableName)->dropColumns(['name'])->get();
+
+        $result = $this->connection->getQueryBuilder()->table($tableName)->columns()->get(true);
+        $columns = array_column($result->getRecords(), 'Field');
+
+        $this->assertCount(1, $columns);
     }
 
 }

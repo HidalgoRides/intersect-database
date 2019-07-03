@@ -2,9 +2,10 @@
 
 namespace Tests\Connection;
 
-use PHPUnit\Framework\TestCase;
-use Intersect\Database\Connection\Connection;
 use Tests\TestUtility;
+use PHPUnit\Framework\TestCase;
+use Intersect\Database\Schema\Blueprint;
+use Intersect\Database\Connection\Connection;
 
 class PostgresConnectionTest extends TestCase {
 
@@ -25,19 +26,19 @@ class PostgresConnectionTest extends TestCase {
 
     public function test_query_cacheUpdatedIfDirty()
     {
-        $result = $this->connection->query("SELECT * FROM users ORDER BY id DESC LIMIT 1");
+        $result = $this->connection->query("SELECT * FROM public.users ORDER BY id DESC LIMIT 1");
 
         $record = $result->getRecords()[0];
 
         $id = $record['id'];
         $updatedData = 'Updated email ' . uniqid();
 
-        $this->connection->query("UPDATE users SET email=:email WHERE id=:id", [
+        $this->connection->query("UPDATE public.users SET email=:email WHERE id=:id", [
             'email' => $updatedData,
             'id' => $id
         ]);
 
-        $result = $this->connection->query("SELECT * FROM users ORDER BY id DESC LIMIT 1");
+        $result = $this->connection->query("SELECT * FROM public.users ORDER BY id DESC LIMIT 1");
 
         $record = $result->getRecords()[0];
 
@@ -46,14 +47,37 @@ class PostgresConnectionTest extends TestCase {
 
     public function test_query_resultsReturnedIfSqlHasSpacesAtBeginning()
     {
-        $result = $this->connection->query("SELECT * FROM users");
+        $result = $this->connection->query("SELECT * FROM public.users");
 
         $this->assertTrue($result->getCount() > 0);
 
         $result = $this->connection->query("
-            SELECT * FROM users
+            SELECT * FROM public.users
         ");
         $this->assertTrue($result->getCount() > 0);
+    }
+
+    public function test_queryBuilder_dropColumns()
+    {
+        $tableName = 'test_querybuilder_dropcolumns';
+
+        $blueprint = new Blueprint($tableName);
+        $blueprint->integer('id');
+        $blueprint->string('name');
+
+        $this->connection->getQueryBuilder()->createTable($blueprint)->get();
+
+        $result = $this->connection->getQueryBuilder()->table($tableName)->columns()->get(true);
+        $columns = array_column($result->getRecords(), 'Field');
+
+        $this->assertCount(2, $columns);
+
+        $this->connection->getQueryBuilder()->table($tableName)->dropColumns(['name'])->get();
+
+        $result = $this->connection->getQueryBuilder()->table($tableName)->columns()->get(true);
+        $columns = array_column($result->getRecords(), 'Field');
+
+        $this->assertCount(1, $columns);
     }
 
 }

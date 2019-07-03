@@ -264,5 +264,19 @@ class MySQLQueryBuilderTest extends TestCase {
 
         $this->assertEquals("select max(score) as max_value from `users`", $query->getSql());
     }
+
+    public function test_buildDropColumnsQuery()
+    {
+        $query = $this->queryBuilder->table('users')->dropColumns(['email'])->build();
+
+        $this->assertEquals("alter table `users` drop column `email`", $query->getSql());
+    }
+
+    public function test_buildDropColumnsQuery_withMultiple()
+    {
+        $query = $this->queryBuilder->table('users')->dropColumns(['email', 'name'])->build();
+
+        $this->assertEquals("alter table `users` drop column `email`, drop column `name`", $query->getSql());
+    }
     
 }

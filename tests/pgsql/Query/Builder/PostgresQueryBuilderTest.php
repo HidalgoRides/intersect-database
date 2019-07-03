@@ -379,5 +379,33 @@ class PostgresQueryBuilderTest extends TestCase {
 
         $this->assertEquals("select max(score) as max_value from users.users", $query->getSql());
     }
+
+    public function test_buildDropColumnsQuery()
+    {
+        $query = $this->queryBuilder->table('users')->dropColumns(['email'])->build();
+
+        $this->assertEquals("alter table public.users drop column email", $query->getSql());
+    }
+
+    public function test_buildDropColumnsQuery_withSchema()
+    {
+        $query = $this->queryBuilder->table('users')->schema('users')->dropColumns(['email'])->build();
+
+        $this->assertEquals("alter table users.users drop column email", $query->getSql());
+    }
+
+    public function test_buildDropColumnsQuery_withMultiple()
+    {
+        $query = $this->queryBuilder->table('users')->dropColumns(['email', 'name'])->build();
+
+        $this->assertEquals("alter table public.users drop column email, drop column name", $query->getSql());
+    }
+
+    public function test_buildDropColumnsQuery_withMultiple_withSchema()
+    {
+        $query = $this->queryBuilder->table('users')->schema('users')->dropColumns(['email', 'name'])->build();
+
+        $this->assertEquals("alter table users.users drop column email, drop column name", $query->getSql());
+    }
     
 }

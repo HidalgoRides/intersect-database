@@ -25,20 +25,22 @@ class NullConnection extends Connection {
 
     /**
      * @param Query $query
+     * @param boolean $bypassCache
      * @return Result
      * @throws DatabaseException
      */
-    public function run(Query $query)
+    public function run(Query $query, $bypassCache = false)
     {
-        return $this->query($query->getSql(), $query->getBindParameters());
+        return $this->query($query->getSql(), $query->getBindParameters(), $bypassCache);
     }
 
     /**
      * @param $sql
+     * @param boolean $bypassCache
      * @param array $bindParameters
      * @return Result
      */
-    public function query($sql, $bindParameters = [])
+    public function query($sql, $bindParameters = [], $bypassCache = false)
     {
         return new Result();
     }

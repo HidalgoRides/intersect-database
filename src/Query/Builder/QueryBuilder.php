@@ -35,6 +35,7 @@ abstract class QueryBuilder {
     private static $ACTION_CREATE_TABLE = 'createTable';
     private static $ACTION_DROP_TABLE = 'dropTable';
     private static $ACTION_DROP_TABLE_IF_EXISTS = 'dropTableIfExists';
+    private static $ACTION_DROP_COLUMNS = 'dropColumns';
 
     protected $columnData = [];
     protected $columns = ['*'];
@@ -83,12 +84,13 @@ abstract class QueryBuilder {
      abstract protected function getColumnDefinitionResolver();
 
     /**
+     * @param $bypassCache
      * @return Result
      */
-    public function get()
+    public function get($bypassCache = false)
     {
         $query = $this->build();
-        return (!is_null($query) ? $this->connection->run($query) : new Result());
+        return (!is_null($query) ? $this->connection->run($query, $bypassCache) : new Result());
     }
 
     /** @return QueryBuilder */
@@ -112,6 +114,13 @@ abstract class QueryBuilder {
     {
         $this->action = self::$ACTION_DROP_TABLE_IF_EXISTS;
         $this->tableName = $tableName;
+        return $this;
+    }
+
+    public function dropColumns(array $columns)
+    {
+        $this->action = self::$ACTION_DROP_COLUMNS;
+        $this->columns = $columns;
         return $this;
     }
 
@@ -413,6 +422,9 @@ abstract class QueryBuilder {
             case self::$ACTION_DROP_TABLE_IF_EXISTS:
                 $query = $this->buildDropTableIfExistsQuery();
                 break;
+            case self::$ACTION_DROP_COLUMNS:
+                $query = $this->buildDropColumnsQuery();
+                break;
         }
 
         return $query;
@@ -553,6 +565,20 @@ abstract class QueryBuilder {
         return new Query($queryString);
     }
 
+    protected function buildDropColumnsQuery()
+    {
+        $dropColumnStrings = [];
+
+        foreach ($this->columns as $column)
+        {
+            $dropColumnStrings[] = 'drop column ' . $this->wrapColumnName($column);
+        }
+
+        $queryString = 'alter table ' . $this->wrapTableName($this->tableName) . ' ' . implode(', ', $dropColumnStrings);
+
+        return new Query($queryString);
+    }
+
     protected function buildColumnWithAlias($column, $alias = null)
     {
         return (!is_null($alias)) ? ($alias . '.' . $column . " as '" . $alias . '.' . $column . "'") : $column;
@@ -573,6 +599,11 @@ abstract class QueryBuilder {
     protected function wrapTableName($tableName)
     {
         return '`' . $tableName . '`';
+    }
+
+    protected function wrapColumnName($columnName)
+    {
+        return '`' . $columnName . '`';
     }
 
 }

@@ -187,6 +187,11 @@ class PostgresQueryBuilder extends QueryBuilder {
         return 'constraint ' . $uniqueKey->getName() . ' unique (' . implode(', ', $uniqueKey->getColumns()) . ')';
     }
 
+    protected function wrapColumnName($columnName)
+    {
+        return $columnName;
+    }
+
     protected function wrapTableName($tableName)
     {
         return $this->tableNameWithSchema($tableName);

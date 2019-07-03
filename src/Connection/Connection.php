@@ -67,21 +67,23 @@ abstract class Connection {
 
     /**
      * @param Query $query
+     * @param boolean $bypassCache
      * @return Result
      * @throws DatabaseException
      */
-    public function run(Query $query)
+    public function run(Query $query, $bypassCache = false)
     {
-        return $this->query($query->getSql(), $query->getBindParameters());
+        return $this->query($query->getSql(), $query->getBindParameters(), $bypassCache);
     }
 
     /**
      * @param $sql
      * @param array $bindParameters
+     * @param boolean $bypassCache
      * @return Result
      * @throws DatabaseException
      */
-    public function query($sql, $bindParameters = [])
+    public function query($sql, $bindParameters = [], $bypassCache = false)
     {
         $sql = trim($sql);
 
@@ -93,10 +95,10 @@ abstract class Connection {
 
         $cacheKey = md5($this->hash . '#' . $cacheString);
 
-       if (array_key_exists($cacheKey, self::$QUERY_CACHE))
-       {
-           return self::$QUERY_CACHE[$cacheKey];
-       }
+        if (!$bypassCache && array_key_exists($cacheKey, self::$QUERY_CACHE))
+        {
+            return self::$QUERY_CACHE[$cacheKey];
+        }
 
         $result = new Result();
         $statement = $this->getConnection()->prepare($sql);
