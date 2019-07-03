@@ -11,7 +11,7 @@ use Intersect\Database\Connection\Connection;
 use Intersect\Database\Query\QueryParameters;
 use Intersect\Database\Schema\Key\ForeignKey;
 use Intersect\Database\Schema\Key\PrimaryKey;
-use Intersect\Database\Schema\Resolver\ColumnDefinitionResolver;
+use Intersect\Database\Schema\ColumnDefinition;
 use Intersect\Database\Query\Builder\Condition\InCondition;
 use Intersect\Database\Query\Builder\QueryConditionResolver;
 use Intersect\Database\Query\Builder\Condition\LikeCondition;
@@ -20,6 +20,7 @@ use Intersect\Database\Query\Builder\Condition\QueryCondition;
 use Intersect\Database\Query\Builder\Condition\EqualsCondition;
 use Intersect\Database\Query\Builder\Condition\BetweenCondition;
 use Intersect\Database\Query\Builder\Condition\NotNullCondition;
+use Intersect\Database\Schema\Resolver\ColumnDefinitionResolver;
 use Intersect\Database\Query\Builder\Condition\NotEqualsCondition;
 use Intersect\Database\Query\Builder\Condition\BetweenDatesCondition;
 
@@ -36,6 +37,7 @@ abstract class QueryBuilder {
     private static $ACTION_DROP_TABLE = 'dropTable';
     private static $ACTION_DROP_TABLE_IF_EXISTS = 'dropTableIfExists';
     private static $ACTION_DROP_COLUMNS = 'dropColumns';
+    private static $ACTION_ADD_COLUMN = 'addColumn';
 
     protected $columnData = [];
     protected $columns = ['*'];
@@ -47,6 +49,8 @@ abstract class QueryBuilder {
     protected $action;
     /** @var Blueprint */
     protected $blueprint;
+    /** @var ColumnDefinition */
+    protected $columnDefinition;
     /** @var Connection */
     protected $connection;
     protected $limit;
@@ -121,6 +125,13 @@ abstract class QueryBuilder {
     {
         $this->action = self::$ACTION_DROP_COLUMNS;
         $this->columns = $columns;
+        return $this;
+    }
+
+    public function addColumn(ColumnDefinition $columnDefinition)
+    {
+        $this->action = self::$ACTION_ADD_COLUMN;
+        $this->columnDefinition = $columnDefinition;
         return $this;
     }
 
@@ -425,6 +436,9 @@ abstract class QueryBuilder {
             case self::$ACTION_DROP_COLUMNS:
                 $query = $this->buildDropColumnsQuery();
                 break;
+            case self::$ACTION_ADD_COLUMN:
+                $query = $this->buildAddColumnQuery();
+                break;
         }
 
         return $query;
@@ -561,6 +575,15 @@ abstract class QueryBuilder {
     protected function buildDropTableIfExistsQuery()
     {
         $queryString = 'drop table if exists ' . $this->wrapTableName($this->tableName);
+
+        return new Query($queryString);
+    }
+
+    protected function buildAddColumnQuery()
+    {
+        $columnDefinitionResolver = $this->getColumnDefinitionResolver();
+
+        $queryString = 'alter table ' . $this->wrapTableName($this->tableName) . ' add column ' . $columnDefinitionResolver->resolve($this->columnDefinition);
 
         return new Query($queryString);
     }

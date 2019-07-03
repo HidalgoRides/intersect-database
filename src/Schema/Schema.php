@@ -31,6 +31,11 @@ class Schema {
         return $this->connection->getQueryBuilder()->createTable($blueprint)->get();
     }
 
+    public function addColumn($tableName, ColumnDefinition $columnDefinition)
+    {
+        return $this->connection->getQueryBuilder()->table($tableName)->addColumn($columnDefinition)->get();
+    }
+
     public function dropColumns($tableName, array $columns)
     {
         return $this->connection->getQueryBuilder()->table($tableName)->dropColumns($columns)->get();

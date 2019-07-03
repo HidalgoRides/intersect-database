@@ -8,6 +8,8 @@ use Intersect\Database\Schema\Blueprint;
 use Intersect\Database\Connection\Connection;
 use Intersect\Database\Query\Builder\QueryBuilder;
 use Intersect\Database\Schema\Schema;
+use Intersect\Database\Schema\ColumnDefinition;
+use Intersect\Database\Schema\ColumnType;
 
 class SchemaTest extends TestCase {
 
@@ -98,6 +100,28 @@ class SchemaTest extends TestCase {
 
         $schema = new Schema($this->connectionMock);
         $result = $schema->dropColumns('test', ['email']);
+
+        $this->assertEquals($expectedResult, $result);
+    }
+
+    public function test_addColumn()
+    {
+        $queryBuilder = $this->queryBuilderMock;
+
+        $queryBuilder->method('table')->willReturnCallback(function($tableName) use ($queryBuilder) {
+            $this->assertEquals('test', $tableName);
+            return $queryBuilder;
+        });
+
+        $queryBuilder->method('addColumn')->willReturn($queryBuilder);
+        
+        $expectedResult = new Result();
+        $queryBuilder->method('get')->willReturn($expectedResult);
+
+        $schema = new Schema($this->connectionMock);
+
+        $columnDefinition = new ColumnDefinition('email', ColumnType::STRING);
+        $result = $schema->addColumn('test', $columnDefinition);
 
         $this->assertEquals($expectedResult, $result);
     }
