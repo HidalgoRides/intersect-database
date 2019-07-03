@@ -231,4 +231,46 @@ class BlueprintTest extends TestCase {
         $this->assertEquals('foreign_user_id_users_id', $key->getName());
     }
 
+    public function test_charset_default()
+    {
+        $tableOptions = $this->blueprint->getTableOptions();
+        $this->assertEquals('utf8', $tableOptions->getCharacterSet());
+    }
+
+    public function test_charset_override()
+    {
+        $definition = $this->blueprint->charset('utf16');
+
+        $tableOptions = $this->blueprint->getTableOptions();
+        $this->assertEquals('utf16', $tableOptions->getCharacterSet());
+    }
+
+    public function test_collation_default()
+    {
+        $tableOptions = $this->blueprint->getTableOptions();
+        $this->assertEquals('utf8_unicode_ci', $tableOptions->getCollation());
+    }
+
+    public function test_collation_override()
+    {
+        $definition = $this->blueprint->collation('utf16_unicode_ci');
+
+        $tableOptions = $this->blueprint->getTableOptions();
+        $this->assertEquals('utf16_unicode_ci', $tableOptions->getCollation());
+    }
+
+    public function test_engine_default()
+    {
+        $tableOptions = $this->blueprint->getTableOptions();
+        $this->assertEquals('InnoDB', $tableOptions->getEngine());
+    }
+
+    public function test_engine_override()
+    {
+        $definition = $this->blueprint->engine('MyISAM');
+
+        $tableOptions = $this->blueprint->getTableOptions();
+        $this->assertEquals('MyISAM', $tableOptions->getEngine());
+    }
+
 }

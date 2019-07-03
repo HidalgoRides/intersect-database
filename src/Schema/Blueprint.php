@@ -4,6 +4,7 @@ namespace Intersect\Database\Schema;
 
 use Intersect\Database\Schema\Key\Index;
 use Intersect\Database\Schema\ColumnType;
+use Intersect\Database\Schema\TableOptions;
 use Intersect\Database\Schema\Key\UniqueKey;
 use Intersect\Database\Schema\Key\ForeignKey;
 use Intersect\Database\Schema\Key\PrimaryKey;
@@ -17,17 +18,27 @@ class Blueprint {
     /** @var Key[] */
     private $keys = [];
 
+    /** @var TableOptions */
+    private $tableOptions;
+
     private $tableName;
 
     public function __construct($tableName)
     {
         $this->tableName = $tableName;
+        $this->tableOptions = new TableOptions();
     }
 
     /** @return ColumnDefinition[] */
     public function getColumnDefinitions()
     {
         return $this->columnDefinitions;
+    }
+
+    /** @return TableOptions */
+    public function getTableOptions()
+    {
+        return $this->tableOptions;
     }
 
     public function getTableName()
@@ -184,6 +195,24 @@ class Blueprint {
     public function getKeys()
     {
         return $this->keys;
+    }
+
+    public function charset($charset)
+    {
+        $this->getTableOptions()->setCharacterSet($charset);
+        return $this;
+    }
+
+    public function collation($collation)
+    {
+        $this->getTableOptions()->setCollation($collation);
+        return $this;
+    }
+
+    public function engine($engine)
+    {
+        $this->getTableOptions()->setEngine($engine);
+        return $this;
     }
 
     private function addColumnDefinition(ColumnDefinition $columnDefinition)

@@ -527,8 +527,17 @@ abstract class QueryBuilder {
 
         $queryString .= ')';
 
+        $tableOptions = $this->buildCreateTableOptions();
+
+        if (!is_null($tableOptions))
+        {
+            $queryString .= ' ' . $tableOptions;
+        }
+
         return new Query($queryString);
     }
+
+    protected function buildCreateTableOptions() {}
 
     protected function buildDropTableQuery()
     {

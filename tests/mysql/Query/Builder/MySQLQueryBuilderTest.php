@@ -201,7 +201,7 @@ class MySQLQueryBuilderTest extends TestCase {
 
         $query = $this->queryBuilder->createTable($blueprint)->build();
 
-        $this->assertEquals("create table `users` (`id` int not null auto_increment, `email` varchar(100) not null, `age` int unsigned, `tint` tinyint default '2', `sint` smallint, `mint` mediumint, `bint` bigint, `price` decimal(5,2), `bio` text, `mtext` mediumtext, `ltext` longtext, `created_at` timestamp, `date_created` datetime, primary key (`id`), unique key unique_users_email (`email`), constraint foreign_user_id_alt_users_id foreign key (`user_id`) references `alt_users` (`id`), index (`email`))", $query->getSql());
+        $this->assertEquals("create table `users` (`id` int not null auto_increment, `email` varchar(100) not null, `age` int unsigned, `tint` tinyint default '2', `sint` smallint, `mint` mediumint, `bint` bigint, `price` decimal(5,2), `bio` text, `mtext` mediumtext, `ltext` longtext, `created_at` timestamp, `date_created` datetime, primary key (`id`), unique key unique_users_email (`email`), constraint foreign_user_id_alt_users_id foreign key (`user_id`) references `alt_users` (`id`), index (`email`)) engine=InnoDB charset=utf8 collate=utf8_unicode_ci", $query->getSql());
     }
 
     public function test_buildCreateTableQuery_withMultipleIndexes()
@@ -215,7 +215,7 @@ class MySQLQueryBuilderTest extends TestCase {
 
         $query = $this->queryBuilder->createTable($blueprint)->build();
 
-        $this->assertEquals("create table `users` (`id` int not null, `email` varchar(255) not null, `age` varchar(255) not null, index (`email`, `age`))", $query->getSql());
+        $this->assertEquals("create table `users` (`id` int not null, `email` varchar(255) not null, `age` varchar(255) not null, index (`email`, `age`)) engine=InnoDB charset=utf8 collate=utf8_unicode_ci", $query->getSql());
     }
 
     public function test_buildCreateTableQuery_withMultipleUniqueKeys()
@@ -228,7 +228,7 @@ class MySQLQueryBuilderTest extends TestCase {
 
         $query = $this->queryBuilder->createTable($blueprint)->build();
 
-        $this->assertEquals("create table `users` (`column_one` int not null, `column_two` int not null, unique key unique_users_column_one_column_two (`column_one`, `column_two`))", $query->getSql());
+        $this->assertEquals("create table `users` (`column_one` int not null, `column_two` int not null, unique key unique_users_column_one_column_two (`column_one`, `column_two`)) engine=InnoDB charset=utf8 collate=utf8_unicode_ci", $query->getSql());
     }
 
     public function test_buildCreateTableQuery_withMultiplePrimaryKeys()
@@ -241,7 +241,7 @@ class MySQLQueryBuilderTest extends TestCase {
 
         $query = $this->queryBuilder->createTable($blueprint)->build();
 
-        $this->assertEquals("create table `users` (`column_one` int not null, `column_two` int not null, primary key (`column_one`, `column_two`))", $query->getSql());
+        $this->assertEquals("create table `users` (`column_one` int not null, `column_two` int not null, primary key (`column_one`, `column_two`)) engine=InnoDB charset=utf8 collate=utf8_unicode_ci", $query->getSql());
     }
 
     public function test_buildDropTableQuery()

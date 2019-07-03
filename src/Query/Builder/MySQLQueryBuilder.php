@@ -169,4 +169,24 @@ class MySQLQueryBuilder extends QueryBuilder {
         return 'unique key ' . $uniqueKey->getName() . ' (' . implode(', ', $columns) . ')';
     }
 
+    protected function buildCreateTableOptions() 
+    {
+        $tableOptions = $this->blueprint->getTableOptions();
+        $tableOptionsArray = [];
+
+        $this->appendNonNullValueToArray($tableOptionsArray, 'engine', $tableOptions->getEngine());
+        $this->appendNonNullValueToArray($tableOptionsArray, 'charset', $tableOptions->getCharacterSet());
+        $this->appendNonNullValueToArray($tableOptionsArray, 'collate', $tableOptions->getCollation());
+
+        return (count($tableOptionsArray) > 0) ? implode(' ', $tableOptionsArray) : null;
+    }
+
+    private function appendNonNullValueToArray(array &$array, $key, $value)
+    {
+        if (!is_null($value))
+        {
+            $array[] = $key . '=' . $value;
+        }
+    }
+
 }
