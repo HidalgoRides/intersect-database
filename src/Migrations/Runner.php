@@ -4,10 +4,14 @@ namespace Intersect\Database\Migrations;
 
 use Intersect\Core\Logger\Logger;
 use Intersect\Core\Storage\FileStorage;
+use Intersect\Database\Migrations\Migration;
 use Intersect\Database\Connection\Connection;
 use Intersect\Database\Query\QueryParameters;
-use Intersect\Database\Migrations\AbstractSeed;
+use Intersect\Database\Migrations\MigrationHelper;
 use Intersect\Database\Exception\DatabaseException;
+use Intersect\Database\Migrations\ExportConnection;
+use Intersect\Database\Connection\ConnectionRepository;
+use Intersect\Database\Migrations\InstallMigrationsCommand;
 
 class Runner {
 
@@ -42,6 +46,65 @@ class Runner {
     public function getCurrentBatchId()
     {
         return $this->currentBatchId;
+    }
+
+    public function export($includeSeedData = false)
+    {
+        $this->logger->info('Starting export');
+        $migrationPaths = $this->fileStorage->glob(rtrim($this->migrationDirectory, '/') . '/*_*.php');
+
+        $oldConnection = $this->connection;
+        $exportConnection = new ExportConnection($oldConnection);
+        
+        $this->connection = $exportConnection;
+        ConnectionRepository::register($exportConnection);
+
+        foreach ($migrationPaths as $migrationPath)
+        {
+            $this->fileStorage->requireOnce($migrationPath);
+
+            $className = MigrationHelper::resolveClassNameFromPath($migrationPath);
+            $class = new $className($this->connection);
+
+            if (!$class instanceof AbstractMigration && !$class instanceof AbstractSeed)
+            {
+                $this->logger->error($migrationPath . ' is not an instance of AbstractMigration or AbstractSeed. Skipping file');
+                return;
+            }
+
+            if ($class instanceof AbstractMigration)
+            {
+                $this->logger->info('Exporting migration: ' . $migrationPath);
+                $class->up();
+            }
+            else if ($class instanceof AbstractSeed && $includeSeedData)
+            {
+                $this->logger->info('Exporting seed data: ' . $migrationPath);
+                $class->populate();
+            }
+        }
+
+        $exportedFileName = 'export_' . strtolower($this->connection->getDriver()) . '_' . date('Y_m_d_His') . '.sql';
+        $exportedFilePath = $this->migrationDirectory . '/' . $exportedFileName;
+        
+        $contents = '-- Intersect Migration Exporter' . PHP_EOL;
+        $contents .= '-- Generated on ' . date('Y-m-d H:i:s') . PHP_EOL;
+        
+        foreach ($this->connection->getQueries() as $query)
+        {
+            $contents .= PHP_EOL . $query;
+        }
+
+        $contents .= PHP_EOL . PHP_EOL . '-- End of export';
+
+        ConnectionRepository::register($oldConnection);
+        $this->connection = $oldConnection;
+
+        $this->fileStorage->writeFile($exportedFilePath, $contents);
+
+        $this->logger->info('Export finished. File saved to: ' . $exportedFilePath);
+
+        return $exportedFilePath;
     }
 
     public function migrate($seedMigrationsEnabled = false)

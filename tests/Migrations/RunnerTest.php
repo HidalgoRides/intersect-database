@@ -15,13 +15,78 @@ class RunnerTest extends TestCase {
     /** @var Connection */
     private $connection;
 
+    /** @var FileStorage */
+    private $fileStorage;
+
     /** @var Runner */
     private $runner;
 
     protected function setUp()
     {
         $this->connection = ConnectionRepository::get();
-        $this->runner = new Runner($this->connection, new FileStorage(), new NullLogger(), '/');
+        $this->fileStorage = new FileStorage();
+        $this->runner = new Runner($this->connection, $this->fileStorage, new NullLogger(), '/');
+    }
+
+    public function test_export()
+    {
+        $this->runner->setMigrationDirectory(dirname(__FILE__) . '/data/export-migrations');
+        $exportedFilePath = $this->runner->export();
+
+        if (!$this->fileStorage->fileExists($exportedFilePath))
+        {
+            $this->fail('exported file was not created successfully');
+        }
+
+        $exportedFile = $this->fileStorage->getFile($exportedFilePath);
+        $lines = explode(PHP_EOL, $exportedFile);
+
+        $this->fileStorage->deleteFile($exportedFilePath);
+
+        $this->assertCount(7, $lines);
+        
+        if ($this->connection->getDriver() == 'mysql')
+        {
+            $this->assertEquals("create table `test_export_one` (`email` varchar(100) not null) engine=InnoDB charset=utf8 collate=utf8_unicode_ci;", $lines[3]);
+            $this->assertEquals("create table `test_export_two` (`email` varchar(100) not null) engine=InnoDB charset=utf8 collate=utf8_unicode_ci;", $lines[4]);
+        }
+        else if ($this->connection->getDriver() == 'pgsql')
+        {
+            $this->assertEquals("create table public.test_export_one (email varchar(100) not null);", $lines[3]);
+            $this->assertEquals("create table public.test_export_two (email varchar(100) not null);", $lines[4]);
+        }
+    }
+
+    public function test_export_withSeedData()
+    {
+        $this->runner->setMigrationDirectory(dirname(__FILE__) . '/data/export-migrations');
+        $exportedFilePath = $this->runner->export(true);
+
+        if (!$this->fileStorage->fileExists($exportedFilePath))
+        {
+            $this->fail('exported file was not created successfully');
+        }
+
+        $exportedFile = $this->fileStorage->getFile($exportedFilePath);
+        $lines = explode(PHP_EOL, $exportedFile);
+
+        $this->fileStorage->deleteFile($exportedFilePath);
+
+        $this->assertCount(8, $lines);
+
+        if ($this->connection->getDriver() == 'mysql')
+        {
+            $this->assertEquals("create table `test_export_one` (`email` varchar(100) not null) engine=InnoDB charset=utf8 collate=utf8_unicode_ci;", $lines[3]);
+            $this->assertEquals("create table `test_export_two` (`email` varchar(100) not null) engine=InnoDB charset=utf8 collate=utf8_unicode_ci;", $lines[4]);
+            $this->assertEquals("insert into `test_export_one` (email) values ('unit@test.com');", $lines[5]);
+        }
+        else if ($this->connection->getDriver() == 'pgsql')
+        {
+            $this->assertEquals("create table public.test_export_one (email varchar(100) not null);", $lines[3]);
+            $this->assertEquals("create table public.test_export_two (email varchar(100) not null);", $lines[4]);
+            $this->assertEquals("insert into public.test_export_one (email) values ('unit@test.com');", $lines[5]);
+        }
+        
     }
 
     public function test_run_singleMigration()

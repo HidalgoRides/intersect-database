@@ -2,7 +2,6 @@
 
 namespace Intersect\Database\Query\Builder;
 
-use Intersect\Database\Query\Query;
 use Intersect\Database\Schema\Key\Index;
 use Intersect\Database\Schema\Key\UniqueKey;
 use Intersect\Database\Connection\Connection;
@@ -26,12 +25,7 @@ class MySQLQueryBuilder extends QueryBuilder {
     {
         $queryString = 'select count(*) as count from ' . $this->wrapTableName($this->tableName);
 
-        $query = new Query($queryString);
-
-        $this->appendWhereConditions($query);
-        $this->appendOptions($query);
-
-        return $query;
+        return $this->buildFinalQuery($queryString);
     }
 
     protected function buildSelectQuery()
@@ -63,24 +57,14 @@ class MySQLQueryBuilder extends QueryBuilder {
             }
         }
 
-        $query = new Query($queryString, $bindParameters);
-
-        $this->appendWhereConditions($query);
-        $this->appendOptions($query);
-
-        return $query;
+        return $this->buildFinalQuery($queryString, $bindParameters);
     }
 
     protected function buildDeleteQuery()
     {
         $queryString = 'delete from ' . $this->buildTableNameWithAlias($this->tableName);
 
-        $query = new Query($queryString);
-
-        $this->appendWhereConditions($query);
-        $this->appendOptions($query);
-
-        return $query;
+        return $this->buildFinalQuery($queryString);
     }
 
     protected function buildUpdateQuery()
@@ -97,12 +81,7 @@ class MySQLQueryBuilder extends QueryBuilder {
 
         $queryString = 'update ' . $this->buildTableNameWithAlias($this->tableName) . ' set ' . implode(', ', $updateValues);
 
-        $query = new Query($queryString, $bindParameters);
-
-        $this->appendWhereConditions($query);
-        $this->appendOptions($query);
-
-        return $query;
+        return $this->buildFinalQuery($queryString, $bindParameters);
     }
 
     protected function buildInsertQuery()
@@ -118,14 +97,14 @@ class MySQLQueryBuilder extends QueryBuilder {
 
         $queryString = 'insert into ' . $this->buildTableNameWithAlias($this->tableName) . ' (' . implode(', ', $columns) . ') values (' . implode(', ', $values) . ')';
 
-        return new Query($queryString, $this->columnData);
+        return $this->buildFinalQuery($queryString, $this->columnData, false, false);
     }
 
     protected function buildColumnQuery()
     {
         $queryString = 'show columns from ' . $this->buildTableNameWithAlias($this->tableName);
 
-        return new Query($queryString);
+        return $this->buildFinalQuery($queryString, [], false, false);
     }
 
     protected function buildIndexDefinition(Index $index)
@@ -185,7 +164,7 @@ class MySQLQueryBuilder extends QueryBuilder {
     {
         $queryString = 'alter table ' . $this->wrapTableName($this->tableName) . ' drop index ' . $this->indexName;
         
-        return new Query($queryString);
+        return $this->buildFinalQuery($queryString, [], false, false);
     }
 
     private function appendNonNullValueToArray(array &$array, $key, $value)

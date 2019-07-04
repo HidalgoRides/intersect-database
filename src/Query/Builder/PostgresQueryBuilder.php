@@ -26,12 +26,7 @@ class PostgresQueryBuilder extends QueryBuilder {
     {
         $queryString = 'select count(*) as count from ' . $this->wrapTableName($this->tableName);
 
-        $query = new Query($queryString);
-
-        $this->appendWhereConditions($query);
-        $this->appendOptions($query);
-
-        return $query;
+        return $this->buildFinalQuery($queryString);
     }
 
     protected function buildSelectQuery()
@@ -63,47 +58,42 @@ class PostgresQueryBuilder extends QueryBuilder {
             }
         }
 
-        $query = new Query($queryString, $bindParameters);
-
-        $this->appendWhereConditions($query);
-        $this->appendOptions($query);
-
-        return $query;
+        return $this->buildFinalQuery($queryString, $bindParameters);
     }
 
     protected function buildDeleteQuery()
     {
         $tableName = $this->buildTableNameWithAlias($this->tableName);
         $queryString = 'delete from ' . $tableName;
-
-        $query = new Query($queryString);
-
+        $bindParameters = [];
+        $appendWhereConditions = false;
+        
         if (!is_null($this->order) || !is_null($this->limit))
         {
             $subQuery = new Query('select ' . $this->primaryKey . ' from ' . $tableName);
             $this->appendWhereConditions($subQuery);
             $this->appendOptions($subQuery);
 
-            $sql = $query->getSql() . ' where ' . $this->primaryKey . ' in ' . '(' . $subQuery->getSql() . ')';
-            $query->setSql($sql);
+            $queryString .= ' where ' . $this->primaryKey . ' in ' . '(' . $subQuery->getSql() . ')';
 
             foreach ($subQuery->getBindParameters() as $key => $value)
             {
-                $query->bindParameter($key, $value);
+                $bindParameters[$key] = $value;
             }
         }
         else 
         {
-            $this->appendWhereConditions($query);
+            $appendWhereConditions = true;
         }
     
-        return $query;
+        return $this->buildFinalQuery($queryString, $bindParameters, $appendWhereConditions, false);
     }
 
     protected function buildUpdateQuery()
     {
         $updateValues = [];
         $bindParameters = [];
+        $appendWhereConditions = false;
         $tableName = $this->buildTableNameWithAlias($this->tableName);
 
         foreach ($this->columnData as $key => $value)
@@ -115,28 +105,25 @@ class PostgresQueryBuilder extends QueryBuilder {
 
         $queryString = 'update ' . $tableName . ' set ' . implode(', ', $updateValues);
 
-        $query = new Query($queryString, $bindParameters);
-
         if (!is_null($this->order) || !is_null($this->limit))
         {
             $subQuery = new Query('select ' . $this->primaryKey . ' from ' . $tableName);
             $this->appendWhereConditions($subQuery);
             $this->appendOptions($subQuery);
 
-            $sql = $query->getSql() . ' where ' . $this->primaryKey . ' in ' . '(' . $subQuery->getSql() . ')';
-            $query->setSql($sql);
+            $queryString .= ' where ' . $this->primaryKey . ' in ' . '(' . $subQuery->getSql() . ')';
 
             foreach ($subQuery->getBindParameters() as $key => $value)
             {
-                $query->bindParameter($key, $value);
+                $bindParameters[$key] = $value;
             }
         }
         else 
         {
-            $this->appendWhereConditions($query);
+            $appendWhereConditions = true;
         }
 
-        return $query;
+        return $this->buildFinalQuery($queryString, $bindParameters, $appendWhereConditions, false);
     }
 
     protected function buildInsertQuery()
@@ -152,14 +139,14 @@ class PostgresQueryBuilder extends QueryBuilder {
 
         $queryString = 'insert into ' . $this->buildTableNameWithAlias($this->tableName) . ' (' . implode(', ', $columns) . ') values (' . implode(', ', $values) . ')';
 
-        return new Query($queryString, $this->columnData);
+        return $this->buildFinalQuery($queryString, $this->columnData, false, false);
     }
 
     protected function buildColumnQuery()
     {
         $queryString = 'select column_name as "Field" from information_schema.columns where table_schema = \'' . $this->getSchema() . '\' and table_name = \'' . $this->tableName . '\'';
 
-        return new Query($queryString);
+        return $this->buildFinalQuery($queryString, [], false, false);
     }
 
     protected function buildColumnWithAlias($column, $alias = null)
@@ -171,7 +158,7 @@ class PostgresQueryBuilder extends QueryBuilder {
     {
         $queryString = 'create index ' . $this->indexName . ' on ' . $this->tableNameWithSchema($this->tableName) . ' (' . implode(', ', $this->columns) . ')';
         
-        return new Query($queryString);
+        return $this->buildFinalQuery($queryString, [], false, false);
     }
 
     protected function buildIndexDefinition(Index $index)

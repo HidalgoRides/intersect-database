@@ -25,7 +25,7 @@ class PostgresQueryBuilderTest extends TestCase {
             ->table('users')
             ->build();
 
-        $this->assertEquals("select column_name as \"Field\" from information_schema.columns where table_schema = 'public' and table_name = 'users'", $query->getSql());
+        $this->assertEquals("select column_name as \"Field\" from information_schema.columns where table_schema = 'public' and table_name = 'users';", $query->getSql());
     }
 
     public function test_buildColumnsQuery_withSchema()
@@ -35,7 +35,7 @@ class PostgresQueryBuilderTest extends TestCase {
             ->schema('test')
             ->build();
 
-        $this->assertEquals("select column_name as \"Field\" from information_schema.columns where table_schema = 'test' and table_name = 'users'", $query->getSql());
+        $this->assertEquals("select column_name as \"Field\" from information_schema.columns where table_schema = 'test' and table_name = 'users';", $query->getSql());
     }
 
     public function test_buildCountQuery()
@@ -44,7 +44,7 @@ class PostgresQueryBuilderTest extends TestCase {
             ->table('users')
             ->build();
 
-        $this->assertEquals("select count(*) as count from public.users", $query->getSql());
+        $this->assertEquals("select count(*) as count from public.users;", $query->getSql());
     }
 
     public function test_buildCountQuery_withSchema()
@@ -54,7 +54,7 @@ class PostgresQueryBuilderTest extends TestCase {
             ->schema('test')
             ->build();
 
-        $this->assertEquals("select count(*) as count from test.users", $query->getSql());
+        $this->assertEquals("select count(*) as count from test.users;", $query->getSql());
     }
 
     public function test_buildCountQuery_withWhereConditions()
@@ -64,7 +64,7 @@ class PostgresQueryBuilderTest extends TestCase {
             ->whereEquals('unit', 'test')
             ->build();
 
-        $this->assertEquals("select count(*) as count from public.users where unit = :unit", $query->getSql());
+        $this->assertEquals("select count(*) as count from public.users where unit = :unit;", $query->getSql());
         
         $bindParameters = $query->getBindParameters();
         $this->assertArrayHasKey('unit', $bindParameters);
@@ -78,7 +78,7 @@ class PostgresQueryBuilderTest extends TestCase {
             ->table('users', 'id', $alias)
             ->build();
 
-        $this->assertEquals("select " . $alias . ".* as \"" . $alias . ".*\" from public.users as " . $alias, $query->getSql());
+        $this->assertEquals("select " . $alias . ".* as \"" . $alias . ".*\" from public.users as " . $alias . ';', $query->getSql());
     }
 
     public function test_buildSelectQuery_withSchema()
@@ -89,7 +89,7 @@ class PostgresQueryBuilderTest extends TestCase {
             ->schema('test')
             ->build();
 
-        $this->assertEquals("select " . $alias . ".* as \"" . $alias . ".*\" from test.users as " . $alias, $query->getSql());
+        $this->assertEquals("select " . $alias . ".* as \"" . $alias . ".*\" from test.users as " . $alias . ';', $query->getSql());
     }
 
     public function test_buildSelectQuery_specificColumns()
@@ -99,7 +99,7 @@ class PostgresQueryBuilderTest extends TestCase {
             ->table('users', 'id', $alias)
             ->build();
 
-        $this->assertEquals("select " . $alias . ".id as \"" . $alias . ".id\", " . $alias . ".email as \"" . $alias . ".email\" from public.users as " . $alias, $query->getSql());
+        $this->assertEquals("select " . $alias . ".id as \"" . $alias . ".id\", " . $alias . ".email as \"" . $alias . ".email\" from public.users as " . $alias . ';', $query->getSql());
     }
 
     public function test_buildSelectQuery_withWhereConditions()
@@ -117,7 +117,7 @@ class PostgresQueryBuilderTest extends TestCase {
             ->whereLike('foo', 'test%')
             ->build();
 
-        $this->assertEquals("select " . $alias . ".* as \"" . $alias . ".*\" from public.users as " . $alias . " where " . $alias . ".unit = :" . $alias . "_unit and " . $alias . ".test != :" . $alias . "_test and " . $alias . ".foo is null and " . $alias . ".bar is not null and " . $alias . ".id in (1, 2, 3) and " . $alias . ".value between 1 and 10 and " . $alias . ".start between cast('1969-01-01' as datetime) and cast('1969-01-02' as datetime) and " . $alias . ".foo like :" . $alias . "_foo", $query->getSql());
+        $this->assertEquals("select " . $alias . ".* as \"" . $alias . ".*\" from public.users as " . $alias . " where " . $alias . ".unit = :" . $alias . "_unit and " . $alias . ".test != :" . $alias . "_test and " . $alias . ".foo is null and " . $alias . ".bar is not null and " . $alias . ".id in (1, 2, 3) and " . $alias . ".value between 1 and 10 and " . $alias . ".start between cast('1969-01-01' as datetime) and cast('1969-01-02' as datetime) and " . $alias . ".foo like :" . $alias . "_foo;", $query->getSql());
 
         $bindParameters = $query->getBindParameters();
         $this->assertArrayHasKey($alias . '_unit', $bindParameters);
@@ -136,7 +136,7 @@ class PostgresQueryBuilderTest extends TestCase {
             ->limit(3)
             ->build();
 
-        $this->assertEquals("select " . $alias . ".* as \"" . $alias . ".*\" from public.users as " . $alias . " limit 3", $query->getSql());
+        $this->assertEquals("select " . $alias . ".* as \"" . $alias . ".*\" from public.users as " . $alias . " limit 3;", $query->getSql());
     }
 
     public function test_buildSelectQuery_withOrder()
@@ -147,7 +147,7 @@ class PostgresQueryBuilderTest extends TestCase {
             ->orderBy('id', 'desc')
             ->build();
 
-        $this->assertEquals("select " . $alias . ".* as \"" . $alias . ".*\" from public.users as " . $alias . " order by " . $alias . ".id desc", $query->getSql());
+        $this->assertEquals("select " . $alias . ".* as \"" . $alias . ".*\" from public.users as " . $alias . " order by " . $alias . ".id desc;", $query->getSql());
     }
 
     public function test_buildSelectQuery_withJoinLeft()
@@ -159,7 +159,7 @@ class PostgresQueryBuilderTest extends TestCase {
             ->joinLeft('phones', 'id', 'phone_id', [], $phonesAlias)
             ->build();
 
-        $this->assertEquals("select " . $usersAlias . ".* as \"" . $usersAlias . ".*\" from public.users as " . $usersAlias . " left join public.phones as " . $phonesAlias . " on " . $usersAlias . ".phone_id = " . $phonesAlias . ".id", $query->getSql());
+        $this->assertEquals("select " . $usersAlias . ".* as \"" . $usersAlias . ".*\" from public.users as " . $usersAlias . " left join public.phones as " . $phonesAlias . " on " . $usersAlias . ".phone_id = " . $phonesAlias . ".id;", $query->getSql());
     }
 
     public function test_buildDeleteQuery()
@@ -168,7 +168,7 @@ class PostgresQueryBuilderTest extends TestCase {
             ->table('users')
             ->build();
 
-        $this->assertEquals("delete from public.users", $query->getSql());
+        $this->assertEquals("delete from public.users;", $query->getSql());
     }
 
     public function test_buildDeleteQuery_withSchema()
@@ -178,7 +178,7 @@ class PostgresQueryBuilderTest extends TestCase {
             ->schema('test')
             ->build();
 
-        $this->assertEquals("delete from test.users", $query->getSql());
+        $this->assertEquals("delete from test.users;", $query->getSql());
     }
 
     public function test_buildDeleteQuery_withOrderAndLimit()
@@ -189,7 +189,7 @@ class PostgresQueryBuilderTest extends TestCase {
             ->limit(2)
             ->build();
 
-        $this->assertEquals("delete from public.users where id in (select id from public.users order by id asc limit 2)", $query->getSql());
+        $this->assertEquals("delete from public.users where id in (select id from public.users order by id asc limit 2);", $query->getSql());
     }
 
     public function test_buildDeleteQuery_withWhereConditions()
@@ -199,7 +199,7 @@ class PostgresQueryBuilderTest extends TestCase {
             ->whereIn('id', [1,2,3])
             ->build();
 
-        $this->assertEquals("delete from public.users where id in (1, 2, 3)", $query->getSql());
+        $this->assertEquals("delete from public.users where id in (1, 2, 3);", $query->getSql());
     }
 
     public function test_buildUpdateQuery_withWhereConditions()
@@ -213,7 +213,7 @@ class PostgresQueryBuilderTest extends TestCase {
             ->whereEquals('id', 1)
             ->build();
 
-        $this->assertEquals("update public.users set email = :email where id = :id", $query->getSql());
+        $this->assertEquals("update public.users set email = :email where id = :id;", $query->getSql());
 
         $bindParameters = $query->getBindParameters();
         $this->assertArrayHasKey('id', $bindParameters);
@@ -232,7 +232,7 @@ class PostgresQueryBuilderTest extends TestCase {
             ->limit(5)
             ->build();
 
-        $this->assertEquals("update public.users set email = :email where id in (select id from public.users order by id asc limit 5)", $query->getSql());
+        $this->assertEquals("update public.users set email = :email where id in (select id from public.users order by id asc limit 5);", $query->getSql());
     }
 
     public function test_buildUpdateQuery_withWhereConditionsAndSchema()
@@ -247,7 +247,7 @@ class PostgresQueryBuilderTest extends TestCase {
             ->whereEquals('id', 1)
             ->build();
 
-        $this->assertEquals("update test.users set email = :email where id = :id", $query->getSql());
+        $this->assertEquals("update test.users set email = :email where id = :id;", $query->getSql());
 
         $bindParameters = $query->getBindParameters();
         $this->assertArrayHasKey('id', $bindParameters);
@@ -272,7 +272,7 @@ class PostgresQueryBuilderTest extends TestCase {
 
         $query = $this->queryBuilder->createTable($blueprint)->build();
 
-        $this->assertEquals("create table public.users (id serial, email varchar(100) not null, age integer default '2', sint smallint, bint bigint, price numeric(5,2), bio text, created_at timestamp, date_created timestamp, constraint primary_users_id primary key (id), constraint unique_users_email unique (email), constraint foreign_user_id_alt_users_id foreign key (user_id) references public.alt_users (id))", $query->getSql());
+        $this->assertEquals("create table public.users (id serial, email varchar(100) not null, age integer default '2', sint smallint, bint bigint, price numeric(5,2), bio text, created_at timestamp, date_created timestamp, constraint primary_users_id primary key (id), constraint unique_users_email unique (email), constraint foreign_user_id_alt_users_id foreign key (user_id) references public.alt_users (id));", $query->getSql());
     }
 
     public function test_buildCreateTableQuery_withSchema()
@@ -293,7 +293,7 @@ class PostgresQueryBuilderTest extends TestCase {
 
         $query = $this->queryBuilder->createTable($blueprint)->schema('users')->build();
 
-        $this->assertEquals("create table users.users (id serial, email varchar(100) not null, age integer default '2', sint smallint, bint bigint, price numeric(5,2), bio text, created_at timestamp, date_created timestamp, constraint primary_users_id primary key (id), constraint unique_users_email unique (email), constraint foreign_user_id_alt_users_id foreign key (user_id) references public.alt_users (id))", $query->getSql());
+        $this->assertEquals("create table users.users (id serial, email varchar(100) not null, age integer default '2', sint smallint, bint bigint, price numeric(5,2), bio text, created_at timestamp, date_created timestamp, constraint primary_users_id primary key (id), constraint unique_users_email unique (email), constraint foreign_user_id_alt_users_id foreign key (user_id) references public.alt_users (id));", $query->getSql());
     }
 
     public function test_buildCreateTableQuery_indexNotSupported()
@@ -305,7 +305,7 @@ class PostgresQueryBuilderTest extends TestCase {
 
         $query = $this->queryBuilder->createTable($blueprint)->build();
 
-        $this->assertEquals("create table public.users (id serial, constraint primary_users_id primary key (id))", $query->getSql());
+        $this->assertEquals("create table public.users (id serial, constraint primary_users_id primary key (id));", $query->getSql());
     }
 
     public function test_buildCreateTableQuery_withMultipleUniqueKeys()
@@ -318,7 +318,7 @@ class PostgresQueryBuilderTest extends TestCase {
 
         $query = $this->queryBuilder->createTable($blueprint)->build();
 
-        $this->assertEquals("create table public.users (column_one integer not null, column_two integer not null, constraint unique_users_column_one_column_two unique (column_one, column_two))", $query->getSql());
+        $this->assertEquals("create table public.users (column_one integer not null, column_two integer not null, constraint unique_users_column_one_column_two unique (column_one, column_two));", $query->getSql());
     }
 
     public function test_buildCreateTableQuery_withMultiplePrimaryKeys()
@@ -331,77 +331,77 @@ class PostgresQueryBuilderTest extends TestCase {
 
         $query = $this->queryBuilder->createTable($blueprint)->build();
 
-        $this->assertEquals("create table public.users (column_one integer not null, column_two integer not null, constraint primary_users_column_one_column_two primary key (column_one, column_two))", $query->getSql());
+        $this->assertEquals("create table public.users (column_one integer not null, column_two integer not null, constraint primary_users_column_one_column_two primary key (column_one, column_two));", $query->getSql());
     }
 
     public function test_buildDropTableQuery()
     {
         $query = $this->queryBuilder->dropTable('users')->build();
 
-        $this->assertEquals("drop table public.users", $query->getSql());
+        $this->assertEquals("drop table public.users;", $query->getSql());
     }
 
     public function test_buildDropTableQuery_withSchema()
     {
         $query = $this->queryBuilder->dropTable('users')->schema('users')->build();
 
-        $this->assertEquals("drop table users.users", $query->getSql());
+        $this->assertEquals("drop table users.users;", $query->getSql());
     }
 
     public function test_buildDropTableIfExistsQuery()
     {
         $query = $this->queryBuilder->dropTableIfExists('users')->build();
 
-        $this->assertEquals("drop table if exists public.users", $query->getSql());
+        $this->assertEquals("drop table if exists public.users;", $query->getSql());
     }
 
     public function test_buildDropTableIfExistsQuery_withSchema()
     {
         $query = $this->queryBuilder->dropTableIfExists('users')->schema('users')->build();
 
-        $this->assertEquals("drop table if exists users.users", $query->getSql());
+        $this->assertEquals("drop table if exists users.users;", $query->getSql());
     }
 
     public function test_buildSelectMaxQuery()
     {
         $query = $this->queryBuilder->table('users')->selectMax('score')->build();
 
-        $this->assertEquals("select max(score) as max_value from public.users", $query->getSql());
+        $this->assertEquals("select max(score) as max_value from public.users;", $query->getSql());
     }
 
     public function test_buildSelectMaxQuery_withSchema()
     {
         $query = $this->queryBuilder->table('users')->schema('users')->selectMax('score')->build();
 
-        $this->assertEquals("select max(score) as max_value from users.users", $query->getSql());
+        $this->assertEquals("select max(score) as max_value from users.users;", $query->getSql());
     }
 
     public function test_buildDropColumnsQuery()
     {
         $query = $this->queryBuilder->table('users')->dropColumns(['email'])->build();
 
-        $this->assertEquals("alter table public.users drop column email", $query->getSql());
+        $this->assertEquals("alter table public.users drop column email;", $query->getSql());
     }
 
     public function test_buildDropColumnsQuery_withSchema()
     {
         $query = $this->queryBuilder->table('users')->schema('users')->dropColumns(['email'])->build();
 
-        $this->assertEquals("alter table users.users drop column email", $query->getSql());
+        $this->assertEquals("alter table users.users drop column email;", $query->getSql());
     }
 
     public function test_buildDropColumnsQuery_withMultiple()
     {
         $query = $this->queryBuilder->table('users')->dropColumns(['email', 'name'])->build();
 
-        $this->assertEquals("alter table public.users drop column email, drop column name", $query->getSql());
+        $this->assertEquals("alter table public.users drop column email, drop column name;", $query->getSql());
     }
 
     public function test_buildDropColumnsQuery_withMultiple_withSchema()
     {
         $query = $this->queryBuilder->table('users')->schema('users')->dropColumns(['email', 'name'])->build();
 
-        $this->assertEquals("alter table users.users drop column email, drop column name", $query->getSql());
+        $this->assertEquals("alter table users.users drop column email, drop column name;", $query->getSql());
     }
 
     public function test_buildAddColumnQuery()
@@ -411,7 +411,7 @@ class PostgresQueryBuilderTest extends TestCase {
 
         $query = $this->queryBuilder->table('users')->addColumn($columnBlueprint)->build();
 
-        $this->assertEquals("alter table public.users add column email varchar(25) not null", $query->getSql());
+        $this->assertEquals("alter table public.users add column email varchar(25) not null;", $query->getSql());
     }
 
     public function test_buildAddColumnQuery_withSchema()
@@ -421,49 +421,49 @@ class PostgresQueryBuilderTest extends TestCase {
 
         $query = $this->queryBuilder->table('users')->schema('users')->addColumn($columnBlueprint)->build();
 
-        $this->assertEquals("alter table users.users add column email varchar(25) not null", $query->getSql());
+        $this->assertEquals("alter table users.users add column email varchar(25) not null;", $query->getSql());
     }
 
     public function test_buildCreateIndexQuery()
     {
         $query = $this->queryBuilder->table('users')->createIndex(['id'], 'index_name')->build();
 
-        $this->assertEquals("create index index_name on public.users (id)", $query->getSql());
+        $this->assertEquals("create index index_name on public.users (id);", $query->getSql());
     }
 
     public function test_buildCreateIndexQuery_withMultipleColumns()
     {
         $query = $this->queryBuilder->table('users')->createIndex(['id', 'email'], 'index_name')->build();
 
-        $this->assertEquals("create index index_name on public.users (id, email)", $query->getSql());
+        $this->assertEquals("create index index_name on public.users (id, email);", $query->getSql());
     }
 
     public function test_buildCreateIndexQuery_withSchema()
     {
         $query = $this->queryBuilder->table('users')->schema('users')->createIndex(['id'], 'index_name')->build();
 
-        $this->assertEquals("create index index_name on users.users (id)", $query->getSql());
+        $this->assertEquals("create index index_name on users.users (id);", $query->getSql());
     }
 
     public function test_buildCreateIndexQuery_withSchema_withMultipleColumns()
     {
         $query = $this->queryBuilder->table('users')->schema('users')->createIndex(['id', 'email'], 'index_name')->build();
 
-        $this->assertEquals("create index index_name on users.users (id, email)", $query->getSql());
+        $this->assertEquals("create index index_name on users.users (id, email);", $query->getSql());
     }
 
     public function test_buildDropIndexQuery()
     {
         $query = $this->queryBuilder->table('users')->dropIndex('index_name')->build();
 
-        $this->assertEquals("drop index index_name", $query->getSql());
+        $this->assertEquals("drop index index_name;", $query->getSql());
     }
 
     public function test_buildDropIndexQuery_withSchema()
     {
         $query = $this->queryBuilder->table('users')->schema('users')->dropIndex('index_name')->build();
 
-        $this->assertEquals("drop index index_name", $query->getSql());
+        $this->assertEquals("drop index index_name;", $query->getSql());
     }
     
 }

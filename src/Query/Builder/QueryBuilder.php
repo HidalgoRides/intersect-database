@@ -526,14 +526,30 @@ abstract class QueryBuilder {
         $query->setSql($sql);
     }
 
-    protected function buildSelectMaxQuery()
+    protected function buildFinalQuery($sql, array $bindParameters = [], $appendWhereConditions = true, $appendOptions = true)
     {
-        $query = new Query('select max(' . $this->columns[0] . ') as max_value from ' . $this->wrapTableName($this->tableName));
+        $query = new Query($sql, $bindParameters);
 
-        $this->appendWhereConditions($query);
-        $this->appendOptions($query);
+        if ($appendWhereConditions)
+        {
+            $this->appendWhereConditions($query);
+        }
+
+        if ($appendOptions)
+        {
+            $this->appendOptions($query);
+        }
+
+        $query->setSql(rtrim($query->getSql(), ';') . ';');
 
         return $query;
+    }
+
+    protected function buildSelectMaxQuery()
+    {
+        $queryString = 'select max(' . $this->columns[0] . ') as max_value from ' . $this->wrapTableName($this->tableName);
+
+        return $this->buildFinalQuery($queryString);
     }
 
     protected function buildCreateTableQuery(Blueprint $blueprint)
@@ -591,7 +607,7 @@ abstract class QueryBuilder {
             $queryString .= ' ' . $tableOptions;
         }
 
-        return new Query($queryString);
+        return $this->buildFinalQuery($queryString, [], false, false);
     }
 
     protected function buildCreateTableOptions() {}
@@ -600,14 +616,14 @@ abstract class QueryBuilder {
     {
         $queryString = 'drop table ' . $this->wrapTableName($this->tableName);
 
-        return new Query($queryString);
+        return $this->buildFinalQuery($queryString, [], false, false);
     }
 
     protected function buildDropTableIfExistsQuery()
     {
         $queryString = 'drop table if exists ' . $this->wrapTableName($this->tableName);
 
-        return new Query($queryString);
+        return $this->buildFinalQuery($queryString, [], false, false);
     }
 
     protected function buildAddColumnQuery()
@@ -616,7 +632,7 @@ abstract class QueryBuilder {
 
         $queryString = 'alter table ' . $this->wrapTableName($this->tableName) . ' add column ' . $columnDefinitionResolver->resolve($this->columnBlueprint->getColumnDefinition());
 
-        return new Query($queryString);
+        return $this->buildFinalQuery($queryString, [], false, false);
     }
 
     protected function buildDropColumnsQuery()
@@ -630,21 +646,21 @@ abstract class QueryBuilder {
 
         $queryString = 'alter table ' . $this->wrapTableName($this->tableName) . ' ' . implode(', ', $dropColumnStrings);
 
-        return new Query($queryString);
+        return $this->buildFinalQuery($queryString, [], false, false);
     }
 
     protected function buildCreateIndexQuery()
     {
         $queryString = 'create index ' . $this->indexName . ' on ' . $this->tableName . ' (' . implode(', ', $this->columns) . ')';
         
-        return new Query($queryString);
+        return $this->buildFinalQuery($queryString, [], false, false);
     }
 
     protected function buildDropIndexQuery()
     {
         $queryString = 'drop index ' . $this->indexName;
         
-        return new Query($queryString);
+        return $this->buildFinalQuery($queryString, [], false, false);
     }
 
     protected function buildColumnWithAlias($column, $alias = null)

@@ -43,6 +43,11 @@ abstract class Connection {
      */
     abstract public function switchDatabase($databaseName);
 
+    public function getDriver()
+    {
+        return $this->pdoDriver;
+    }
+
     /**
      * @return \PDO
      * @throws DatabaseException
@@ -177,6 +182,12 @@ abstract class Connection {
         }
 
         return $map;
+    }
+
+    /** @return ConnectionSettings */
+    protected function getConnectionSettings()
+    {
+        return $this->connectionSettings;
     }
 
     /**
