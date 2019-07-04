@@ -290,6 +290,20 @@ class MySQLQueryBuilderTest extends TestCase {
         $this->assertEquals("alter table `users` add column `email` varchar(25) not null", $query->getSql());
     }
 
+    public function test_buildCreateIndexQuery()
+    {
+        $query = $this->queryBuilder->table('users')->createIndex(['id'], 'index_name')->build();
+
+        $this->assertEquals("create index index_name on users (id)", $query->getSql());
+    }
+
+    public function test_buildCreateIndexQuery_withMultipleColumns()
+    {
+        $query = $this->queryBuilder->table('users')->createIndex(['id', 'email'], 'index_name')->build();
+
+        $this->assertEquals("create index index_name on users (id, email)", $query->getSql());
+    }
+
     public function test_buildDropIndexQuery()
     {
         $query = $this->queryBuilder->table('users')->dropIndex('index_name')->build();

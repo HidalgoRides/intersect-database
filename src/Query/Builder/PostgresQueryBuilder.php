@@ -167,6 +167,13 @@ class PostgresQueryBuilder extends QueryBuilder {
         return (!is_null($alias)) ? ($alias . '.' . $column . " as \"" . $alias . '.' . $column . "\"") : $column;
     }
 
+    protected function buildCreateIndexQuery()
+    {
+        $queryString = 'create index ' . $this->indexName . ' on ' . $this->tableNameWithSchema($this->tableName) . ' (' . implode(', ', $this->columns) . ')';
+        
+        return new Query($queryString);
+    }
+
     protected function buildIndexDefinition(Index $index)
     {
         return null;

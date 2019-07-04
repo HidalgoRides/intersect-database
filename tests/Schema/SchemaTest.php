@@ -129,6 +129,26 @@ class SchemaTest extends TestCase {
         $this->assertEquals($expectedResult, $result);
     }
 
+    public function test_createIndex()
+    {
+        $queryBuilder = $this->queryBuilderMock;
+
+        $queryBuilder->method('table')->willReturnCallback(function($tableName) use ($queryBuilder) {
+            $this->assertEquals('test', $tableName);
+            return $queryBuilder;
+        });
+
+        $queryBuilder->method('createIndex')->willReturn($queryBuilder);
+        
+        $expectedResult = new Result();
+        $queryBuilder->method('get')->willReturn($expectedResult);
+
+        $schema = new Schema($this->connectionMock);
+        $result = $schema->createIndex('test', ['id'], 'index_name');
+
+        $this->assertEquals($expectedResult, $result);
+    }
+
     public function test_dropIndex()
     {
         $queryBuilder = $this->queryBuilderMock;

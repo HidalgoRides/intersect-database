@@ -38,6 +38,7 @@ abstract class QueryBuilder {
     private static $ACTION_DROP_TABLE_IF_EXISTS = 'dropTableIfExists';
     private static $ACTION_DROP_COLUMNS = 'dropColumns';
     private static $ACTION_ADD_COLUMN = 'addColumn';
+    private static $ACTION_CREATE_INDEX = 'createIndex';
     private static $ACTION_DROP_INDEX = 'dropIndex';
 
     protected $columnData = [];
@@ -134,6 +135,14 @@ abstract class QueryBuilder {
     {
         $this->action = self::$ACTION_ADD_COLUMN;
         $this->columnBlueprint = $columnBlueprint;
+        return $this;
+    }
+
+    public function createIndex(array $columns, $indexName)
+    {
+        $this->action = self::$ACTION_CREATE_INDEX;
+        $this->columns = $columns;
+        $this->indexName = $indexName;
         return $this;
     }
 
@@ -451,6 +460,9 @@ abstract class QueryBuilder {
             case self::$ACTION_DROP_INDEX:
                 $query = $this->buildDropIndexQuery();
                 break;
+            case self::$ACTION_CREATE_INDEX:
+                $query = $this->buildCreateIndexQuery();
+                break;
         }
 
         return $query;
@@ -618,6 +630,13 @@ abstract class QueryBuilder {
 
         $queryString = 'alter table ' . $this->wrapTableName($this->tableName) . ' ' . implode(', ', $dropColumnStrings);
 
+        return new Query($queryString);
+    }
+
+    protected function buildCreateIndexQuery()
+    {
+        $queryString = 'create index ' . $this->indexName . ' on ' . $this->tableName . ' (' . implode(', ', $this->columns) . ')';
+        
         return new Query($queryString);
     }
 
