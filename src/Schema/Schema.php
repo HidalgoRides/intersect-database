@@ -5,6 +5,7 @@ namespace Intersect\Database\Schema;
 use Closure;
 use Intersect\Database\Schema\Blueprint;
 use Intersect\Database\Connection\Connection;
+use Intersect\Database\Schema\ColumnBlueprint;
 use Intersect\Database\Connection\ConnectionRepository;
 
 class Schema {
@@ -31,9 +32,9 @@ class Schema {
         return $this->connection->getQueryBuilder()->createTable($blueprint)->get();
     }
 
-    public function addColumn($tableName, ColumnDefinition $columnDefinition)
+    public function addColumn($tableName, ColumnBlueprint $columnBlueprint)
     {
-        return $this->connection->getQueryBuilder()->table($tableName)->addColumn($columnDefinition)->get();
+        return $this->connection->getQueryBuilder()->table($tableName)->addColumn($columnBlueprint)->get();
     }
 
     public function dropColumns($tableName, array $columns)

@@ -11,7 +11,6 @@ use Intersect\Database\Connection\Connection;
 use Intersect\Database\Query\QueryParameters;
 use Intersect\Database\Schema\Key\ForeignKey;
 use Intersect\Database\Schema\Key\PrimaryKey;
-use Intersect\Database\Schema\ColumnDefinition;
 use Intersect\Database\Query\Builder\Condition\InCondition;
 use Intersect\Database\Query\Builder\QueryConditionResolver;
 use Intersect\Database\Query\Builder\Condition\LikeCondition;
@@ -23,6 +22,7 @@ use Intersect\Database\Query\Builder\Condition\NotNullCondition;
 use Intersect\Database\Schema\Resolver\ColumnDefinitionResolver;
 use Intersect\Database\Query\Builder\Condition\NotEqualsCondition;
 use Intersect\Database\Query\Builder\Condition\BetweenDatesCondition;
+use Intersect\Database\Schema\ColumnBlueprint;
 
 abstract class QueryBuilder {
 
@@ -49,8 +49,8 @@ abstract class QueryBuilder {
     protected $action;
     /** @var Blueprint */
     protected $blueprint;
-    /** @var ColumnDefinition */
-    protected $columnDefinition;
+    /** @var ColumnBlueprint */
+    protected $columnBlueprint;
     /** @var Connection */
     protected $connection;
     protected $limit;
@@ -128,10 +128,10 @@ abstract class QueryBuilder {
         return $this;
     }
 
-    public function addColumn(ColumnDefinition $columnDefinition)
+    public function addColumn(ColumnBlueprint $columnBlueprint)
     {
         $this->action = self::$ACTION_ADD_COLUMN;
-        $this->columnDefinition = $columnDefinition;
+        $this->columnBlueprint = $columnBlueprint;
         return $this;
     }
 
@@ -583,7 +583,7 @@ abstract class QueryBuilder {
     {
         $columnDefinitionResolver = $this->getColumnDefinitionResolver();
 
-        $queryString = 'alter table ' . $this->wrapTableName($this->tableName) . ' add column ' . $columnDefinitionResolver->resolve($this->columnDefinition);
+        $queryString = 'alter table ' . $this->wrapTableName($this->tableName) . ' add column ' . $columnDefinitionResolver->resolve($this->columnBlueprint->getColumnDefinition());
 
         return new Query($queryString);
     }

@@ -4,8 +4,7 @@ namespace Tests\Query\Builder;
 
 use PHPUnit\Framework\TestCase;
 use Intersect\Database\Schema\Blueprint;
-use Intersect\Database\Schema\ColumnType;
-use Intersect\Database\Schema\ColumnDefinition;
+use Intersect\Database\Schema\ColumnBlueprint;
 use Intersect\Database\Connection\NullConnection;
 use Intersect\Database\Query\Builder\QueryBuilder;
 use Intersect\Database\Query\Builder\MySQLQueryBuilder;
@@ -283,9 +282,10 @@ class MySQLQueryBuilderTest extends TestCase {
 
     public function test_buildAddColumnQuery()
     {
-        $columnDefinition = new ColumnDefinition('email', ColumnType::STRING);
-        $columnDefinition->length(25);
-        $query = $this->queryBuilder->table('users')->addColumn($columnDefinition)->build();
+        $columnBlueprint = new ColumnBlueprint();
+        $columnBlueprint->string('email', 25);
+
+        $query = $this->queryBuilder->table('users')->addColumn($columnBlueprint)->build();
 
         $this->assertEquals("alter table `users` add column `email` varchar(25) not null", $query->getSql());
     }

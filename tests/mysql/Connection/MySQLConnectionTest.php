@@ -5,9 +5,8 @@ namespace Tests\Connection;
 use Tests\TestUtility;
 use PHPUnit\Framework\TestCase;
 use Intersect\Database\Schema\Blueprint;
-use Intersect\Database\Schema\ColumnType;
 use Intersect\Database\Connection\Connection;
-use Intersect\Database\Schema\ColumnDefinition;
+use Intersect\Database\Schema\ColumnBlueprint;
 
 class MySQLConnectionTest extends TestCase {
 
@@ -97,10 +96,10 @@ class MySQLConnectionTest extends TestCase {
 
         $this->assertCount(2, $columns);
 
-        $columnDefinition = new ColumnDefinition('email', ColumnType::STRING);
-        $columnDefinition->length(25);
+        $columnBlueprint = new ColumnBlueprint();
+        $columnBlueprint->string('email', 25);
 
-        $this->connection->getQueryBuilder()->table($tableName)->addColumn($columnDefinition)->get();
+        $this->connection->getQueryBuilder()->table($tableName)->addColumn($columnBlueprint)->get();
 
         $result = $this->connection->getQueryBuilder()->table($tableName)->columns()->get(true);
         $columns = array_column($result->getRecords(), 'Field');

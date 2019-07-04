@@ -10,6 +10,7 @@ use Intersect\Database\Query\Builder\QueryBuilder;
 use Intersect\Database\Schema\Schema;
 use Intersect\Database\Schema\ColumnDefinition;
 use Intersect\Database\Schema\ColumnType;
+use Intersect\Database\Schema\ColumnBlueprint;
 
 class SchemaTest extends TestCase {
 
@@ -120,8 +121,10 @@ class SchemaTest extends TestCase {
 
         $schema = new Schema($this->connectionMock);
 
-        $columnDefinition = new ColumnDefinition('email', ColumnType::STRING);
-        $result = $schema->addColumn('test', $columnDefinition);
+        $columnBlueprint = new ColumnBlueprint();
+        $columnBlueprint->string('email');
+
+        $result = $schema->addColumn('test', $columnBlueprint);
 
         $this->assertEquals($expectedResult, $result);
     }
