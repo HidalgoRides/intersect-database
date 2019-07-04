@@ -42,6 +42,11 @@ class Schema {
         return $this->connection->getQueryBuilder()->table($tableName)->dropColumns($columns)->get();
     }
 
+    public function dropIndex($tableName, $indexName)
+    {
+        return $this->connection->getQueryBuilder()->table($tableName)->dropIndex($indexName)->get();
+    }
+
     public function dropTable($tableName)
     {
         return $this->connection->getQueryBuilder()->dropTable($tableName)->get();

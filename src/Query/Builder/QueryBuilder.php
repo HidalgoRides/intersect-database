@@ -38,6 +38,7 @@ abstract class QueryBuilder {
     private static $ACTION_DROP_TABLE_IF_EXISTS = 'dropTableIfExists';
     private static $ACTION_DROP_COLUMNS = 'dropColumns';
     private static $ACTION_ADD_COLUMN = 'addColumn';
+    private static $ACTION_DROP_INDEX = 'dropIndex';
 
     protected $columnData = [];
     protected $columns = ['*'];
@@ -53,6 +54,7 @@ abstract class QueryBuilder {
     protected $columnBlueprint;
     /** @var Connection */
     protected $connection;
+    protected $indexName;
     protected $limit;
     protected $order;
     protected $useAliases = false;
@@ -132,6 +134,13 @@ abstract class QueryBuilder {
     {
         $this->action = self::$ACTION_ADD_COLUMN;
         $this->columnBlueprint = $columnBlueprint;
+        return $this;
+    }
+
+    public function dropIndex($indexName)
+    {
+        $this->action = self::$ACTION_DROP_INDEX;
+        $this->indexName = $indexName;
         return $this;
     }
 
@@ -439,6 +448,9 @@ abstract class QueryBuilder {
             case self::$ACTION_ADD_COLUMN:
                 $query = $this->buildAddColumnQuery();
                 break;
+            case self::$ACTION_DROP_INDEX:
+                $query = $this->buildDropIndexQuery();
+                break;
         }
 
         return $query;
@@ -525,21 +537,28 @@ abstract class QueryBuilder {
         $keyDefinitionStrings = [];
         foreach ($blueprint->getKeys() as $key)
         {
+            $definition = null;
+
             if ($key instanceof UniqueKey)
             {
-                $keyDefinitionStrings[] = $this->buildUniqueKeyDefinition($key);
+                $definition = $this->buildUniqueKeyDefinition($key);
             }
             else if ($key instanceof PrimaryKey)
             {
-                $keyDefinitionStrings[] = $this->buildPrimaryKeyDefinition($key);
+                $definition = $this->buildPrimaryKeyDefinition($key);
             }
             else if ($key instanceof ForeignKey)
             {
-                $keyDefinitionStrings[] = $this->buildForeignKeyDefinition($key);
+                $definition = $this->buildForeignKeyDefinition($key);
             }
             else if ($key instanceof Index)
             {
-                $keyDefinitionStrings[] = $this->buildIndexDefinition($key);
+                $definition = $this->buildIndexDefinition($key);
+            }
+
+            if (!is_null($definition))
+            {
+                $keyDefinitionStrings[] = $definition;
             }
         }
 
@@ -599,6 +618,13 @@ abstract class QueryBuilder {
 
         $queryString = 'alter table ' . $this->wrapTableName($this->tableName) . ' ' . implode(', ', $dropColumnStrings);
 
+        return new Query($queryString);
+    }
+
+    protected function buildDropIndexQuery()
+    {
+        $queryString = 'drop index ' . $this->indexName;
+        
         return new Query($queryString);
     }
 

@@ -303,14 +303,9 @@ class PostgresQueryBuilderTest extends TestCase {
 
         $blueprint->index('test');
 
-        try {
-            $this->queryBuilder->createTable($blueprint)->build();
-        } catch (\Exception $e) {
-            $this->assertEquals('Not implemented', $e->getMessage());
-            return;
-        }
+        $query = $this->queryBuilder->createTable($blueprint)->build();
 
-        $this->fail('Defining an index should have thrown an exception');        
+        $this->assertEquals("create table public.users (id serial, constraint primary_users_id primary key (id))", $query->getSql());
     }
 
     public function test_buildCreateTableQuery_withMultipleUniqueKeys()
@@ -427,6 +422,20 @@ class PostgresQueryBuilderTest extends TestCase {
         $query = $this->queryBuilder->table('users')->schema('users')->addColumn($columnBlueprint)->build();
 
         $this->assertEquals("alter table users.users add column email varchar(25) not null", $query->getSql());
+    }
+
+    public function test_buildDropIndexQuery()
+    {
+        $query = $this->queryBuilder->table('users')->dropIndex('index_name')->build();
+
+        $this->assertEquals("drop index index_name", $query->getSql());
+    }
+
+    public function test_buildDropIndexQuery_withSchema()
+    {
+        $query = $this->queryBuilder->table('users')->schema('users')->dropIndex('index_name')->build();
+
+        $this->assertEquals("drop index index_name", $query->getSql());
     }
     
 }

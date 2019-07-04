@@ -169,7 +169,7 @@ class PostgresQueryBuilder extends QueryBuilder {
 
     protected function buildIndexDefinition(Index $index)
     {
-        throw new \Exception('Not implemented');
+        return null;
     }
 
     protected function buildForeignKeyDefinition(ForeignKey $foreignKey)

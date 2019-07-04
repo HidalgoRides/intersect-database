@@ -181,6 +181,13 @@ class MySQLQueryBuilder extends QueryBuilder {
         return (count($tableOptionsArray) > 0) ? implode(' ', $tableOptionsArray) : null;
     }
 
+    protected function buildDropIndexQuery()
+    {
+        $queryString = 'alter table ' . $this->wrapTableName($this->tableName) . ' drop index ' . $this->indexName;
+        
+        return new Query($queryString);
+    }
+
     private function appendNonNullValueToArray(array &$array, $key, $value)
     {
         if (!is_null($value))

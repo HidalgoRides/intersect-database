@@ -289,5 +289,12 @@ class MySQLQueryBuilderTest extends TestCase {
 
         $this->assertEquals("alter table `users` add column `email` varchar(25) not null", $query->getSql());
     }
+
+    public function test_buildDropIndexQuery()
+    {
+        $query = $this->queryBuilder->table('users')->dropIndex('index_name')->build();
+
+        $this->assertEquals("alter table `users` drop index index_name", $query->getSql());
+    }
     
 }
