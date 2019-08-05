@@ -119,11 +119,6 @@ abstract class AbstractModel implements ModelActions {
         if (!is_null($this->columns) && count($this->columns) > 0)
         {
             $columnList = $this->columns;
-
-            if (!in_array($this->primaryKey, $columnList))
-            {
-                $columnList[] = $this->primaryKey;
-            }
         }
         else
         {

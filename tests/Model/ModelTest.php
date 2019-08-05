@@ -48,6 +48,19 @@ class ModelTest extends TestCase {
         $this->assertTrue(count($users) > 0);
     }
 
+    public function test_find_withExplicitColumns()
+    {
+        $queryParameters = new QueryParameters();
+        $queryParameters->setColumns(['email']);
+        $queryParameters->setLimit(1);
+         $users = User::find($queryParameters);
+        $this->assertNotNull($users);
+        $this->assertTrue(count($users) == 1);
+         $user = $users[0];
+        $this->assertNull($user->id);
+        $this->assertNotNull($user->email);
+    }
+
     public function test_findById()
     {
         $user = User::findById(1);
