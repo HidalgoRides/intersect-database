@@ -4,20 +4,20 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "98925cd55f9013a19bf105cb4871fd09",
+    "content-hash": "4a0ea6a2caa3dfe690324cbcf78bdc22",
     "packages": [
         {
             "name": "hidalgo-rides/intersect-core",
-            "version": "1.1.2",
+            "version": "dev-release/1.2.x",
             "source": {
                 "type": "git",
                 "url": "https://github.com/HidalgoRides/intersect-core.git",
-                "reference": "04c99467582dfd9bc4ccf1072876dea1e790353e"
+                "reference": "8c41b1717f175bfb59e1b4359ab510ef40219499"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/HidalgoRides/intersect-core/zipball/04c99467582dfd9bc4ccf1072876dea1e790353e",
-                "reference": "04c99467582dfd9bc4ccf1072876dea1e790353e",
+                "url": "https://api.github.com/repos/HidalgoRides/intersect-core/zipball/8c41b1717f175bfb59e1b4359ab510ef40219499",
+                "reference": "8c41b1717f175bfb59e1b4359ab510ef40219499",
                 "shasum": ""
             },
             "require": {
@@ -43,7 +43,7 @@
                 }
             ],
             "description": "Common classes used throughout Intersect libraries and projects.",
-            "time": "2019-07-27T03:00:42+00:00"
+            "time": "2019-08-05T01:44:52+00:00"
         }
     ],
     "packages-dev": [
@@ -1522,7 +1522,9 @@
     ],
     "aliases": [],
     "minimum-stability": "dev",
-    "stability-flags": [],
+    "stability-flags": {
+        "hidalgo-rides/intersect-core": 20
+    },
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": [],
