@@ -25,13 +25,14 @@ class RunnerTest extends TestCase {
     {
         $this->connection = ConnectionRepository::get();
         $this->fileStorage = new FileStorage();
-        $this->runner = new Runner($this->connection, $this->fileStorage, new NullLogger(), '/');
+        $this->runner = new Runner($this->connection, $this->fileStorage, new NullLogger(), []);
     }
 
     public function test_export()
     {
-        $this->runner->setMigrationDirectory(dirname(__FILE__) . '/data/export-migrations');
-        $exportedFilePath = $this->runner->export();
+        $migrationDirectory = dirname(__FILE__) . '/data/export-migrations';
+        $this->runner->setMigrationDirectories([$migrationDirectory]);
+        $exportedFilePath = $this->runner->export($migrationDirectory);
 
         if (!$this->fileStorage->fileExists($exportedFilePath))
         {
@@ -59,8 +60,9 @@ class RunnerTest extends TestCase {
 
     public function test_export_withSeedData()
     {
-        $this->runner->setMigrationDirectory(dirname(__FILE__) . '/data/export-migrations');
-        $exportedFilePath = $this->runner->export(true);
+        $migrationDirectory = dirname(__FILE__) . '/data/export-migrations';
+        $this->runner->setMigrationDirectories([$migrationDirectory]);
+        $exportedFilePath = $this->runner->export($migrationDirectory, true);
 
         if (!$this->fileStorage->fileExists($exportedFilePath))
         {
@@ -89,26 +91,29 @@ class RunnerTest extends TestCase {
         
     }
 
-    public function test_run_singleMigration()
+    public function test_migrate_singleMigration()
     {
-        $this->runner->setMigrationDirectory(dirname(__FILE__) . '/data/single-migration');
+        $migrationDirectory = dirname(__FILE__) . '/data/single-migration';
+        $this->runner->setMigrationDirectories([$migrationDirectory]);
         $this->runner->migrate();
 
         $this->assertTableMigrated('test_migration_one');
     }
 
-    public function test_run_multipleMigrations()
+    public function test_migrate_multipleMigrations()
     {
-        $this->runner->setMigrationDirectory(dirname(__FILE__) . '/data/multiple-migrations');
+        $migrationDirectory = dirname(__FILE__) . '/data/multiple-migrations';
+        $this->runner->setMigrationDirectories([$migrationDirectory]);
         $this->runner->migrate();
 
         $this->assertTableMigrated('test_migration_two');
         $this->assertTableMigrated('test_migration_three');
     }
 
-    public function test_run_rollbackMigrations()
+    public function test_migrate_rollbackMigrations()
     {
-        $this->runner->setMigrationDirectory(dirname(__FILE__) . '/data/rollback-migrations');
+        $migrationDirectory = dirname(__FILE__) . '/data/rollback-migrations';
+        $this->runner->setMigrationDirectories([$migrationDirectory]);
         $this->runner->migrate();
 
         $this->assertTableMigrated('test_migration_four');

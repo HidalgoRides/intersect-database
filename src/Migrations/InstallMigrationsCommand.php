@@ -30,6 +30,7 @@ class InstallMigrationsCommand extends AbstractCommand {
         $schema->createTable('ic_migrations', function(Blueprint $blueprint) {
             $blueprint->increments('id');
             $blueprint->string('name');
+            $blueprint->string('path');
             $blueprint->tinyInteger('status')->default(1);
             $blueprint->integer('batch_id');
             $blueprint->datetime('date_created');

@@ -26,21 +26,21 @@ class Runner {
 
     private $currentBatchId;
 
-    private $migrationDirectory;
+    private $migrationDirectories = [];
 
     private $seedMigrationsEnabled;
 
-    public function __construct(Connection $connection, FileStorage $fileStorage, Logger $logger, $migrationsPath)
+    public function __construct(Connection $connection, FileStorage $fileStorage, Logger $logger, array $migrationDirectories = [])
     {
         $this->connection = $connection;
         $this->fileStorage = $fileStorage;
         $this->logger = $logger;
-        $this->migrationDirectory = $migrationsPath;
+        $this->migrationDirectories = $migrationDirectories;
     }
 
-    public function setMigrationDirectory($migrationDirectory)
+    public function setMigrationDirectories($migrationDirectories)
     {
-        $this->migrationDirectory = $migrationDirectory;
+        $this->migrationDirectories = $migrationDirectories;
     }
 
     public function getCurrentBatchId()
@@ -48,44 +48,48 @@ class Runner {
         return $this->currentBatchId;
     }
 
-    public function export($includeSeedData = false)
+    public function export($exportPath, $includeSeedData = false)
     {
         $this->logger->info('Starting export');
-        $migrationPaths = $this->fileStorage->glob(rtrim($this->migrationDirectory, '/') . '/*_*.php');
 
-        $oldConnection = $this->connection;
-        $exportConnection = new ExportConnection($oldConnection);
-        
-        $this->connection = $exportConnection;
-        ConnectionRepository::register($exportConnection);
-
-        foreach ($migrationPaths as $migrationPath)
+        foreach ($this->migrationDirectories as $migrationDirectory)
         {
-            $this->fileStorage->requireOnce($migrationPath);
+            $migrationPaths = $this->fileStorage->glob(rtrim($migrationDirectory, '/') . '/*_*.php');
 
-            $className = MigrationHelper::resolveClassNameFromPath($migrationPath);
-            $class = new $className($this->connection);
-
-            if (!$class instanceof AbstractMigration && !$class instanceof AbstractSeed)
+            $oldConnection = $this->connection;
+            $exportConnection = new ExportConnection($oldConnection);
+            
+            $this->connection = $exportConnection;
+            ConnectionRepository::register($exportConnection);
+    
+            foreach ($migrationPaths as $migrationPath)
             {
-                $this->logger->error($migrationPath . ' is not an instance of AbstractMigration or AbstractSeed. Skipping file');
-                return;
-            }
-
-            if ($class instanceof AbstractMigration)
-            {
-                $this->logger->info('Exporting migration: ' . $migrationPath);
-                $class->up();
-            }
-            else if ($class instanceof AbstractSeed && $includeSeedData)
-            {
-                $this->logger->info('Exporting seed data: ' . $migrationPath);
-                $class->populate();
+                $this->fileStorage->requireOnce($migrationPath);
+    
+                $className = MigrationHelper::resolveClassNameFromPath($migrationPath);
+                $class = new $className($this->connection);
+    
+                if (!$class instanceof AbstractMigration && !$class instanceof AbstractSeed)
+                {
+                    $this->logger->error($migrationPath . ' is not an instance of AbstractMigration or AbstractSeed. Skipping file');
+                    return;
+                }
+    
+                if ($class instanceof AbstractMigration)
+                {
+                    $this->logger->info('Exporting migration: ' . $migrationPath);
+                    $class->up();
+                }
+                else if ($class instanceof AbstractSeed && $includeSeedData)
+                {
+                    $this->logger->info('Exporting seed data: ' . $migrationPath);
+                    $class->populate();
+                }
             }
         }
 
         $exportedFileName = 'export_' . strtolower($this->connection->getDriver()) . '_' . date('Y_m_d_His') . '.sql';
-        $exportedFilePath = $this->migrationDirectory . '/' . $exportedFileName;
+        $exportedFilePath = $exportPath . '/' . $exportedFileName;
         
         $contents = '-- Intersect Migration Exporter' . PHP_EOL;
         $contents .= '-- Generated on ' . date('Y-m-d H:i:s') . PHP_EOL;
@@ -114,28 +118,31 @@ class Runner {
 
         $this->logger->info('Starting migration');
 
-        $migrationPaths = $this->fileStorage->glob(rtrim($this->migrationDirectory, '/') . '/*_*.php');
-
-        $migrationsToRun = $this->getMigrationToRun($migrationPaths);
-
-        if (count($migrationsToRun) == 0)
+        foreach ($this->migrationDirectories as $migrationDirectory)
         {
-            $this->logger->warn('Nothing to migrate!');
-            return;
-        }
+            $migrationPaths = $this->fileStorage->glob(rtrim($migrationDirectory, '/') . '/*_*.php');
 
-        $lastBatchId = $this->getLastBatchId();
-        $this->currentBatchId = ($lastBatchId + 1);
-
-        /** @var Migration $migration */
-        foreach ($migrationsToRun as $migration)
-        {
-            try {
-                $this->runMigration($migration);
-            } catch (\Exception $e) {
-                $this->logger->error('An error occurred during migration of file: ' . $path);
-                $this->logger->error(' * ' . $e->getMessage());
+            $migrationsToRun = $this->getMigrationToRun($migrationPaths);
+    
+            if (count($migrationsToRun) == 0)
+            {
+                $this->logger->warn('Nothing to migrate!');
                 return;
+            }
+    
+            $lastBatchId = $this->getLastBatchId();
+            $this->currentBatchId = ($lastBatchId + 1);
+    
+            /** @var Migration $migration */
+            foreach ($migrationsToRun as $migration)
+            {
+                try {
+                    $this->runMigration($migration);
+                } catch (\Exception $e) {
+                    $this->logger->error('An error occurred during migration of file: ' . $migration->name);
+                    $this->logger->error(' * ' . $e->getMessage());
+                    return;
+                }
             }
         }
 
@@ -227,6 +234,7 @@ class Runner {
             {
                 $migrationToRun = new Migration();
                 $migrationToRun->name = $migrationFileName;
+                $migrationToRun->path = $migrationFile;
             }
 
             if (!is_null($migrationToRun))
@@ -265,7 +273,7 @@ class Runner {
 
         $this->logger->info('Migrating file: ' . $fileName);
 
-        $this->fileStorage->requireOnce($this->migrationDirectory . '/' . $fileName);
+        $this->fileStorage->requireOnce($migration->path);
 
         $className = MigrationHelper::resolveClassNameFromPath($fileName);
         $class = new $className($this->connection);
@@ -293,7 +301,7 @@ class Runner {
     private function rollbackMigration(Migration $migration)
     {
         $migrationFile = $migration->name;
-        $migrationFileFullPath = $this->migrationDirectory . '/' . $migrationFile;
+        $migrationFileFullPath = $migration->path;
 
         $this->logger->info('Rolling back file: ' . $migrationFile);
 
