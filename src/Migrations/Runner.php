@@ -52,22 +52,25 @@ class Runner {
     {
         $this->logger->info('Starting export');
 
+        $contents = '-- Intersect Migration Exporter' . PHP_EOL;
+        $contents .= '-- Generated on ' . date('Y-m-d H:i:s');
+
+        $oldConnection = $this->connection;
+        $queryContents = '';
+
         foreach ($this->migrationDirectories as $migrationDirectory)
         {
             $migrationPaths = $this->fileStorage->glob(rtrim($migrationDirectory, '/') . '/*_*.php');
-
-            $oldConnection = $this->connection;
-            $exportConnection = new ExportConnection($oldConnection);
-            
-            $this->connection = $exportConnection;
-            ConnectionRepository::register($exportConnection);
     
             foreach ($migrationPaths as $migrationPath)
             {
+                $exportConnection = new ExportConnection($oldConnection);
+                ConnectionRepository::register($exportConnection);
+
                 $this->fileStorage->requireOnce($migrationPath);
     
                 $className = MigrationHelper::resolveClassNameFromPath($migrationPath);
-                $class = new $className($this->connection);
+                $class = new $className($exportConnection);
     
                 if (!$class instanceof AbstractMigration && !$class instanceof AbstractSeed)
                 {
@@ -78,28 +81,27 @@ class Runner {
                 if ($class instanceof AbstractMigration)
                 {
                     $this->logger->info('Exporting migration: ' . $migrationPath);
+                    $queryContents .= PHP_EOL . PHP_EOL . '-- File: ' . $migrationPath;
                     $class->up();
                 }
                 else if ($class instanceof AbstractSeed && $includeSeedData)
                 {
                     $this->logger->info('Exporting seed data: ' . $migrationPath);
+                    $queryContents .= PHP_EOL . PHP_EOL . '-- File: ' . $migrationPath;
                     $class->populate();
+                }
+
+                foreach ($exportConnection->getQueries() as $query)
+                {
+                    $queryContents .= PHP_EOL . $query;
                 }
             }
         }
 
-        $exportedFileName = 'export_' . strtolower($this->connection->getDriver()) . '_' . date('Y_m_d_His') . '.sql';
+        $exportedFileName = 'export_' . strtolower($oldConnection->getDriver()) . '_' . date('Y_m_d_His') . '.sql';
         $exportedFilePath = $exportPath . '/' . $exportedFileName;
-        
-        $contents = '-- Intersect Migration Exporter' . PHP_EOL;
-        $contents .= '-- Generated on ' . date('Y-m-d H:i:s') . PHP_EOL;
-        
-        foreach ($this->connection->getQueries() as $query)
-        {
-            $contents .= PHP_EOL . $query;
-        }
 
-        $contents .= PHP_EOL . PHP_EOL . '-- End of export';
+        $contents .= $queryContents . PHP_EOL . PHP_EOL . '-- End of export';
 
         ConnectionRepository::register($oldConnection);
         $this->connection = $oldConnection;
