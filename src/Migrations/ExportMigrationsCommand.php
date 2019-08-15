@@ -8,28 +8,42 @@ use Intersect\Database\Connection\Connection;
 
 class ExportMigrationsCommand extends AbstractCommand {
 
+    /** @var FileStorage */
+    private $fileStorage;
+
     /** @var Runner */
     private $runner;
 
-    public function __construct(Connection $connection, $migrationsPath)
+    public function __construct(Connection $connection, array $migrationDirectories)
     {
         parent::__construct();
-        $this->runner = new Runner($connection, new FileStorage(), $this->logger, $migrationsPath);
+        $this->fileStorage = new FileStorage();
+        $this->runner = new Runner($connection, $this->fileStorage, $this->logger, $migrationDirectories);
     }
 
     public function getDescription()
     {
-        return 'Exports all migration queries to SQL file in your migrations directory';
+        return 'Exports all migration queries to SQL file';
+    }
+
+    public function getParameters()
+    {
+        return [
+            'path' => 'Path to save the exported SQL file',
+            'action' => '"--seed" include seed data (optional)'
+        ];
     }
 
     public function execute($data = [])
     {
-        $action = $data[0];
-
-        if (isset($data[0]))
+        if (!isset($data[0]) || !$this->fileStorage->directoryExists($data[0]))
         {
-            $action = $data[0];
+            $this->logger->warn('Please enter a valid path');
+            exit();
         }
+
+        $path = $data[0];
+        $action = (isset($data[1]) ? $data[1] : null);
 
         $includeSeedData = false;
 
@@ -38,7 +52,7 @@ class ExportMigrationsCommand extends AbstractCommand {
             $includeSeedData = true;
         } 
 
-        $this->runner->export($includeSeedData);
+        $this->runner->export($path, $includeSeedData);
     }
 
 }

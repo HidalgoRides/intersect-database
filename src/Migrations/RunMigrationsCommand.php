@@ -11,25 +11,27 @@ class RunMigrationsCommand extends AbstractCommand {
     /** @var Runner */
     private $runner;
 
-    public function __construct(Connection $connection, $migrationsPath)
+    public function __construct(Connection $connection, array $migrationDirectories)
     {
         parent::__construct();
-        $this->runner = new Runner($connection, new FileStorage(), $this->logger, $migrationsPath);
+        $this->runner = new Runner($connection, new FileStorage(), $this->logger, $migrationDirectories);
     }
 
     public function getDescription()
     {
         return 'Runs all migration scripts, if needed, in your migrations directory';
     }
+    
+    public function getParameters()
+    {
+        return [
+            'action' => '"--rollback" or "--rollbackLast" (optional)'
+        ];
+    }
 
     public function execute($data = [])
     {
-        $action = $data[0];
-
-        if (isset($data[0]))
-        {
-            $action = $data[0];
-        }
+        $action = (isset($data[0]) ? $data[0] : null);
 
         if ($action == '--rollback')
         {
