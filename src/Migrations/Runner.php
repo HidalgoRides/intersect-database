@@ -128,8 +128,7 @@ class Runner {
     
             if (count($migrationsToRun) == 0)
             {
-                $this->logger->warn('Nothing to migrate!');
-                return;
+                continue;
             }
     
             $lastBatchId = $this->getLastBatchId();
