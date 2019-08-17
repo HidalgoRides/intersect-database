@@ -43,7 +43,8 @@ class RunMigrationsCommand extends AbstractCommand {
         }
         else
         {
-            $this->runner->migrate();
+            $seedMigrationsEnabled = ($action == '--seed');
+            $this->runner->migrate($seedMigrationsEnabled);
         }
     }
 

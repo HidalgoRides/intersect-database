@@ -124,7 +124,7 @@ class RunnerTest extends TestCase {
         $migrationDirectory1 = dirname(__FILE__) . '/data/multiple-migration-sources/source1';
         $migrationDirectory2 = dirname(__FILE__) . '/data/multiple-migration-sources/source2';
         $this->runner->setMigrationDirectories([$migrationDirectory1, $migrationDirectory2]);
-        $this->runner->migrate();
+        $this->runner->migrate(true);
 
         $this->assertTableMigrated('test_migration_source_1');
         $this->assertTableMigrated('test_migration_source_2');

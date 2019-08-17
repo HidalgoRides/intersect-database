@@ -28,7 +28,7 @@ class Runner {
 
     private $migrationDirectories = [];
 
-    private $seedMigrationsEnabled;
+    private $seedMigrationsEnabled = false;
 
     public function __construct(Connection $connection, FileStorage $fileStorage, Logger $logger, array $migrationDirectories = [])
     {
@@ -148,7 +148,7 @@ class Runner {
         {
             $migrationPaths = $this->fileStorage->glob(rtrim($migrationDirectory, '/') . '/*_*.php');
 
-            $migrationsToRun = $this->getMigrationToRun($migrationPaths);
+            $migrationsToRun = $this->getMigrationsToRun($migrationPaths);
     
             if (count($migrationsToRun) == 0)
             {
@@ -231,7 +231,7 @@ class Runner {
 
     private function getLastBatchId()
     {
-        $result = $this->connection->getQueryBuilder()->selectMax('batch_id')->table('ic_migrations')->get();
+        $result = $this->connection->getQueryBuilder()->selectMax('batch_id')->table('ic_migrations')->whereEquals('status', 1)->get();
         return (int) ($result->getFirstRecord()['max_value']);
     }
 
@@ -240,7 +240,7 @@ class Runner {
      * @return Migration[]
      * @throws DatabaseException
      */
-    private function getMigrationToRun(array $migrationFiles)
+    private function getMigrationsToRun(array $migrationFiles)
     {
         if (count($migrationFiles) == 0)
         {
@@ -260,6 +260,16 @@ class Runner {
 
         foreach ($migrationFiles as $migrationFile)
         {
+            $this->fileStorage->requireOnce($migrationFile);
+    
+            $className = MigrationHelper::resolveClassNameFromPath($migrationFile);
+            $class = new $className($this->connection);
+
+            if ($class instanceof AbstractSeed && !$this->seedMigrationsEnabled)
+            {
+                continue;
+            }
+
             $migrationFileParts = explode('/', $migrationFile);
             $migrationFileName = end($migrationFileParts);
 
