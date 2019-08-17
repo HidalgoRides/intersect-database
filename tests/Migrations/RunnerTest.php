@@ -119,6 +119,21 @@ class RunnerTest extends TestCase {
         $this->assertTableMigrated('test_migration_three');
     }
 
+    public function test_migrate_multipleMigrationSources_verifyRanInChronologicalOrder()
+    {
+        $migrationDirectory1 = dirname(__FILE__) . '/data/multiple-migration-sources/source1';
+        $migrationDirectory2 = dirname(__FILE__) . '/data/multiple-migration-sources/source2';
+        $this->runner->setMigrationDirectories([$migrationDirectory1, $migrationDirectory2]);
+        $this->runner->migrate();
+
+        $this->assertTableMigrated('test_migration_source_1');
+        $this->assertTableMigrated('test_migration_source_2');
+
+        $results = $this->connection->getQueryBuilder()->count()->table('test_migration_source_2')->get();
+        $this->assertNotNull($results->getFirstRecord());
+        $this->assertEquals(1, $results->getFirstRecord()['count']);
+    }
+
     public function test_migrate_rollbackMigrations()
     {
         $migrationDirectory = dirname(__FILE__) . '/data/rollback-migrations';

@@ -38,7 +38,7 @@ class Runner {
         $this->migrationDirectories = $migrationDirectories;
     }
 
-    public function setMigrationDirectories($migrationDirectories)
+    public function setMigrationDirectories(array $migrationDirectories)
     {
         $this->migrationDirectories = $migrationDirectories;
     }
@@ -120,6 +120,8 @@ class Runner {
 
         $this->logger->info('Starting migration');
 
+        $allMigrationsToRun = [];
+
         foreach ($this->migrationDirectories as $migrationDirectory)
         {
             $migrationPaths = $this->fileStorage->glob(rtrim($migrationDirectory, '/') . '/*_*.php');
@@ -130,12 +132,26 @@ class Runner {
             {
                 continue;
             }
-    
+
+            $allMigrationsToRun = array_merge($allMigrationsToRun, $migrationsToRun);
+        }
+
+        if (count($allMigrationsToRun) == 0)
+        {
+            $this->logger->info('No migrations to run');
+        }
+        else
+        {
             $lastBatchId = $this->getLastBatchId();
             $this->currentBatchId = ($lastBatchId + 1);
+
+            // sort migrations by name so that all sources are run according to date created and not per directory load order
+            usort($allMigrationsToRun, function($m1, $m2) {
+                return strcmp($m1->name, $m2->name);
+            });
     
             /** @var Migration $migration */
-            foreach ($migrationsToRun as $migration)
+            foreach ($allMigrationsToRun as $migration)
             {
                 try {
                     $this->runMigration($migration);
