@@ -37,7 +37,7 @@ class RunMigrationsCommand extends AbstractCommand {
         {
             $this->runner->rollback();
         } 
-        if ($action == '--rollbackLast')
+        else if ($action == '--rollbackLast')
         {
             $this->runner->rollbackLastBatch();
         }
