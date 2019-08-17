@@ -58,11 +58,32 @@ class Runner {
         $oldConnection = $this->connection;
         $queryContents = '';
 
+        $allMigrationPathsToExport = [];
+
         foreach ($this->migrationDirectories as $migrationDirectory)
         {
             $migrationPaths = $this->fileStorage->glob(rtrim($migrationDirectory, '/') . '/*_*.php');
-    
-            foreach ($migrationPaths as $migrationPath)
+
+            if (count($migrationPaths) == 0)
+            {
+                continue;
+            }
+
+            $allMigrationPathsToExport = array_merge($allMigrationPathsToExport, $migrationPaths);
+        }
+
+        $exportedFilePath = null;
+
+        if (count($allMigrationPathsToExport) == 0)
+        {
+            $this->logger->info('No migrations to export');
+        }
+        else
+        {   
+            // sort migrations by name so that all sources are run according to date created and not per directory load order
+            $allMigrationPathsToExport = $this->sortMigrationPaths($allMigrationPathsToExport);
+
+            foreach ($allMigrationPathsToExport as $migrationPath)
             {
                 $exportConnection = new ExportConnection($oldConnection);
                 ConnectionRepository::register($exportConnection);
@@ -96,22 +117,23 @@ class Runner {
                     $queryContents .= PHP_EOL . $query;
                 }
             }
+
+            // reset connection back to original connection
+            ConnectionRepository::register($oldConnection);
+            $this->connection = $oldConnection;
+            
+            $exportedFileName = 'export_' . strtolower($oldConnection->getDriver()) . '_' . date('Y_m_d_His') . '.sql';
+            $exportedFilePath = $exportPath . '/' . $exportedFileName;
+    
+            $contents .= $queryContents . PHP_EOL . PHP_EOL . '-- End of export';
+    
+            $this->fileStorage->writeFile($exportedFilePath, $contents);
+    
+            $this->logger->info('Export finished. File saved to: ' . $exportedFilePath);
         }
 
-        $exportedFileName = 'export_' . strtolower($oldConnection->getDriver()) . '_' . date('Y_m_d_His') . '.sql';
-        $exportedFilePath = $exportPath . '/' . $exportedFileName;
-
-        $contents .= $queryContents . PHP_EOL . PHP_EOL . '-- End of export';
-
-        ConnectionRepository::register($oldConnection);
-        $this->connection = $oldConnection;
-
-        $this->fileStorage->writeFile($exportedFilePath, $contents);
-
-        $this->logger->info('Export finished. File saved to: ' . $exportedFilePath);
-
         return $exportedFilePath;
-    }
+    }    
 
     public function migrate($seedMigrationsEnabled = false)
     {
@@ -147,7 +169,7 @@ class Runner {
 
             // sort migrations by name so that all sources are run according to date created and not per directory load order
             usort($allMigrationsToRun, function($m1, $m2) {
-                return strcmp($m1->name, $m2->name);
+                return strcmp($this->getTimeFromMigrationPath($m1->path), $this->getTimeFromMigrationPath($m2->name));
             });
     
             /** @var Migration $migration */
@@ -205,6 +227,12 @@ class Runner {
             $installCommand->execute();
             $this->logger->info('Finished creating migrations table');
         }
+    }
+
+    private function getLastBatchId()
+    {
+        $result = $this->connection->getQueryBuilder()->selectMax('batch_id')->table('ic_migrations')->get();
+        return (int) ($result->getFirstRecord()['max_value']);
     }
 
     /**
@@ -278,6 +306,13 @@ class Runner {
         return Migration::find($migrationParameters);
     }
 
+    private function getTimeFromMigrationPath($migrationPath)
+    {
+        $migrationPathParts = explode('/', str_replace('.php', '', $migrationPath));
+        $migrationPathParts = explode('_', end($migrationPathParts));
+        return end($migrationPathParts);
+    }
+
 
     /**
      * @param Migration $migration
@@ -348,10 +383,13 @@ class Runner {
         $migration->save();
     }
 
-    private function getLastBatchId()
+    private function sortMigrationPaths(array $migrationPaths)
     {
-        $result = $this->connection->getQueryBuilder()->selectMax('batch_id')->table('ic_migrations')->get();
-        return (int) ($result->getFirstRecord()['max_value']);
+        usort($migrationPaths, function($a, $b) {
+            return strcmp($this->getTimeFromMigrationPath($a), $this->getTimeFromMigrationPath($b));
+        });
+
+        return $migrationPaths;
     }
 
 }

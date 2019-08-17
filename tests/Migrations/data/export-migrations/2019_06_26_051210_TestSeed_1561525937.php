@@ -3,7 +3,7 @@
 use Intersect\Database\Migrations\AbstractSeed;
 use Tests\Stubs\TestModel;
 
-class TestSeed1561525934 extends AbstractSeed {
+class TestSeed1561525937 extends AbstractSeed {
 
     public function populate()
     {

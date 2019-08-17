@@ -3,7 +3,7 @@
 use Intersect\Database\Schema\Blueprint;
 use Intersect\Database\Migrations\AbstractMigration;
 
-class TestMigration1561525937 extends AbstractMigration {
+class TestMigration1561525938 extends AbstractMigration {
 
     /**
      * Run the migration
