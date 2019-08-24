@@ -7,7 +7,7 @@ use Intersect\Core\Command\AbstractCommand;
 use Intersect\Database\Connection\Connection;
 use Intersect\Database\Migrations\Runner;
 
-class RunMigrationsCommand extends AbstractCommand {
+class RollbackMigrationsCommand extends AbstractCommand {
 
     /** @var Runner */
     private $runner;
@@ -20,13 +20,13 @@ class RunMigrationsCommand extends AbstractCommand {
 
     public function getDescription()
     {
-        return 'Runs all migration scripts, if needed, in your migrations directory';
+        return 'Rollback all migration scripts, or only migration scripts from last batch ran';
     }
     
     public function getParameters()
     {
         return [
-            'action' => '"--seed" (optional)'
+            'action' => '"--last" (optional)'
         ];
     }
 
@@ -34,8 +34,14 @@ class RunMigrationsCommand extends AbstractCommand {
     {
         $action = (isset($data[0]) ? $data[0] : null);
 
-        $seedMigrationsEnabled = ($action == '--seed');
-        $this->runner->migrate($seedMigrationsEnabled);
+        if ($action == '--last')
+        {
+            $this->runner->rollbackLastBatch();
+        }
+        else
+        {
+            $this->runner->rollback();
+        }
     }
 
 }
