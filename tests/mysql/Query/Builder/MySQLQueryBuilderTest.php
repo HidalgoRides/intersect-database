@@ -245,6 +245,18 @@ class MySQLQueryBuilderTest extends TestCase {
         $this->assertEquals("create table `users` (`column_one` int not null, `column_two` int not null, primary key (`column_one`, `column_two`)) engine=InnoDB charset=utf8 collate=utf8_unicode_ci;", $query->getSql());
     }
 
+    public function test_buildCreateTableIfNotExistsQuery()
+    {
+        $blueprint = new Blueprint('users');
+        $blueprint->integer('id');
+        $blueprint->string('email');
+        $blueprint->string('age');
+
+        $query = $this->queryBuilder->createTableIfNotExists($blueprint)->build();
+
+        $this->assertEquals("create table if not exists `users` (`id` int not null, `email` varchar(255) not null, `age` varchar(255) not null) engine=InnoDB charset=utf8 collate=utf8_unicode_ci;", $query->getSql());
+    }
+
     public function test_buildDropTableQuery()
     {
         $query = $this->queryBuilder->dropTable('users')->build();

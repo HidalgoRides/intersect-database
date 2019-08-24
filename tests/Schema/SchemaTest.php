@@ -49,6 +49,27 @@ class SchemaTest extends TestCase {
         $this->assertEquals($expectedResult, $result);
     }
 
+    public function test_createTableIfNotExists()
+    {
+        $queryBuilder = $this->queryBuilderMock;
+
+        $queryBuilder->method('createTable')->willReturnCallback(function(Blueprint $b) use ($queryBuilder) {
+            $this->assertEquals('test', $b->getTableName());
+            $this->assertCount(1, $b->getColumnDefinitions());
+            return $queryBuilder;
+        });
+        
+        $expectedResult = new Result();
+        $queryBuilder->method('get')->willReturn($expectedResult);
+
+        $schema = new Schema($this->connectionMock);
+        $result = $schema->createTableIfNotExists('test', function(Blueprint $b) {
+            $b->string('unit');
+        });
+
+        $this->assertEquals($expectedResult, $result);
+    }
+
     public function test_dropTable()
     {
         $queryBuilder = $this->queryBuilderMock;

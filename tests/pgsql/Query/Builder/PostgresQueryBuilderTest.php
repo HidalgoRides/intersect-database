@@ -334,6 +334,18 @@ class PostgresQueryBuilderTest extends TestCase {
         $this->assertEquals("create table public.users (column_one integer not null, column_two integer not null, constraint primary_users_column_one_column_two primary key (column_one, column_two));", $query->getSql());
     }
 
+    public function test_buildCreateTableIfNotExistsQuery()
+    {
+        $blueprint = new Blueprint('users');
+        $blueprint->integer('id');
+        $blueprint->string('email');
+        $blueprint->string('age');
+
+        $query = $this->queryBuilder->createTableIfNotExists($blueprint)->build();
+
+        $this->assertEquals("create table if not exists public.users (id integer not null, email varchar(255) not null, age varchar(255) not null);", $query->getSql());
+    }
+
     public function test_buildDropTableQuery()
     {
         $query = $this->queryBuilder->dropTable('users')->build();

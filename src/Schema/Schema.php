@@ -32,6 +32,15 @@ class Schema {
         return $this->connection->getQueryBuilder()->createTable($blueprint)->get();
     }
 
+    public function createTableIfNotExists($tableName, Closure $closure)
+    {
+        $blueprint = new Blueprint($tableName);
+
+        $closure($blueprint);
+
+        return $this->connection->getQueryBuilder()->createTable($blueprint)->get();
+    }
+
     public function addColumn($tableName, ColumnBlueprint $columnBlueprint)
     {
         return $this->connection->getQueryBuilder()->table($tableName)->addColumn($columnBlueprint)->get();

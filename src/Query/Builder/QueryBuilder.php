@@ -34,6 +34,7 @@ abstract class QueryBuilder {
     private static $ACTION_INSERT = 'insert';
     private static $ACTION_COLUMNS = 'columns';
     private static $ACTION_CREATE_TABLE = 'createTable';
+    private static $ACTION_CREATE_TABLE_IF_NOT_EXISTS = 'createTableIfNotExists';
     private static $ACTION_DROP_TABLE = 'dropTable';
     private static $ACTION_DROP_TABLE_IF_EXISTS = 'dropTableIfExists';
     private static $ACTION_DROP_COLUMNS = 'dropColumns';
@@ -104,6 +105,14 @@ abstract class QueryBuilder {
     public function createTable(Blueprint $blueprint)
     {
         $this->action = self::$ACTION_CREATE_TABLE;
+        $this->blueprint = $blueprint;
+        return $this;
+    }
+
+    /** @return QueryBuilder */
+    public function createTableIfNotExists(Blueprint $blueprint)
+    {
+        $this->action = self::$ACTION_CREATE_TABLE_IF_NOT_EXISTS;
         $this->blueprint = $blueprint;
         return $this;
     }
@@ -445,6 +454,9 @@ abstract class QueryBuilder {
             case self::$ACTION_CREATE_TABLE:
                 $query = $this->buildCreateTableQuery($this->blueprint);
                 break;
+            case self::$ACTION_CREATE_TABLE_IF_NOT_EXISTS:
+                $query = $this->buildCreateTableQuery($this->blueprint, true);
+                break;
             case self::$ACTION_DROP_TABLE:
                 $query = $this->buildDropTableQuery();
                 break;
@@ -552,7 +564,7 @@ abstract class QueryBuilder {
         return $this->buildFinalQuery($queryString);
     }
 
-    protected function buildCreateTableQuery(Blueprint $blueprint)
+    protected function buildCreateTableQuery(Blueprint $blueprint, $suffixWithIfNotExists = false)
     {
         $columnDefinitionStrings = [];
         $columnDefinitionResolver = $this->getColumnDefinitionResolver();
@@ -590,7 +602,8 @@ abstract class QueryBuilder {
             }
         }
 
-        $queryString = 'create table ' . $this->wrapTableName($blueprint->getTableName()) . ' (';
+        $ifNotExists = (($suffixWithIfNotExists) ? 'if not exists ' : '');
+        $queryString = 'create table ' . $ifNotExists . $this->wrapTableName($blueprint->getTableName()) . ' (';
         $queryString .= implode(', ', $columnDefinitionStrings);
 
         if (count($keyDefinitionStrings) > 0)
