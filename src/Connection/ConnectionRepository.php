@@ -22,15 +22,16 @@ class ConnectionRepository {
         if (array_key_exists($key, self::$CONNECTIONS))
         {
             $connection = self::$CONNECTIONS[$key];
+
+            if ($connection instanceof \Closure)
+            {
+                $connection = $connection();
+                self::$CONNECTIONS[$key] = $connection;
+            }
         }
         else if (array_key_exists($key, self::$ALIASES))
         {
-            $connection =self::get(self::$ALIASES[$key]);
-        }
-
-        if ($connection instanceof \Closure)
-        {
-            $connection = $connection();
+            $connection = self::get(self::$ALIASES[$key]);
         }
 
         return $connection;
