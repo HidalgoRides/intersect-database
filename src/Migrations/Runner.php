@@ -369,8 +369,8 @@ class Runner {
 
         if (!$this->fileStorage->fileExists($migrationFileFullPath))
         {
-            $this->logger->error($migrationFileFullPath . ' not found. Aborting rollback');
-            die();
+            $this->logger->error($migrationFileFullPath . ' not found. Skipping migration rollback for this file');
+            return;
         }
 
         $this->fileStorage->requireOnce($migrationFileFullPath);

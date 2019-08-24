@@ -12,12 +12,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/HidalgoRides/intersect-core.git",
-                "reference": "8ff893ac6d98164e3e5b2e66d4febf4c7f413109"
+                "reference": "15fbaa94bbb70b4bbabd382f46fa6e0484edb49a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/HidalgoRides/intersect-core/zipball/8ff893ac6d98164e3e5b2e66d4febf4c7f413109",
-                "reference": "8ff893ac6d98164e3e5b2e66d4febf4c7f413109",
+                "url": "https://api.github.com/repos/HidalgoRides/intersect-core/zipball/15fbaa94bbb70b4bbabd382f46fa6e0484edb49a",
+                "reference": "15fbaa94bbb70b4bbabd382f46fa6e0484edb49a",
                 "shasum": ""
             },
             "require": {
@@ -43,7 +43,7 @@
                 }
             ],
             "description": "Common classes used throughout Intersect libraries and projects.",
-            "time": "2019-08-13T05:33:23+00:00"
+            "time": "2019-08-24T02:51:10+00:00"
         }
     ],
     "packages-dev": [
@@ -722,16 +722,16 @@
         },
         {
             "name": "phpunit/phpunit",
-            "version": "7.5.14",
+            "version": "7.5.15",
             "source": {
                 "type": "git",
                 "url": "https://github.com/sebastianbergmann/phpunit.git",
-                "reference": "2834789aeb9ac182ad69bfdf9ae91856a59945ff"
+                "reference": "d79c053d972856b8b941bb233e39dc521a5093f0"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/sebastianbergmann/phpunit/zipball/2834789aeb9ac182ad69bfdf9ae91856a59945ff",
-                "reference": "2834789aeb9ac182ad69bfdf9ae91856a59945ff",
+                "url": "https://api.github.com/repos/sebastianbergmann/phpunit/zipball/d79c053d972856b8b941bb233e39dc521a5093f0",
+                "reference": "d79c053d972856b8b941bb233e39dc521a5093f0",
                 "shasum": ""
             },
             "require": {
@@ -802,7 +802,7 @@
                 "testing",
                 "xunit"
             ],
-            "time": "2019-07-15T06:24:08+00:00"
+            "time": "2019-08-21T07:05:16+00:00"
         },
         {
             "name": "sebastian/code-unit-reverse-lookup",
