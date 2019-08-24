@@ -284,6 +284,11 @@ abstract class Model extends AbstractModel {
 
         $id = (int) ($isNewModel ? $result->getInsertId() : $primaryKeyValue);
 
+        if ($isNewModel)
+        {
+            $this->{$this->primaryKey} = $id;
+        }
+
         if (!is_null($id) && $id > 0)
         {
             $savedModel = $this->findById($id);

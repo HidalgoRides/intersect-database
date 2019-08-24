@@ -29,6 +29,16 @@ class ExportQueryBuilder extends QueryBuilder {
         $this->queryBuilder = $queryBuilder;
     }
 
+    public function getAction()
+    {
+        return $this->queryBuilder->action;
+    }
+
+    public function getTableName()
+    {
+        return $this->queryBuilder->tableName;
+    }
+
     public function build()
     {
         return $this->queryBuilder->build();
