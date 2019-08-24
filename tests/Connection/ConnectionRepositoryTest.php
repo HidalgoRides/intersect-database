@@ -3,6 +3,7 @@
 namespace Tests\Connection;
 
 use PHPUnit\Framework\TestCase;
+use Intersect\Database\Connection\Connection;
 use Intersect\Database\Connection\ConnectionRepository;
 use Intersect\Database\Connection\NullConnection;
 
@@ -15,12 +16,24 @@ class ConnectionRepositoryTest extends TestCase {
         $this->assertNotNull(ConnectionRepository::get($key));
     }
 
-    public function test_register()
+    public function test_register_asConnection()
     {
-        $key = 'test-register';
+        $key = 'test-register-connection';
         $this->assertNull(ConnectionRepository::get($key));
         ConnectionRepository::register(new NullConnection(), $key);
-        $this->assertNotNull(ConnectionRepository::get($key));
+        $connection = ConnectionRepository::get($key);
+        $this->assertNotNull($connection);
+        $this->assertTrue($connection instanceof Connection);
+    }
+
+    public function test_register_asClosure()
+    {
+        $key = 'test-register-closure';
+        $this->assertNull(ConnectionRepository::get($key));
+        ConnectionRepository::register(function() { return new NullConnection(); }, $key);
+        $connection = ConnectionRepository::get($key);
+        $this->assertNotNull($connection);
+        $this->assertTrue($connection instanceof Connection);
     }
 
     public function test_registerAlias()
