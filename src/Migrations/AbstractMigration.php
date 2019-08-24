@@ -7,6 +7,8 @@ use Intersect\Database\Connection\Connection;
 
 abstract class AbstractMigration {
 
+    public $skipMigration = false;
+
     /** @var Schema */
     protected $schema;
 

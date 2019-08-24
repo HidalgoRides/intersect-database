@@ -346,13 +346,20 @@ class Runner {
             return;
         }
 
-        if ($class instanceof AbstractMigration)
+        if ($class->skipMigration)
         {
-            $class->up();
+            $this->logger->error($fileName . ' has skipMigration set to true. Skipping file');
         }
-        else if ($class instanceof AbstractSeed)
+        else
         {
-            $class->populate();
+            if ($class instanceof AbstractMigration)
+            {
+                $class->up();
+            }
+            else if ($class instanceof AbstractSeed)
+            {
+                $class->populate();
+            }
         }
 
         $migration->batch_id = $this->currentBatchId;
