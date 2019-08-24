@@ -1,6 +1,6 @@
 <?php
 
-namespace Intersect\Database\Migrations;
+namespace Intersect\Database\Migrations\Commands;
 
 use Intersect\Core\Command\AbstractCommand;
 use Intersect\Database\Connection\Connection;

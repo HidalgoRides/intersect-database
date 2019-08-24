@@ -11,7 +11,7 @@ use Intersect\Database\Migrations\MigrationHelper;
 use Intersect\Database\Exception\DatabaseException;
 use Intersect\Database\Migrations\ExportConnection;
 use Intersect\Database\Connection\ConnectionRepository;
-use Intersect\Database\Migrations\InstallMigrationsCommand;
+use Intersect\Database\Migrations\Commands\InstallMigrationsCommand;
 
 class Runner {
 

@@ -1,9 +1,10 @@
 <?php
 
-namespace Intersect\Database\Migrations;
+namespace Intersect\Database\Migrations\Commands;
 
 use Intersect\Core\Storage\FileStorage;
 use Intersect\Core\Command\AbstractCommand;
+use Intersect\Database\Migrations\Generator;
 
 class GenerateMigrationCommand extends AbstractCommand {
 
