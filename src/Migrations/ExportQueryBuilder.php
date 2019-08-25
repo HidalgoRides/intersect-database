@@ -50,6 +50,12 @@ class ExportQueryBuilder extends QueryBuilder {
         return $this;
     }
 
+    public function createTableIfNotExists(Blueprint $blueprint)
+    {
+        $this->queryBuilder->createTableIfNotExists($blueprint);
+        return $this;
+    }
+
     public function dropTable($tableName)
     {
         $this->queryBuilder->dropTable($tableName);
