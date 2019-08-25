@@ -11,6 +11,8 @@ use Intersect\Database\Connection\Connection;
 use Intersect\Database\Query\QueryParameters;
 use Intersect\Database\Schema\Key\ForeignKey;
 use Intersect\Database\Schema\Key\PrimaryKey;
+use Intersect\Database\Schema\ColumnBlueprint;
+use Intersect\Database\Exception\DatabaseException;
 use Intersect\Database\Query\Builder\Condition\InCondition;
 use Intersect\Database\Query\Builder\QueryConditionResolver;
 use Intersect\Database\Query\Builder\Condition\LikeCondition;
@@ -22,7 +24,6 @@ use Intersect\Database\Query\Builder\Condition\NotNullCondition;
 use Intersect\Database\Schema\Resolver\ColumnDefinitionResolver;
 use Intersect\Database\Query\Builder\Condition\NotEqualsCondition;
 use Intersect\Database\Query\Builder\Condition\BetweenDatesCondition;
-use Intersect\Database\Schema\ColumnBlueprint;
 
 abstract class QueryBuilder {
 
@@ -94,6 +95,7 @@ abstract class QueryBuilder {
     /**
      * @param $bypassCache
      * @return Result
+     * @throws DatabaseException
      */
     public function get($bypassCache = false)
     {

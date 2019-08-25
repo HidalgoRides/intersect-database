@@ -64,7 +64,10 @@ class Generator {
 
     private function generateFullPath($name)
     {
-        return $this->getMigrationsPath() . '/' . date('Y_m_d_His') . '_' . $name . '_' . time() . '.php';
+        // $time = strtotime('2018-08-01 00:00:00');
+        $time = time();
+
+        return $this->getMigrationsPath() . '/' . date('Y_m_d_His', $time) . '_' . $name . '_' . $time . '.php';
     }
 
     private function generateFullTemplatePath($templateName)

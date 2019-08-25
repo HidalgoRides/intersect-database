@@ -11,7 +11,6 @@ use Intersect\Database\Migrations\MigrationHelper;
 use Intersect\Database\Exception\DatabaseException;
 use Intersect\Database\Migrations\ExportConnection;
 use Intersect\Database\Connection\ConnectionRepository;
-use Intersect\Database\Migrations\Commands\InstallMigrationsCommand;
 
 class Runner {
 
@@ -35,11 +34,12 @@ class Runner {
         $this->connection = $connection;
         $this->fileStorage = $fileStorage;
         $this->logger = $logger;
-        $this->migrationDirectories = $migrationDirectories;
+        $this->setMigrationDirectories($migrationDirectories);
     }
 
     public function setMigrationDirectories(array $migrationDirectories)
     {
+        $migrationDirectories = array_merge([dirname(__FILE__) . '/Migrations'], $migrationDirectories);
         $this->migrationDirectories = $migrationDirectories;
     }
 
@@ -137,7 +137,6 @@ class Runner {
 
     public function migrate($seedMigrationsEnabled = false)
     {
-        $this->checkForMigrationTable();
         $this->seedMigrationsEnabled = $seedMigrationsEnabled;
 
         $this->logger->info('Starting migration');
@@ -222,17 +221,21 @@ class Runner {
         try {
             Migration::findOne();
         } catch (DatabaseException $e) {
-            $this->logger->info('Creating migrations table');
-            $installCommand = new InstallMigrationsCommand($this->connection);
-            $installCommand->execute();
-            $this->logger->info('Finished creating migrations table');
+            $this->logger->error('Migrations table "ic_migrations" does not exist...');
+            throw new \Exception('Migrations table "ic_migrations" does not exist...');
         }
     }
 
     private function getLastBatchId()
     {
-        $result = $this->connection->getQueryBuilder()->selectMax('batch_id')->table('ic_migrations')->whereEquals('status', 1)->get();
-        return (int) ($result->getFirstRecord()['max_value']);
+        $lastBatchId = 0;
+
+        try {
+            $result = $this->connection->getQueryBuilder()->selectMax('batch_id')->table('ic_migrations')->whereEquals('status', 1)->get();
+            $lastBatchId = (int) ($result->getFirstRecord()['max_value']);
+        } catch (DatabaseException $e) {}
+        
+        return $lastBatchId;
     }
 
     /**
@@ -248,7 +251,11 @@ class Runner {
         }
 
         $migrationParameters = new QueryParameters();
-        $existingMigrations = Migration::find($migrationParameters);
+        $existingMigrations = [];
+
+        try {
+            $existingMigrations = Migration::find($migrationParameters);
+        } catch (DatabaseException $e) {}
 
         $existingMigrationsWithKeys = [];
         foreach ($existingMigrations as $existingMigration)
