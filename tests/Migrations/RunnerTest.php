@@ -43,21 +43,21 @@ class RunnerTest extends TestCase {
         $lines = explode(PHP_EOL, $exportedFile);
 
         $this->fileStorage->deleteFile($exportedFilePath);
-        $this->assertCount(13, $lines);
+        $this->assertCount(12, $lines);
         
         if ($this->connection->getDriver() == 'mysql')
         {
-            $this->assertTrue(strpos($lines[6], '-- File:') !== false);
-            $this->assertEquals("create table `test_export_one` (`email` varchar(100) not null) engine=InnoDB charset=utf8 collate=utf8_unicode_ci;", $lines[7]);
-            $this->assertTrue(strpos($lines[9], '-- File:') !== false);
-            $this->assertEquals("create table `test_export_two` (`email` varchar(100) not null) engine=InnoDB charset=utf8 collate=utf8_unicode_ci;", $lines[10]);
+            $this->assertTrue(strpos($lines[5], '-- File:') !== false);
+            $this->assertEquals("create table `test_export_one` (`email` varchar(100) not null) engine=InnoDB charset=utf8 collate=utf8_unicode_ci;", $lines[6]);
+            $this->assertTrue(strpos($lines[8], '-- File:') !== false);
+            $this->assertEquals("create table `test_export_two` (`email` varchar(100) not null) engine=InnoDB charset=utf8 collate=utf8_unicode_ci;", $lines[9]);
         }
         else if ($this->connection->getDriver() == 'pgsql')
         {
-            $this->assertTrue(strpos($lines[6], '-- File:') !== false);
-            $this->assertEquals("create table public.test_export_one (email varchar(100) not null);", $lines[7]);
-            $this->assertTrue(strpos($lines[9], '-- File:') !== false);
-            $this->assertEquals("create table public.test_export_two (email varchar(100) not null);", $lines[10]);
+            $this->assertTrue(strpos($lines[5], '-- File:') !== false);
+            $this->assertEquals("create table public.test_export_one (email varchar(100) not null);", $lines[6]);
+            $this->assertTrue(strpos($lines[8], '-- File:') !== false);
+            $this->assertEquals("create table public.test_export_two (email varchar(100) not null);", $lines[9]);
         }
     }
 
@@ -77,25 +77,25 @@ class RunnerTest extends TestCase {
 
         $this->fileStorage->deleteFile($exportedFilePath);
 
-        $this->assertCount(16, $lines);
+        $this->assertCount(15, $lines);
 
         if ($this->connection->getDriver() == 'mysql')
         {
-            $this->assertTrue(strpos($lines[6], '-- File:') !== false);
-            $this->assertEquals("create table `test_export_one` (`email` varchar(100) not null) engine=InnoDB charset=utf8 collate=utf8_unicode_ci;", $lines[7]);
-            $this->assertTrue(strpos($lines[9], '-- File:') !== false);
-            $this->assertEquals("insert into `test_export_one` (email) values ('unit@test.com');", $lines[10]);
-            $this->assertTrue(strpos($lines[12], '-- File:') !== false);
-            $this->assertEquals("create table `test_export_two` (`email` varchar(100) not null) engine=InnoDB charset=utf8 collate=utf8_unicode_ci;", $lines[13]);
+            $this->assertTrue(strpos($lines[5], '-- File:') !== false);
+            $this->assertEquals("create table `test_export_one` (`email` varchar(100) not null) engine=InnoDB charset=utf8 collate=utf8_unicode_ci;", $lines[6]);
+            $this->assertTrue(strpos($lines[8], '-- File:') !== false);
+            $this->assertEquals("insert into `test_export_one` (email) values ('unit@test.com');", $lines[9]);
+            $this->assertTrue(strpos($lines[11], '-- File:') !== false);
+            $this->assertEquals("create table `test_export_two` (`email` varchar(100) not null) engine=InnoDB charset=utf8 collate=utf8_unicode_ci;", $lines[12]);
         }
         else if ($this->connection->getDriver() == 'pgsql')
         {
-            $this->assertTrue(strpos($lines[6], '-- File:') !== false);
-            $this->assertEquals("create table public.test_export_one (email varchar(100) not null);", $lines[7]);
-            $this->assertTrue(strpos($lines[9], '-- File:') !== false);
-            $this->assertEquals("insert into public.test_export_one (email) values ('unit@test.com');", $lines[10]);
-            $this->assertTrue(strpos($lines[12], '-- File:') !== false);
-            $this->assertEquals("create table public.test_export_two (email varchar(100) not null);", $lines[13]);
+            $this->assertTrue(strpos($lines[5], '-- File:') !== false);
+            $this->assertEquals("create table public.test_export_one (email varchar(100) not null);", $lines[6]);
+            $this->assertTrue(strpos($lines[8], '-- File:') !== false);
+            $this->assertEquals("insert into public.test_export_one (email) values ('unit@test.com');", $lines[9]);
+            $this->assertTrue(strpos($lines[11], '-- File:') !== false);
+            $this->assertEquals("create table public.test_export_two (email varchar(100) not null);", $lines[12]);
         }
         
     }

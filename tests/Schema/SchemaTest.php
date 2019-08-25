@@ -53,7 +53,7 @@ class SchemaTest extends TestCase {
     {
         $queryBuilder = $this->queryBuilderMock;
 
-        $queryBuilder->method('createTable')->willReturnCallback(function(Blueprint $b) use ($queryBuilder) {
+        $queryBuilder->method('createTableIfNotExists')->willReturnCallback(function(Blueprint $b) use ($queryBuilder) {
             $this->assertEquals('test', $b->getTableName());
             $this->assertCount(1, $b->getColumnDefinitions());
             return $queryBuilder;

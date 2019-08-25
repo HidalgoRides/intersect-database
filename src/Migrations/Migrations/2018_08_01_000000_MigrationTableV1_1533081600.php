@@ -26,7 +26,7 @@ class MigrationTableV11533081600 extends AbstractMigration {
      */
     public function down()
     {
-        $this->schema->dropTableIfExists('ic_migrations');
+        // nothing to do here since we do not want to drop the migrations table once it is created
     }
 
 }
