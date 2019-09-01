@@ -233,7 +233,7 @@ abstract class Model extends AbstractModel {
     protected function isNewModel()
     {
         $primaryKeyValue = $this->getPrimaryKeyValue();
-        return is_null($primaryKeyValue);
+        return (is_null($primaryKeyValue) || $this->forceCreate);
     }
 
     /**

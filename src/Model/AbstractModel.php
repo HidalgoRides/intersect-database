@@ -21,6 +21,7 @@ abstract class AbstractModel implements ModelActions {
     protected $attributes = [];
     protected $columns = [];
     protected $connectionKey = 'default';
+    protected $forceCreate = false;
     protected $isDirty = false;
     protected $primaryKey = 'id';
     protected $readOnlyAttributes = [];
@@ -47,6 +48,7 @@ abstract class AbstractModel implements ModelActions {
         foreach ($modelData as $data)
         {
             $model = self::newInstance($data);
+            $model->forceCreate = true;
             $models[] = $model->save(true);
         }
 

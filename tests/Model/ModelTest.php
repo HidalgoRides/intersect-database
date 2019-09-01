@@ -234,4 +234,23 @@ class ModelTest extends TestCase {
         }
     }
 
+    public function test_bulkCreate_withPrimaryKeyValueSet()
+    {
+        Phone::bulkCreate([
+            [
+                'id' => 999,
+                'number' => '999'
+            ]
+        ]);
+
+        $q = new QueryParameters();
+        $q->equals('id', 999);
+        
+        $model = Phone::findOne($q);
+
+        $this->assertNotNull($model);
+        $this->assertEquals(999, $model->id);
+        $this->assertEquals('999', $model->number);
+    }
+
 }
