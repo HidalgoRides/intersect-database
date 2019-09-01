@@ -107,4 +107,12 @@ class MySQLColumnDefinitionResolverTest extends TestCase {
         $this->assertEquals('`test` int not null unsigned', $result);
     }
 
+    public function test_resolve_json()
+    {
+        $columnDefinition = new ColumnDefinition('test', 'json');
+
+        $result = $this->resolver->resolve($columnDefinition);
+        $this->assertEquals('`test` json not null', $result);
+    }
+
 }

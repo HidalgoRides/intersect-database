@@ -16,5 +16,6 @@ class ColumnType {
     const STRING = 'string';
     const TEXT = 'text';
     const TIMESTAMP = 'timestamp';
+    const JSON = 'json';
 
 }

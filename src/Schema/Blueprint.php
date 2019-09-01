@@ -133,6 +133,15 @@ class Blueprint {
         return $columnDefinition;
     }
 
+    public function json($name)
+    {
+        $columnDefinition = new ColumnDefinition($name, ColumnType::JSON);
+
+        $this->addColumnDefinition($columnDefinition);
+
+        return $columnDefinition;
+    }
+
     public function mediumText($name)
     {
         $columnDefinition = new ColumnDefinition($name, ColumnType::MEDIUM_TEXT);

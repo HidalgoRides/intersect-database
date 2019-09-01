@@ -8,8 +8,6 @@ use Intersect\Database\Schema\Blueprint;
 use Intersect\Database\Connection\Connection;
 use Intersect\Database\Query\Builder\QueryBuilder;
 use Intersect\Database\Schema\Schema;
-use Intersect\Database\Schema\ColumnDefinition;
-use Intersect\Database\Schema\ColumnType;
 use Intersect\Database\Schema\ColumnBlueprint;
 
 class SchemaTest extends TestCase {

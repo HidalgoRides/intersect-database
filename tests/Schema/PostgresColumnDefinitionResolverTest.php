@@ -98,4 +98,13 @@ class PostgresColumnDefinitionResolverTest extends TestCase {
         $this->assertEquals('test varchar not null default \'unit\'', $result);
     }
 
+    public function test_resolve_json()
+    {
+        $columnDefinition = new ColumnDefinition('test', 'json');
+
+        $result = $this->resolver->resolve($columnDefinition);
+
+        $this->assertEquals('test json not null', $result);
+    }
+
 }

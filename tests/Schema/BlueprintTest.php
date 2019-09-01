@@ -183,6 +183,17 @@ class BlueprintTest extends TestCase {
         $this->assertEquals(ColumnType::TIMESTAMP, $definition->getType());
     }
 
+    public function test_json()
+    {
+        $definition = $this->blueprint->json('json_test');
+
+        $this->assertCount(1, $this->blueprint->getColumnDefinitions());
+
+        $this->assertNotNull($definition);
+        $this->assertEquals('json_test', $definition->getName());
+        $this->assertEquals(ColumnType::JSON, $definition->getType());
+    }
+
     public function test_primary()
     {
         $columns = ['id'];

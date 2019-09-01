@@ -77,6 +77,12 @@ class ColumnBlueprint {
         return $this->columnDefinition;
     }
 
+    public function json($name)
+    {
+        $this->columnDefinition = new ColumnDefinition($name, ColumnType::JSON);
+        return $this->columnDefinition;
+    }
+
     public function mediumText($name)
     {
         $this->columnDefinition = new ColumnDefinition($name, ColumnType::MEDIUM_TEXT);
