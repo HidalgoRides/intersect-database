@@ -239,7 +239,7 @@ class BlueprintTest extends TestCase {
         $this->assertEquals('user_id', $key->getFromColumn());
         $this->assertEquals('id', $key->getToColumn());
         $this->assertEquals('users', $key->getOnTable());
-        $this->assertEquals('foreign_user_id_users_id', $key->getName());
+        $this->assertEquals('user_id_users_id', $key->getName());
     }
 
     public function test_charset_default()

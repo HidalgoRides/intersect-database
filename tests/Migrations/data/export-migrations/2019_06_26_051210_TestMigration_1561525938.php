@@ -13,6 +13,10 @@ class TestMigration1561525938 extends AbstractMigration {
         $this->schema->createTable('test_export_two', function(Blueprint $blueprint) {
             $blueprint->string('email', 100);
         });
+        
+        $this->schema->addForeignKey('test_export_two', 'from_column', 'to_column', 'on_table', 'fk_to_drop');
+
+        $this->schema->dropForeignKey('test_export_two', 'fk_to_drop');
     }
 
     /**

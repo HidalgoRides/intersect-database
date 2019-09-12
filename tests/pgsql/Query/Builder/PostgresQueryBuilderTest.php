@@ -272,7 +272,7 @@ class PostgresQueryBuilderTest extends TestCase {
 
         $query = $this->queryBuilder->createTable($blueprint)->build();
 
-        $this->assertEquals("create table public.users (id serial, email varchar(100) not null, age integer default '2', sint smallint, bint bigint, price numeric(5,2), bio text, created_at timestamp, date_created timestamp, constraint primary_users_id primary key (id), constraint unique_users_email unique (email), constraint foreign_user_id_alt_users_id foreign key (user_id) references public.alt_users (id));", $query->getSql());
+        $this->assertEquals("create table public.users (id serial, email varchar(100) not null, age integer default '2', sint smallint, bint bigint, price numeric(5,2), bio text, created_at timestamp, date_created timestamp, constraint primary_users_id primary key (id), constraint unique_users_email unique (email), constraint user_id_alt_users_id foreign key (user_id) references public.alt_users (id));", $query->getSql());
     }
 
     public function test_buildCreateTableQuery_withSchema()
@@ -293,7 +293,7 @@ class PostgresQueryBuilderTest extends TestCase {
 
         $query = $this->queryBuilder->createTable($blueprint)->schema('users')->build();
 
-        $this->assertEquals("create table users.users (id serial, email varchar(100) not null, age integer default '2', sint smallint, bint bigint, price numeric(5,2), bio text, created_at timestamp, date_created timestamp, constraint primary_users_id primary key (id), constraint unique_users_email unique (email), constraint foreign_user_id_alt_users_id foreign key (user_id) references public.alt_users (id));", $query->getSql());
+        $this->assertEquals("create table users.users (id serial, email varchar(100) not null, age integer default '2', sint smallint, bint bigint, price numeric(5,2), bio text, created_at timestamp, date_created timestamp, constraint primary_users_id primary key (id), constraint unique_users_email unique (email), constraint user_id_alt_users_id foreign key (user_id) references public.alt_users (id));", $query->getSql());
     }
 
     public function test_buildCreateTableQuery_indexNotSupported()
@@ -476,6 +476,20 @@ class PostgresQueryBuilderTest extends TestCase {
         $query = $this->queryBuilder->table('users')->schema('users')->dropIndex('index_name')->build();
 
         $this->assertEquals("drop index index_name;", $query->getSql());
+    }
+
+    public function test_buildAddForeignKeyQuery()
+    {
+        $query = $this->queryBuilder->table('users')->addForeignKey('from_column', 'to_column', 'on_table', 'public', 'foreign_key')->build();
+
+        $this->assertEquals("alter table public.users add constraint foreign_key foreign key (from_column) references public.on_table (to_column);", $query->getSql());
+    }
+
+    public function test_buildDropForeignKeyQuery()
+    {
+        $query = $this->queryBuilder->table('users')->dropForeignKey('foreign_key')->build();
+
+        $this->assertEquals("alter table public.users drop constraint foreign_key;", $query->getSql());
     }
     
 }

@@ -4,6 +4,7 @@ namespace Intersect\Database\Query\Builder;
 
 use Intersect\Database\Query\Query;
 use Intersect\Database\Query\Result;
+use Intersect\Database\Schema\Key\Key;
 use Intersect\Database\Schema\Blueprint;
 use Intersect\Database\Schema\Key\Index;
 use Intersect\Database\Schema\Key\UniqueKey;
@@ -42,6 +43,8 @@ abstract class QueryBuilder {
     private static $ACTION_ADD_COLUMN = 'addColumn';
     private static $ACTION_CREATE_INDEX = 'createIndex';
     private static $ACTION_DROP_INDEX = 'dropIndex';
+    private static $ACTION_ADD_FOREIGN_KEY = 'addForeignKey';
+    private static $ACTION_DROP_FOREIGN_KEY = 'dropForeignKey';
 
     protected $columnData = [];
     protected $columns = ['*'];
@@ -62,6 +65,8 @@ abstract class QueryBuilder {
     protected $order;
     protected $useAliases = false;
     protected $primaryKey = 'id';
+    /** @var Key */
+    protected $key;
 
     /** @var QueryCondition[] */
     protected $queryConditions = [];
@@ -161,6 +166,22 @@ abstract class QueryBuilder {
     {
         $this->action = self::$ACTION_DROP_INDEX;
         $this->indexName = $indexName;
+        return $this;
+    }
+
+    public function addForeignKey($fromColumn, $toColumn, $onTable, $onTableSchema = 'public', $keyName = null)
+    {
+        $keyName = (!is_null($keyName) ? $keyName : $fromColumn . '_' . $onTable . '_' . $toColumn);
+        $this->key = new ForeignKey($keyName, $fromColumn, $toColumn, $onTable, $onTableSchema);
+
+        $this->action = self::$ACTION_ADD_FOREIGN_KEY;
+        return $this;
+    }
+
+    public function dropForeignKey($keyName)
+    {
+        $this->action = self::$ACTION_DROP_FOREIGN_KEY;
+        $this->key = new Key($this->tableName, [], $keyName);
         return $this;
     }
 
@@ -477,6 +498,12 @@ abstract class QueryBuilder {
             case self::$ACTION_CREATE_INDEX:
                 $query = $this->buildCreateIndexQuery();
                 break;
+            case self::$ACTION_ADD_FOREIGN_KEY:
+                $query = $this->buildAddForeignKeyQuery();
+                break;
+            case self::$ACTION_DROP_FOREIGN_KEY:
+                $query = $this->buildDropForeignKeyQuery();
+                break;
         }
 
         return $query;
@@ -674,6 +701,20 @@ abstract class QueryBuilder {
     protected function buildDropIndexQuery()
     {
         $queryString = 'drop index ' . $this->indexName;
+        
+        return $this->buildFinalQuery($queryString, [], false, false);
+    }
+
+    protected function buildAddForeignKeyQuery()
+    {
+        $queryString = 'alter table ' . $this->wrapTableName($this->tableName) . ' add ' . $this->buildForeignKeyDefinition($this->key);
+        
+        return $this->buildFinalQuery($queryString, [], false, false);
+    }
+
+    protected function buildDropForeignKeyQuery()
+    {
+        $queryString = 'alter table ' . $this->wrapTableName($this->tableName) . ' drop foreign key ' . $this->key->getName();
         
         return $this->buildFinalQuery($queryString, [], false, false);
     }

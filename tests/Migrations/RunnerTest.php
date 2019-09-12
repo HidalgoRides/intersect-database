@@ -43,7 +43,7 @@ class RunnerTest extends TestCase {
         $lines = explode(PHP_EOL, $exportedFile);
 
         $this->fileStorage->deleteFile($exportedFilePath);
-        $this->assertCount(13, $lines);
+        $this->assertCount(15, $lines);
         
         if ($this->connection->getDriver() == 'mysql')
         {
@@ -51,6 +51,8 @@ class RunnerTest extends TestCase {
             $this->assertEquals("create table `test_export_one` (`email` varchar(100) not null) engine=InnoDB charset=utf8 collate=utf8_unicode_ci;", $lines[7]);
             $this->assertTrue(strpos($lines[9], '-- File:') !== false);
             $this->assertEquals("create table `test_export_two` (`email` varchar(100) not null) engine=InnoDB charset=utf8 collate=utf8_unicode_ci;", $lines[10]);
+            $this->assertEquals("alter table `test_export_two` add constraint from_column_on_table_to_column foreign key (`from_column`) references `on_table` (`to_column`);", $lines[11]);
+            $this->assertEquals("alter table `test_export_two` drop foreign key fk_to_drop;", $lines[12]);
         }
         else if ($this->connection->getDriver() == 'pgsql')
         {
@@ -58,6 +60,8 @@ class RunnerTest extends TestCase {
             $this->assertEquals("create table public.test_export_one (email varchar(100) not null);", $lines[7]);
             $this->assertTrue(strpos($lines[9], '-- File:') !== false);
             $this->assertEquals("create table public.test_export_two (email varchar(100) not null);", $lines[10]);
+            $this->assertEquals("alter table public.test_export_two add constraint from_column_on_table_to_column foreign key (from_column) references fk_to_drop.on_table (to_column);", $lines[11]);
+            $this->assertEquals("alter table public.test_export_two drop constraint fk_to_drop;", $lines[12]);
         }
     }
 
@@ -77,7 +81,7 @@ class RunnerTest extends TestCase {
 
         $this->fileStorage->deleteFile($exportedFilePath);
 
-        $this->assertCount(16, $lines);
+        $this->assertCount(18, $lines);
 
         if ($this->connection->getDriver() == 'mysql')
         {
@@ -87,6 +91,8 @@ class RunnerTest extends TestCase {
             $this->assertEquals("insert into `test_export_one` (email) values ('unit@test.com');", $lines[10]);
             $this->assertTrue(strpos($lines[12], '-- File:') !== false);
             $this->assertEquals("create table `test_export_two` (`email` varchar(100) not null) engine=InnoDB charset=utf8 collate=utf8_unicode_ci;", $lines[13]);
+            $this->assertEquals("alter table `test_export_two` add constraint from_column_on_table_to_column foreign key (`from_column`) references `on_table` (`to_column`);", $lines[14]);
+            $this->assertEquals("alter table `test_export_two` drop foreign key fk_to_drop;", $lines[15]);
         }
         else if ($this->connection->getDriver() == 'pgsql')
         {
@@ -96,6 +102,8 @@ class RunnerTest extends TestCase {
             $this->assertEquals("insert into public.test_export_one (email) values ('unit@test.com');", $lines[10]);
             $this->assertTrue(strpos($lines[12], '-- File:') !== false);
             $this->assertEquals("create table public.test_export_two (email varchar(100) not null);", $lines[13]);
+            $this->assertEquals("alter table public.test_export_two add constraint from_column_on_table_to_column foreign key (from_column) references fk_to_drop.on_table (to_column);", $lines[14]);
+            $this->assertEquals("alter table public.test_export_two drop constraint fk_to_drop;", $lines[15]);
         }
         
     }

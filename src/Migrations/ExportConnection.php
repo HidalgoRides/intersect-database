@@ -9,11 +9,13 @@ use Intersect\Database\Migrations\ExportQueryBuilder;
 class ExportConnection extends Connection {
 
     private static $EXPORTABLE_ACTIONS = [
-        'addColumn', 
+        'addColumn',
+        'addForeignKey',
         'createIndex', 
         'createTable',
         'createTableIfNotExists',
-        'dropColumns', 
+        'dropColumns',
+        'dropForeignKey',
         'dropIndex', 
         'dropTable', 
         'dropTableIfExists', 

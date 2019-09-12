@@ -92,6 +92,18 @@ class ExportQueryBuilder extends QueryBuilder {
         return $this;
     }
 
+    public function addForeignKey($fromColumn, $toColumn, $onTable, $onTableSchema = 'public', $keyName = null)
+    {
+        $this->queryBuilder->addForeignKey($fromColumn, $toColumn, $onTable, $onTableSchema, $keyName);
+        return $this;
+    }
+
+    public function dropForeignKey($keyName)
+    {
+        $this->queryBuilder->dropForeignKey($keyName);
+        return $this;
+    }
+
     public function select(array $columns = [], QueryParameters $queryParameters = null)
     {
         $this->queryBuilder->select($columns, $queryParameters);
