@@ -73,7 +73,7 @@ class Schema {
 
     public function addForeignKey($tableName, $fromColumn, $toColumn, $onTable, $keyName = null)
     {
-        return $this->connection->getQueryBuilder()->table($tableName)->addForeignKey($fromColumn, $toColumn, $onTable, null. $keyName)->get();
+        return $this->connection->getQueryBuilder()->table($tableName)->addForeignKey($fromColumn, $toColumn, $onTable, null, $keyName)->get();
     }
 
     public function dropForeignKey($tableName, $keyName)

@@ -14,6 +14,10 @@ use Intersect\Database\Connection\ConnectionRepository;
 
 class Runner {
 
+    private static $MIGRATION_STATUS_COMPLETED = 1;
+    private static $MIGRATION_STATUS_PENDING = 2;
+    private static $MIGRATION_STATUS_IN_PROGESS = 3;
+
     /** @var Connection */
     private $connection;
 
@@ -179,6 +183,8 @@ class Runner {
                 } catch (\Exception $e) {
                     $this->logger->error('An error occurred during migration of file: ' . $migration->name);
                     $this->logger->error(' * ' . $e->getMessage());
+                    $this->logger->info('Rolling back migrations...');
+                    $this->rollback($this->currentBatchId);
                     return;
                 }
             }
@@ -189,14 +195,23 @@ class Runner {
 
     public function rollbackLastBatch()
     {
-        $this->checkForMigrationTable();
+        if (!$this->migrationTableExists())
+        {
+            $this->logger->info('Nothing to rollback!');
+            return;
+        }
+
         $lastBatchId = $this->getLastBatchId();
         $this->rollback($lastBatchId);
     }
 
     public function rollback($batchId = null)
     {
-        $this->checkForMigrationTable();
+        if (!$this->migrationTableExists())
+        {
+            $this->logger->info('Nothing to rollback!');
+            return;
+        }
 
         $this->logger->info('Starting rollback' . (!is_null($batchId) ? ' for batch id: ' . $batchId : ''));
 
@@ -216,14 +231,15 @@ class Runner {
         $this->logger->info('Finished rollback');
     }
 
-    private function checkForMigrationTable()
+    private function migrationTableExists()
     {
         try {
             Migration::findOne();
         } catch (DatabaseException $e) {
-            $this->logger->error('Migrations table "ic_migrations" does not exist...');
-            throw new \Exception('Migrations table "ic_migrations" does not exist...');
+            return false;
         }
+
+        return true;
     }
 
     private function getLastBatchId()
@@ -231,7 +247,7 @@ class Runner {
         $lastBatchId = 0;
 
         try {
-            $result = $this->connection->getQueryBuilder()->selectMax('batch_id')->table('ic_migrations')->whereEquals('status', 1)->get();
+            $result = $this->connection->getQueryBuilder()->selectMax('batch_id')->table('ic_migrations')->whereEquals('status', self::$MIGRATION_STATUS_COMPLETED)->get();
             $lastBatchId = (int) ($result->getFirstRecord()['max_value']);
         } catch (DatabaseException $e) {}
         
@@ -287,7 +303,7 @@ class Runner {
             {
                 $migration = $existingMigrationsWithKeys[$migrationFileNameHash];
 
-                if ($migration->status != 1)
+                if ($migration->status != self::$MIGRATION_STATUS_COMPLETED)
                 {
                     $migrationToRun = $migration;
                 }
@@ -312,7 +328,7 @@ class Runner {
     private function getMigrationsToRollback($batchId = null)
     {
         $migrationParameters = new QueryParameters();
-        $migrationParameters->equals('status', 1);
+        $migrationParameters->in('status', [self::$MIGRATION_STATUS_COMPLETED, self::$MIGRATION_STATUS_IN_PROGESS]);
         $migrationParameters->setOrder('id desc');
 
         if (!is_null($batchId))
@@ -349,16 +365,24 @@ class Runner {
 
         if (!$class instanceof AbstractMigration && !$class instanceof AbstractSeed)
         {
-            $this->logger->error($fileName . ' is not an instance of AbstractMigration or AbstractSeed. Skipping file');
+            $this->logger->warn($fileName . ' is not an instance of AbstractMigration or AbstractSeed. Skipping file');
             return;
         }
 
         if ($class->skipMigration)
         {
-            $this->logger->error($fileName . ' has skipMigration set to true. Skipping file');
+            $this->logger->warn($fileName . ' has skipMigration set to true. Skipping file');
         }
         else
         {
+            $migration->batch_id = $this->currentBatchId;
+
+            if ($this->migrationTableExists())
+            {
+                $migration->status = self::$MIGRATION_STATUS_IN_PROGESS;
+                $migration->save();
+            }
+            
             if ($class instanceof AbstractMigration)
             {
                 $class->up();
@@ -367,11 +391,10 @@ class Runner {
             {
                 $class->populate();
             }
-        }
 
-        $migration->batch_id = $this->currentBatchId;
-        $migration->status = 1;
-        $migration->save();
+            $migration->status = self::$MIGRATION_STATUS_COMPLETED;
+            $migration->save();
+        }
     }
 
     private function rollbackMigration(Migration $migration)
@@ -403,7 +426,7 @@ class Runner {
             $class->down();
         }
 
-        $migration->status = 2;
+        $migration->status = self::$MIGRATION_STATUS_PENDING;
         $migration->save();
     }
 

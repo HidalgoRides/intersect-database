@@ -171,6 +171,7 @@ abstract class QueryBuilder {
 
     public function addForeignKey($fromColumn, $toColumn, $onTable, $onTableSchema = 'public', $keyName = null)
     {
+        $onTableSchema = (!is_null($onTableSchema) ? $onTableSchema : 'public');
         $keyName = (!is_null($keyName) ? $keyName : $fromColumn . '_' . $onTable . '_' . $toColumn);
         $this->key = new ForeignKey($keyName, $fromColumn, $toColumn, $onTable, $onTableSchema);
 
@@ -581,7 +582,11 @@ abstract class QueryBuilder {
             $this->appendOptions($query);
         }
 
-        $query->setSql(rtrim($query->getSql(), ';') . ';');
+        $sql = rtrim($query->getSql(), ';');
+        if ($sql != null)
+        {
+            $query->setSql($sql . ';');
+        }
 
         return $query;
     }
@@ -600,7 +605,10 @@ abstract class QueryBuilder {
 
         foreach ($blueprint->getColumnDefinitions() as $columnDefinition)
         {
-            $columnDefinitionStrings[] = $columnDefinitionResolver->resolve($columnDefinition);
+            if (!is_null($columnDefinition))
+            {
+                $columnDefinitionStrings[] = $columnDefinitionResolver->resolve($columnDefinition);
+            }
         }
 
         $keyDefinitionStrings = [];
@@ -672,7 +680,13 @@ abstract class QueryBuilder {
     {
         $columnDefinitionResolver = $this->getColumnDefinitionResolver();
 
-        $queryString = 'alter table ' . $this->wrapTableName($this->tableName) . ' add column ' . $columnDefinitionResolver->resolve($this->columnBlueprint->getColumnDefinition());
+        $queryString = null;
+        $columnDefinition = $this->columnBlueprint->getColumnDefinition();
+
+        if (!is_null($columnDefinition))
+        {
+            $queryString = 'alter table ' . $this->wrapTableName($this->tableName) . ' add column ' . $columnDefinitionResolver->resolve($columnDefinition);
+        }
 
         return $this->buildFinalQuery($queryString, [], false, false);
     }
