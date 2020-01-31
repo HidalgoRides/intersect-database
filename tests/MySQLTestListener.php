@@ -26,6 +26,8 @@ class MySQLTestListener extends BaseTestListener {
         $queries[] = "CREATE TABLE users (
             id INT(11) AUTO_INCREMENT PRIMARY KEY,
             email VARCHAR(50) NOT NULL,
+            password VARCHAR(50),
+            status TINYINT(1),
             phone_id INT(11),
             name_id INT(11),
             meta_data TEXT,

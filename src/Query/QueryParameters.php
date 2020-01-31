@@ -2,15 +2,18 @@
 
 namespace Intersect\Database\Query;
 
+use Closure;
+use Intersect\Database\Query\Builder\Condition\InCondition;
+use Intersect\Database\Query\Builder\Condition\LikeCondition;
+use Intersect\Database\Query\Builder\Condition\NullCondition;
 use Intersect\Database\Query\Builder\Condition\QueryCondition;
 use Intersect\Database\Query\Builder\Condition\EqualsCondition;
-use Intersect\Database\Query\Builder\Condition\NotEqualsCondition;
-use Intersect\Database\Query\Builder\Condition\BetweenDatesCondition;
 use Intersect\Database\Query\Builder\Condition\BetweenCondition;
-use Intersect\Database\Query\Builder\Condition\LikeCondition;
-use Intersect\Database\Query\Builder\Condition\InCondition;
-use Intersect\Database\Query\Builder\Condition\NullCondition;
 use Intersect\Database\Query\Builder\Condition\NotNullCondition;
+use Intersect\Database\Query\Builder\Condition\NotEqualsCondition;
+use Intersect\Database\Query\Builder\Condition\QueryConditionType;
+use Intersect\Database\Query\Builder\Condition\QueryConditionGroup;
+use Intersect\Database\Query\Builder\Condition\BetweenDatesCondition;
 
 class QueryParameters {
 
@@ -18,9 +21,11 @@ class QueryParameters {
     private $limit;
     private $order;
     private $queryConditions = [];
+    private $rootConjunction;
 
-    public function __construct()
+    public function __construct($rootConjunction = QueryConditionType::AND)
     {
+        $this->rootConjunction = $rootConjunction;
         return $this;
     }
 
@@ -61,6 +66,23 @@ class QueryParameters {
     public function getQueryConditions()
     {
         return $this->queryConditions;
+    }
+
+    public function getRootConjunction()
+    {
+        return $this->rootConjunction;
+    }
+
+    public function group(Closure $closure)
+    {
+        $this->addGroupConditions($closure, QueryConditionType::AND);
+        return $this;
+    }
+
+    public function groupOr(Closure $closure)
+    {
+        $this->addGroupConditions($closure, QueryConditionType::OR);
+        return $this;
     }
 
     public function between($key, $startValue, $endValue)
@@ -122,6 +144,16 @@ class QueryParameters {
     {
         $this->queryConditions[] = new NotNullCondition($key);
         return $this;
+    }
+
+    private function addGroupConditions(Closure $closure, $type)
+    {
+        $queryParameters = new self();
+        $queryConditionGroup = new QueryConditionGroup($type);
+        $closure($queryParameters);
+
+        $queryConditionGroup->addConditions($queryParameters->getQueryConditions());
+        $this->queryConditions[] = $queryConditionGroup;
     }
 
 }

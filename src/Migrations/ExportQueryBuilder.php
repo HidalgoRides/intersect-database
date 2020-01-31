@@ -11,7 +11,7 @@ use Intersect\Database\Schema\Key\ForeignKey;
 use Intersect\Database\Schema\Key\PrimaryKey;
 use Intersect\Database\Schema\ColumnBlueprint;
 use Intersect\Database\Query\Builder\QueryBuilder;
-use Intersect\Database\Query\Builder\Condition\QueryCondition;
+use Intersect\Database\Query\Builder\QueryConditionVisitable;
 use Intersect\Database\Schema\Resolver\ColumnDefinitionResolver;
 
 class ExportQueryBuilder extends QueryBuilder {
@@ -170,7 +170,7 @@ class ExportQueryBuilder extends QueryBuilder {
         return $this;
     }
 
-    public function addQueryCondition(QueryCondition $queryCondition)
+    public function addQueryCondition(QueryConditionVisitable $queryCondition)
     {
         $this->queryBuilder->addQueryCondition($queryCondition);
         return $this;

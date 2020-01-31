@@ -84,17 +84,25 @@ class MySQLQueryBuilderTest extends TestCase {
             ->whereBetween('value', 1, 10)
             ->whereBetweenDates('start', '1969-01-01', '1969-01-02')
             ->whereLike('foo', 'test%')
+            ->group(function(QueryBuilder $queryBuilder) {
+                $queryBuilder->whereEquals('group', 'test');
+                $queryBuilder->whereEquals('biz', 'baz');
+            })
             ->build();
 
-        $this->assertEquals("select " . $alias . ".* as '" . $alias . ".*' from `users` as " . $alias . " where " . $alias . ".unit = :" . $alias . "_unit and " . $alias . ".test != :" . $alias . "_test and " . $alias . ".foo is null and " . $alias . ".bar is not null and " . $alias . ".id in (1, 2, 3) and " . $alias . ".value between 1 and 10 and " . $alias . ".start between cast('1969-01-01' as datetime) and cast('1969-01-02' as datetime) and " . $alias . ".foo like :" . $alias . "_foo;", $query->getSql());
+        $this->assertEquals("select " . $alias . ".* as '" . $alias . ".*' from `users` as " . $alias . " where " . $alias . ".unit = :" . $alias . "_unit and " . $alias . ".test != :" . $alias . "_test and " . $alias . ".foo is null and " . $alias . ".bar is not null and " . $alias . ".id in (1, 2, 3) and " . $alias . ".value between 1 and 10 and " . $alias . ".start between cast('1969-01-01' as datetime) and cast('1969-01-02' as datetime) and " . $alias . ".foo like :" . $alias . "_foo and (" . $alias . ".group = :" . $alias . "_group and " . $alias . ".biz = :" . $alias . "_biz);", $query->getSql());
 
         $bindParameters = $query->getBindParameters();
         $this->assertArrayHasKey($alias . '_unit', $bindParameters);
         $this->assertArrayHasKey($alias . '_test', $bindParameters);
         $this->assertArrayHasKey($alias . '_foo', $bindParameters);
+        $this->assertArrayHasKey($alias . '_group', $bindParameters);
+        $this->assertArrayHasKey($alias . '_biz', $bindParameters);
         $this->assertEquals('test', $bindParameters[$alias . '_unit']);
         $this->assertEquals('unit', $bindParameters[$alias . '_test']);
         $this->assertEquals('test%', $bindParameters[$alias . '_foo']);
+        $this->assertEquals('test', $bindParameters[$alias . '_group']);
+        $this->assertEquals('baz', $bindParameters[$alias . '_biz']);
     }
 
     public function test_buildSelectQuery_withLimit()
@@ -131,6 +139,66 @@ class MySQLQueryBuilderTest extends TestCase {
         $this->assertEquals("select " . $usersAlias . ".* as '" . $usersAlias . ".*' from `users` as " . $usersAlias . " left join `phones` as " . $phonesAlias . " on " . $usersAlias . ".phone_id = " . $phonesAlias . ".id;", $query->getSql());
     }
 
+    public function test_buildSelectQuery_withGroup()
+    {
+        $query = $this->queryBuilder->select()
+            ->table('users', 'id', null)
+            ->group(function(QueryBuilder $queryBuilder) {
+                $queryBuilder->whereEquals('email', 'unit@test.com');
+                $queryBuilder->whereEquals('password', 'password');
+            })
+            ->build();
+
+        $this->assertEquals("select * from `users` where (email = :email and password = :password);", $query->getSql());
+
+        $bindParameters = $query->getBindParameters();
+        $this->assertArrayHasKey('email', $bindParameters);
+        $this->assertArrayHasKey('password', $bindParameters);
+        $this->assertEquals('unit@test.com', $bindParameters['email']);
+        $this->assertEquals('password', $bindParameters['password']);
+    }
+
+    public function test_buildSelectQuery_withGroupOr()
+    {
+        $query = $this->queryBuilder->select()
+            ->table('users', 'id', null)
+            ->groupOr(function(QueryBuilder $queryBuilder) {
+                $queryBuilder->whereEquals('email', 'unit@test.com');
+                $queryBuilder->whereEquals('password', 'password');
+            })
+            ->build();
+
+        $this->assertEquals("select * from `users` where (email = :email or password = :password);", $query->getSql());
+
+        $bindParameters = $query->getBindParameters();
+        $this->assertArrayHasKey('email', $bindParameters);
+        $this->assertArrayHasKey('password', $bindParameters);
+        $this->assertEquals('unit@test.com', $bindParameters['email']);
+        $this->assertEquals('password', $bindParameters['password']);
+    }
+
+    public function test_buildSelectQuery_withNestedGroups()
+    {
+        $query = $this->queryBuilder->select()
+            ->table('users', 'id', null)
+            ->group(function(QueryBuilder $queryBuilder) {
+                $queryBuilder->whereEquals('email', 'unit@test.com');
+                $queryBuilder->groupOr(function(QueryBuilder $queryBuilder) {
+                    $queryBuilder->whereEquals('password', 'password');
+                    $queryBuilder->whereNull('password');
+                });
+            })
+            ->build();
+
+        $this->assertEquals("select * from `users` where (email = :email and (password = :password or password is null));", $query->getSql());
+
+        $bindParameters = $query->getBindParameters();
+        $this->assertArrayHasKey('email', $bindParameters);
+        $this->assertArrayHasKey('password', $bindParameters);
+        $this->assertEquals('unit@test.com', $bindParameters['email']);
+        $this->assertEquals('password', $bindParameters['password']);
+    }
+
     public function test_buildDeleteQuery()
     {
         $query = $this->queryBuilder->delete()
@@ -156,9 +224,13 @@ class MySQLQueryBuilderTest extends TestCase {
         $query = $this->queryBuilder->delete()
             ->table('users')
             ->whereIn('id', [1,2,3])
+            ->groupOr(function(QueryBuilder $queryBuilder){
+                $queryBuilder->whereEquals('phone', '1234567890');
+                $queryBuilder->whereEquals('zip', '12345');
+            })
             ->build();
 
-        $this->assertEquals("delete from `users` where id in (1, 2, 3);", $query->getSql());
+        $this->assertEquals("delete from `users` where id in (1, 2, 3) and (phone = :phone or zip = :zip);", $query->getSql());
     }
 
     public function test_buildUpdateQuery_withWhereConditions()
@@ -170,9 +242,13 @@ class MySQLQueryBuilderTest extends TestCase {
         $query = $this->queryBuilder->update($columnData)
             ->table('users')
             ->whereEquals('id', 1)
+            ->group(function(QueryBuilder $queryBuilder){
+                $queryBuilder->whereEquals('phone', '1234567890');
+                $queryBuilder->whereEquals('zip', '12345');
+            })
             ->build();
 
-        $this->assertEquals("update `users` set email = :email where id = :id;", $query->getSql());
+        $this->assertEquals("update `users` set email = :email where id = :id and (phone = :phone and zip = :zip);", $query->getSql());
 
         $bindParameters = $query->getBindParameters();
         $this->assertArrayHasKey('id', $bindParameters);

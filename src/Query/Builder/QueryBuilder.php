@@ -2,6 +2,7 @@
 
 namespace Intersect\Database\Query\Builder;
 
+use Closure;
 use Intersect\Database\Query\Query;
 use Intersect\Database\Query\Result;
 use Intersect\Database\Schema\Key\Key;
@@ -15,15 +16,17 @@ use Intersect\Database\Schema\Key\PrimaryKey;
 use Intersect\Database\Schema\ColumnBlueprint;
 use Intersect\Database\Exception\DatabaseException;
 use Intersect\Database\Query\Builder\Condition\InCondition;
-use Intersect\Database\Query\Builder\QueryConditionResolver;
 use Intersect\Database\Query\Builder\Condition\LikeCondition;
 use Intersect\Database\Query\Builder\Condition\NullCondition;
+use Intersect\Database\Query\Builder\QueryConditionVisitable;
 use Intersect\Database\Query\Builder\Condition\QueryCondition;
 use Intersect\Database\Query\Builder\Condition\EqualsCondition;
 use Intersect\Database\Query\Builder\Condition\BetweenCondition;
 use Intersect\Database\Query\Builder\Condition\NotNullCondition;
 use Intersect\Database\Schema\Resolver\ColumnDefinitionResolver;
 use Intersect\Database\Query\Builder\Condition\NotEqualsCondition;
+use Intersect\Database\Query\Builder\Condition\QueryConditionType;
+use Intersect\Database\Query\Builder\Condition\QueryConditionGroup;
 use Intersect\Database\Query\Builder\Condition\BetweenDatesCondition;
 
 abstract class QueryBuilder {
@@ -71,16 +74,13 @@ abstract class QueryBuilder {
     /** @var QueryCondition[] */
     protected $queryConditions = [];
 
-    /** @var QueryConditionResolver */
-    protected $queryConditionResolver;
-
     /** @var QueryParameters */
     protected $queryParameters;
 
     public function __construct(Connection $connection)
     {
         $this->connection = $connection;
-        $this->queryConditionResolver = new QueryConditionResolver();
+        $this->queryParameters = new QueryParameters();
     }
 
      abstract protected function buildSelectQuery();
@@ -344,7 +344,7 @@ abstract class QueryBuilder {
     }
 
     /** @return QueryBuilder */
-    public function addQueryCondition(QueryCondition $queryCondition)
+    public function addQueryCondition(QueryConditionVisitable $queryCondition)
     {
         $this->queryConditions[] = $queryCondition;
         return $this;
@@ -357,6 +357,23 @@ abstract class QueryBuilder {
         {
             $this->addQueryCondition($queryCondition);
         }
+        return $this;
+    }
+
+    public function getQueryConditions()
+    {
+        return $this->queryConditions;
+    }
+
+    public function group(Closure $closure)
+    {
+        $this->addGroupConditions($closure, QueryConditionType::AND);
+        return $this;
+    }
+
+    public function groupOr(Closure $closure)
+    {
+        $this->addGroupConditions($closure, QueryConditionType::OR);
         return $this;
     }
 
@@ -529,43 +546,48 @@ abstract class QueryBuilder {
 
         if (count($queryConditions) > 0)
         {
-            $sql = $query->getSql();
-            $whereSql = '';
+            $conditionQuery = new Query();
+            $rootConjunction = $this->queryParameters->getRootConjunction();
             $alias = $this->getTableAlias();
-            
-            foreach ($queryConditions as $queryCondition)
+            $visitor = new QueryConditionVisitor($conditionQuery, $alias);
+
+            for ($i = 0; $i < count($queryConditions); $i++)
             {
-                $whereSql .= ($whereSql == '') ? ' where ' : ' and ';
-                $resolvedQueryCondition = $this->queryConditionResolver->resolve($queryCondition, $alias);
-                
-                $whereSql .= $resolvedQueryCondition->getQueryString();
-                $bindParameters = $resolvedQueryCondition->getBindParameters();
-                if (!is_null($bindParameters))
+                $queryCondition = $queryConditions[$i];
+
+                if ($queryCondition instanceof QueryConditionVisitable)
                 {
-                    $query->bindParameter($bindParameters[0], $bindParameters[1]);
+                    if ($i > 0)
+                    {
+                        $conditionQuery->appendSql(' ' . $rootConjunction . ' ');
+                    }
+
+                    $queryCondition->accept($visitor);
                 }
             }
 
-            $query->setSql($sql . $whereSql);
+            $query->appendSql(' where ' . preg_replace("/^\s+" . $rootConjunction . "+\s|\s+" . $rootConjunction . "+\s$/","", $conditionQuery->getSql()));
+            
+            foreach ($conditionQuery->getBindParameters() as $key => $value)
+            {
+                $query->bindParameter($key, $value);
+            }
         }
     }
 
     protected function appendOptions(Query $query)
     {
-        $sql = $query->getSql();
         $alias = $this->getTableAlias();
         
         if (!is_null($this->order))
         {
-            $sql .= ' order by ' . ((!is_null($alias)) ? $alias . '.' : '') . $this->order[0] . ' ' . $this->order[1];
+            $query->appendSql(' order by ' . ((!is_null($alias)) ? $alias . '.' : '') . $this->order[0] . ' ' . $this->order[1]);
         }
 
         if (!is_null($this->limit))
         {
-            $sql .= ' limit ' . $this->limit;
+            $query->appendSql(' limit ' . $this->limit);
         }
-
-        $query->setSql($sql);
     }
 
     protected function buildFinalQuery($sql, array $bindParameters = [], $appendWhereConditions = true, $appendOptions = true)
@@ -585,7 +607,7 @@ abstract class QueryBuilder {
         $sql = rtrim($query->getSql(), ';');
         if ($sql != null)
         {
-            $query->setSql($sql . ';');
+            $query->appendSql(';');
         }
 
         return $query;
@@ -758,6 +780,16 @@ abstract class QueryBuilder {
     protected function wrapColumnName($columnName)
     {
         return '`' . $columnName . '`';
+    }
+
+    private function addGroupConditions(Closure $closure, $type)
+    {
+        $queryBuilder = new static($this->connection);
+        $queryConditionGroup = new QueryConditionGroup($type);
+        $closure($queryBuilder);
+
+        $queryConditionGroup->addConditions($queryBuilder->getQueryConditions());
+        $this->queryConditions[] = $queryConditionGroup;
     }
 
 }

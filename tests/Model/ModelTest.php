@@ -56,9 +56,63 @@ class ModelTest extends TestCase {
          $users = User::find($queryParameters);
         $this->assertNotNull($users);
         $this->assertTrue(count($users) == 1);
-         $user = $users[0];
+        $user = $users[0];
         $this->assertNull($user->id);
         $this->assertNotNull($user->email);
+    }
+
+    public function test_find_withGroupParameters()
+    {
+        $uniqueId = uniqid();
+
+        $user = new User();
+        $user->email = 'unit-test-' . $uniqueId . '-1@test.com';
+        $user->save();
+        $user = new User();
+        $user->email = 'unit-test-' . $uniqueId . '-2@test.com';
+        $user->save();
+
+        $queryParameters = new QueryParameters();
+        $queryParameters->groupOr(function(QueryParameters $queryParameters) use ($uniqueId) {
+            $queryParameters->equals('email', 'unit-test-' . $uniqueId . '-1@test.com');
+            $queryParameters->equals('email', 'unit-test-' . $uniqueId . '-2@test.com');
+        });
+
+        $users = User::find($queryParameters);
+        $this->assertCount(2, $users);
+    }
+
+    public function test_find_withNestedGroupParameters()
+    {
+        $uniqueId = uniqid();
+
+        $user = new User();
+        $user->email = 'unit-test-' . $uniqueId . '-1@test.com';
+        $user->password = '123';
+        $user->status = 1;
+        $user->save();
+        $user = new User();
+        $user->email = 'unit-test-' . $uniqueId . '-2@test.com';
+        $user->password = 'password';
+        $user->status = 1;
+        $user->save();
+
+        $queryParameters = new QueryParameters();
+        $queryParameters->setColumns(['id']);
+        $queryParameters->groupOr(function(QueryParameters $queryParameters) use ($uniqueId) {
+            $queryParameters->group(function(QueryParameters $queryParameters) use ($uniqueId) {
+                $queryParameters->equals('email', 'unit-test-' . $uniqueId . '-1@test.com');
+                $queryParameters->equals('password', '123');
+            });
+            $queryParameters->group(function(QueryParameters $queryParameters) use ($uniqueId) {
+                $queryParameters->equals('email', 'unit-test-' . $uniqueId . '-2@test.com');
+                $queryParameters->equals('password', 'password');
+            });
+        });
+        $queryParameters->equals('status', 1);
+
+        $users = User::find($queryParameters);
+        $this->assertCount(2, $users);
     }
 
     public function test_findById()

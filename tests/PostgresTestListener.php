@@ -26,6 +26,8 @@ class PostgresTestListener extends BaseTestListener {
         $queries[] = "CREATE TABLE users (
             id SERIAL PRIMARY KEY,
             email VARCHAR(50) NOT NULL,
+            password VARCHAR(50),
+            status INT,
             phone_id INT,
             name_id INT,
             meta_data TEXT,

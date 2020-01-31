@@ -115,17 +115,25 @@ class PostgresQueryBuilderTest extends TestCase {
             ->whereBetween('value', 1, 10)
             ->whereBetweenDates('start', '1969-01-01', '1969-01-02')
             ->whereLike('foo', 'test%')
+            ->group(function(QueryBuilder $queryBuilder) {
+                $queryBuilder->whereEquals('group', 'test');
+                $queryBuilder->whereEquals('biz', 'baz');
+            })
             ->build();
 
-        $this->assertEquals("select " . $alias . ".* as \"" . $alias . ".*\" from public.users as " . $alias . " where " . $alias . ".unit = :" . $alias . "_unit and " . $alias . ".test != :" . $alias . "_test and " . $alias . ".foo is null and " . $alias . ".bar is not null and " . $alias . ".id in (1, 2, 3) and " . $alias . ".value between 1 and 10 and " . $alias . ".start between cast('1969-01-01' as datetime) and cast('1969-01-02' as datetime) and " . $alias . ".foo like :" . $alias . "_foo;", $query->getSql());
+        $this->assertEquals("select " . $alias . ".* as \"" . $alias . ".*\" from public.users as " . $alias . " where " . $alias . ".unit = :" . $alias . "_unit and " . $alias . ".test != :" . $alias . "_test and " . $alias . ".foo is null and " . $alias . ".bar is not null and " . $alias . ".id in (1, 2, 3) and " . $alias . ".value between 1 and 10 and " . $alias . ".start between cast('1969-01-01' as datetime) and cast('1969-01-02' as datetime) and " . $alias . ".foo like :" . $alias . "_foo and (" . $alias . ".group = :" . $alias . "_group and " . $alias . ".biz = :" . $alias . "_biz);", $query->getSql());
 
         $bindParameters = $query->getBindParameters();
         $this->assertArrayHasKey($alias . '_unit', $bindParameters);
         $this->assertArrayHasKey($alias . '_test', $bindParameters);
         $this->assertArrayHasKey($alias . '_foo', $bindParameters);
+        $this->assertArrayHasKey($alias . '_group', $bindParameters);
+        $this->assertArrayHasKey($alias . '_biz', $bindParameters);
         $this->assertEquals('test', $bindParameters[$alias . '_unit']);
         $this->assertEquals('unit', $bindParameters[$alias . '_test']);
         $this->assertEquals('test%', $bindParameters[$alias . '_foo']);
+        $this->assertEquals('test', $bindParameters[$alias . '_group']);
+        $this->assertEquals('baz', $bindParameters[$alias . '_biz']);
     }
 
     public function test_buildSelectQuery_withLimit()
