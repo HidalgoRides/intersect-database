@@ -10,7 +10,7 @@ class {{CLASS_NAME}} extends AbstractMigration {
      */
     public function up()
     {
-        $this->schema->createTable('sample', function(Blueprint $blueprint) {
+        $this->schema->createTableIfNotExists('sample', function(Blueprint $blueprint) {
             $blueprint->increments('id');
             $blueprint->string('email', 100);
             $blueprint->integer('age')->nullable();
@@ -22,7 +22,7 @@ class {{CLASS_NAME}} extends AbstractMigration {
      */
     public function down()
     {
-        $this->schema->dropTable('sample');
+        $this->schema->dropTableIfExists('sample');
     }
 
 }
