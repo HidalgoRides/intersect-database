@@ -10,13 +10,10 @@ use Intersect\Database\Query\QueryParameters;
 use Intersect\Database\Migrations\MigrationHelper;
 use Intersect\Database\Exception\DatabaseException;
 use Intersect\Database\Migrations\ExportConnection;
+use Intersect\Database\Migrations\MigrationFetcher;
 use Intersect\Database\Connection\ConnectionRepository;
 
 class Runner {
-
-    private static $MIGRATION_STATUS_COMPLETED = 1;
-    private static $MIGRATION_STATUS_PENDING = 2;
-    private static $MIGRATION_STATUS_IN_PROGESS = 3;
 
     /** @var Connection */
     private $connection;
@@ -26,6 +23,9 @@ class Runner {
 
     /** @var Logger */
     private $logger;
+
+    /** @var MigrationFetcher */
+    private $migrationFetcher;
 
     private $currentBatchId;
 
@@ -39,11 +39,13 @@ class Runner {
         $this->fileStorage = $fileStorage;
         $this->logger = $logger;
         $this->setMigrationDirectories($migrationDirectories);
+
+        $this->migrationFetcher = new MigrationFetcher($connection);
     }
 
     public function setMigrationDirectories(array $migrationDirectories)
     {
-        $migrationDirectories = array_merge([dirname(__FILE__) . '/Migrations'], $migrationDirectories);
+        $migrationDirectories = array_merge($migrationDirectories, [dirname(__FILE__) . '/Migrations']);
         $this->migrationDirectories = $migrationDirectories;
     }
 
@@ -62,46 +64,26 @@ class Runner {
         $oldConnection = $this->connection;
         $queryContents = '';
 
-        $allMigrationPathsToExport = [];
-
-        foreach ($this->migrationDirectories as $migrationDirectory)
-        {
-            $migrationPaths = $this->fileStorage->glob(rtrim($migrationDirectory, '/') . '/*_*.php');
-
-            if (count($migrationPaths) == 0)
-            {
-                continue;
-            }
-
-            $allMigrationPathsToExport = array_merge($allMigrationPathsToExport, $migrationPaths);
-        }
+        $migrationsToExport = $this->migrationFetcher->fetch($this->migrationDirectories, $includeSeedData, true);
 
         $exportedFilePath = null;
 
-        if (count($allMigrationPathsToExport) == 0)
+        if (count($migrationsToExport) == 0)
         {
             $this->logger->info('No migrations to export');
         }
         else
         {   
-            // sort migrations by name so that all sources are run according to date created and not per directory load order
-            $allMigrationPathsToExport = $this->sortMigrationPaths($allMigrationPathsToExport);
-
-            foreach ($allMigrationPathsToExport as $migrationPath)
+            foreach ($migrationsToExport as $migration)
             {
                 $exportConnection = new ExportConnection($oldConnection);
                 ConnectionRepository::register($exportConnection);
 
+                $migrationPath = $migration->path;
+
                 $this->fileStorage->requireOnce($migrationPath);
-    
                 $className = MigrationHelper::resolveClassNameFromPath($migrationPath);
                 $class = new $className($exportConnection);
-    
-                if (!$class instanceof AbstractMigration && !$class instanceof AbstractSeed)
-                {
-                    $this->logger->error($migrationPath . ' is not an instance of AbstractMigration or AbstractSeed. Skipping file');
-                    return;
-                }
     
                 if ($class instanceof AbstractMigration)
                 {
@@ -145,21 +127,7 @@ class Runner {
 
         $this->logger->info('Starting migration');
 
-        $allMigrationsToRun = [];
-
-        foreach ($this->migrationDirectories as $migrationDirectory)
-        {
-            $migrationPaths = $this->fileStorage->glob(rtrim($migrationDirectory, '/') . '/*_*.php');
-
-            $migrationsToRun = $this->getMigrationsToRun($migrationPaths);
-    
-            if (count($migrationsToRun) == 0)
-            {
-                continue;
-            }
-
-            $allMigrationsToRun = array_merge($allMigrationsToRun, $migrationsToRun);
-        }
+        $allMigrationsToRun = $this->migrationFetcher->fetch($this->migrationDirectories, $seedMigrationsEnabled, false);
 
         if (count($allMigrationsToRun) == 0)
         {
@@ -170,11 +138,6 @@ class Runner {
             $lastBatchId = $this->getLastBatchId();
             $this->currentBatchId = ($lastBatchId + 1);
 
-            // sort migrations by name so that all sources are run according to date created and not per directory load order
-            usort($allMigrationsToRun, function($m1, $m2) {
-                return strcmp($this->getTimeFromMigrationPath($m1->path), $this->getTimeFromMigrationPath($m2->name));
-            });
-    
             /** @var Migration $migration */
             foreach ($allMigrationsToRun as $migration)
             {
@@ -247,88 +210,18 @@ class Runner {
         $lastBatchId = 0;
 
         try {
-            $result = $this->connection->getQueryBuilder()->selectMax('batch_id')->table('ic_migrations')->whereEquals('status', self::$MIGRATION_STATUS_COMPLETED)->get();
+            $result = $this->connection->getQueryBuilder()->selectMax('batch_id')->table('ic_migrations')->whereEquals('status', MigrationStatus::COMPLETED)->get();
             $lastBatchId = (int) ($result->getFirstRecord()['max_value']);
         } catch (DatabaseException $e) {}
         
         return $lastBatchId;
     }
 
-    /**
-     * @param $migrationFiles
-     * @return Migration[]
-     * @throws DatabaseException
-     */
-    private function getMigrationsToRun(array $migrationFiles)
-    {
-        if (count($migrationFiles) == 0)
-        {
-            return [];
-        }
-
-        $migrationParameters = new QueryParameters();
-        $existingMigrations = [];
-
-        try {
-            $existingMigrations = Migration::find($migrationParameters);
-        } catch (DatabaseException $e) {}
-
-        $existingMigrationsWithKeys = [];
-        foreach ($existingMigrations as $existingMigration)
-        {
-            $existingMigrationsWithKeys[md5($existingMigration->name)] = $existingMigration;
-        }
-
-        $migrationsToRun = [];
-
-        foreach ($migrationFiles as $migrationFile)
-        {
-            $this->fileStorage->requireOnce($migrationFile);
-    
-            $className = MigrationHelper::resolveClassNameFromPath($migrationFile);
-            $class = new $className($this->connection);
-
-            if ($class instanceof AbstractSeed && !$this->seedMigrationsEnabled)
-            {
-                continue;
-            }
-
-            $migrationFileParts = explode('/', $migrationFile);
-            $migrationFileName = end($migrationFileParts);
-
-            $migrationToRun = null;
-
-            $migrationFileNameHash = md5($migrationFileName);
-            if (array_key_exists($migrationFileNameHash, $existingMigrationsWithKeys))
-            {
-                $migration = $existingMigrationsWithKeys[$migrationFileNameHash];
-
-                if ($migration->status != self::$MIGRATION_STATUS_COMPLETED)
-                {
-                    $migrationToRun = $migration;
-                }
-            }
-            else
-            {
-                $migrationToRun = new Migration();
-                $migrationToRun->name = $migrationFileName;
-                $migrationToRun->path = $migrationFile;
-            }
-
-            if (!is_null($migrationToRun))
-            {
-                $migrationsToRun[] = $migrationToRun;
-            }
-        }
-
-        return $migrationsToRun;
-    }
-
     /** @return Migration[] */
     private function getMigrationsToRollback($batchId = null)
     {
         $migrationParameters = new QueryParameters();
-        $migrationParameters->in('status', [self::$MIGRATION_STATUS_COMPLETED, self::$MIGRATION_STATUS_IN_PROGESS]);
+        $migrationParameters->in('status', [MigrationStatus::COMPLETED, MigrationStatus::IN_PROGESS]);
         $migrationParameters->setOrder('id desc');
 
         if (!is_null($batchId))
@@ -338,14 +231,6 @@ class Runner {
 
         return Migration::find($migrationParameters);
     }
-
-    private function getTimeFromMigrationPath($migrationPath)
-    {
-        $migrationPathParts = explode('/', str_replace('.php', '', $migrationPath));
-        $migrationPathParts = explode('_', end($migrationPathParts));
-        return end($migrationPathParts);
-    }
-
 
     /**
      * @param Migration $migration
@@ -379,7 +264,7 @@ class Runner {
 
             if ($this->migrationTableExists())
             {
-                $migration->status = self::$MIGRATION_STATUS_IN_PROGESS;
+                $migration->status = MigrationStatus::IN_PROGESS;
                 $migration->save();
             }
             
@@ -392,7 +277,7 @@ class Runner {
                 $class->populate();
             }
 
-            $migration->status = self::$MIGRATION_STATUS_COMPLETED;
+            $migration->status = MigrationStatus::COMPLETED;
             $migration->save();
         }
     }
@@ -426,17 +311,8 @@ class Runner {
             $class->down();
         }
 
-        $migration->status = self::$MIGRATION_STATUS_PENDING;
+        $migration->status = MigrationStatus::PENDING;
         $migration->save();
-    }
-
-    private function sortMigrationPaths(array $migrationPaths)
-    {
-        usort($migrationPaths, function($a, $b) {
-            return strcmp($this->getTimeFromMigrationPath($a), $this->getTimeFromMigrationPath($b));
-        });
-
-        return $migrationPaths;
     }
 
 }

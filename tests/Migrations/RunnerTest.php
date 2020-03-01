@@ -9,6 +9,7 @@ use Intersect\Database\Migrations\Runner;
 use Intersect\Database\Connection\Connection;
 use Intersect\Database\Exception\DatabaseException;
 use Intersect\Database\Connection\ConnectionRepository;
+use Tests\Stubs\Seed;
 
 class RunnerTest extends TestCase {
 
@@ -117,10 +118,11 @@ class RunnerTest extends TestCase {
     {
         $migrationDirectory = dirname(__FILE__) . '/data/multiple-migrations';
         $this->runner->setMigrationDirectories([$migrationDirectory]);
-        $this->runner->migrate();
+        $this->runner->migrate(true);
 
         $this->assertTableMigrated('test_migration_two');
         $this->assertTableMigrated('test_migration_three');
+        $this->assertNotNull(Seed::findOne());
     }
 
     public function test_migrate_multipleMigrationSources_verifyRanInChronologicalOrder()
