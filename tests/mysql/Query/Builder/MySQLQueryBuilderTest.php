@@ -415,7 +415,7 @@ class MySQLQueryBuilderTest extends TestCase {
 
     public function test_buildTruncateTableQuery()
     {
-        $query = $this->queryBuilder->truncate('users')->build();
+        $query = $this->queryBuilder->truncateTable('users')->build();
 
         $this->assertEquals("truncate table `users`;", $query->getSql());
     }

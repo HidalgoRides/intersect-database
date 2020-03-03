@@ -104,6 +104,12 @@ class ExportQueryBuilder extends QueryBuilder {
         return $this;
     }
 
+    public function truncateTable($tableName)
+    {
+        $this->queryBuilder->truncateTable($tableName);
+        return $this;
+    }
+
     public function select(array $columns = [], QueryParameters $queryParameters = null)
     {
         $this->queryBuilder->select($columns, $queryParameters);

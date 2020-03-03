@@ -118,7 +118,7 @@ abstract class AbstractModel implements ModelActions {
     public static function truncate()
     {
         $instance = new static();
-        $instance->getConnection()->getQueryBuilder()->truncate($instance->getTableName())->get();
+        $instance->getConnection()->getQueryBuilder()->truncateTable($instance->getTableName())->get();
         return true;
     }
 

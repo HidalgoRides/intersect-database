@@ -4,18 +4,19 @@ namespace Tests\Schema;
 
 use PHPUnit\Framework\TestCase;
 use Intersect\Database\Query\Result;
-use Intersect\Database\Schema\Blueprint;
-use Intersect\Database\Connection\Connection;
-use Intersect\Database\Query\Builder\QueryBuilder;
 use Intersect\Database\Schema\Schema;
+use Intersect\Database\Schema\Blueprint;
+use PHPUnit\Framework\MockObject\MockObject;
+use Intersect\Database\Connection\Connection;
 use Intersect\Database\Schema\ColumnBlueprint;
+use Intersect\Database\Query\Builder\QueryBuilder;
 
 class SchemaTest extends TestCase {
 
     /** @var Connection */
     private $connectionMock;
 
-    /** @var QueryBuilder */
+    /** @var QueryBuilder|MockObject */
     private $queryBuilderMock;
 
     protected function setUp()
@@ -224,6 +225,24 @@ class SchemaTest extends TestCase {
 
         $schema = new Schema($this->connectionMock);
         $result = $schema->dropForeignKey('test', 'key_name');
+
+        $this->assertEquals($expectedResult, $result);
+    }
+
+    public function test_truncateTable()
+    {
+        $queryBuilder = $this->queryBuilderMock;
+
+        $queryBuilder->method('truncateTable')->willReturnCallback(function($tableName) use ($queryBuilder) {
+            $this->assertEquals('test', $tableName);
+            return $queryBuilder;
+        });
+        
+        $expectedResult = new Result();
+        $queryBuilder->method('get')->willReturn($expectedResult);
+
+        $schema = new Schema($this->connectionMock);
+        $result = $schema->truncateTable('test');
 
         $this->assertEquals($expectedResult, $result);
     }

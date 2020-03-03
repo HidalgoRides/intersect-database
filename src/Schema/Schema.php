@@ -81,4 +81,9 @@ class Schema {
         return $this->connection->getQueryBuilder()->table($tableName)->dropForeignKey($keyName)->get();
     }
 
+    public function truncateTable($tableName)
+    {
+        return $this->connection->getQueryBuilder()->truncateTable($tableName)->get();
+    }
+
 }

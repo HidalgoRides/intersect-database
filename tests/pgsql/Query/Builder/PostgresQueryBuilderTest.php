@@ -502,14 +502,14 @@ class PostgresQueryBuilderTest extends TestCase {
 
     public function test_buildTruncateTableQuery()
     {
-        $query = $this->queryBuilder->truncate('users')->build();
+        $query = $this->queryBuilder->truncateTable('users')->build();
 
         $this->assertEquals("truncate table public.users;", $query->getSql());
     }
 
     public function test_buildTruncateTableQuery_withSchema()
     {
-        $query = $this->queryBuilder->truncate('users')->schema('users')->build();
+        $query = $this->queryBuilder->truncateTable('users')->schema('users')->build();
 
         $this->assertEquals("truncate table users.users;", $query->getSql());
     }

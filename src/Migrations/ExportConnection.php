@@ -18,7 +18,8 @@ class ExportConnection extends Connection {
         'dropForeignKey',
         'dropIndex', 
         'dropTable', 
-        'dropTableIfExists', 
+        'dropTableIfExists',
+        'truncateTable',
         'insert', 
         'delete', 
         'update'

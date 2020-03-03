@@ -276,7 +276,7 @@ abstract class QueryBuilder {
     }
 
     /** @return QueryBuilder */
-    public function truncate($tableName)
+    public function truncateTable($tableName)
     {
         $this->action = self::$ACTION_TRUNCATE_TABLE;
         $this->tableName = $tableName;
