@@ -7,6 +7,7 @@ use PHPUnit\Framework\TestCase;
 use Intersect\Database\Schema\Blueprint;
 use Intersect\Database\Connection\Connection;
 use Intersect\Database\Schema\ColumnBlueprint;
+use Intersect\Database\Exception\DatabaseException;
 
 class PostgresConnectionTest extends TestCase {
 
@@ -105,6 +106,29 @@ class PostgresConnectionTest extends TestCase {
         $columns = array_column($result->getRecords(), 'Field');
 
         $this->assertCount(3, $columns);
+    }
+
+    public function test_transactions()
+    {
+        $tableName = 'test_transactions';
+
+        $blueprint = new Blueprint($tableName);
+        $blueprint->integer('id');
+
+        $this->connection->getQueryBuilder()->createTable($blueprint)->get();
+
+        try {
+            $this->connection->startTransaction();
+            $this->connection->getQueryBuilder()->table($tableName)->insert(['id' => 1])->get();
+            $this->connection->getQueryBuilder()->table($tableName)->insert(['id' => 'test'])->get();
+            $this->connection->commitTransaction();
+        } catch (DatabaseException $e) {
+            $this->connection->rollbackTransaction();
+        }
+
+        $result = $this->connection->getQueryBuilder()->table($tableName)->select(['*'])->get();
+
+        $this->assertEquals(0, $result->getCount());
     }
 
 }

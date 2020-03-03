@@ -113,6 +113,40 @@ abstract class AbstractModel implements ModelActions {
     }
 
     /**
+     * @return bool
+     */
+    public static function truncate()
+    {
+        $instance = new static();
+        $instance->getConnection()->getQueryBuilder()->truncate($instance->getTableName())->get();
+        return true;
+    }
+
+    /**
+     * @param $callable
+     * @param $fallback
+     */
+    public static function withTransaction(callable $callable, callable $fallback = null)
+    {
+        $instance = new static();
+        $connection = $instance->getConnection();
+
+        try {
+            $connection->startTransaction();
+            $callable();
+            $connection->commitTransaction();
+        } catch (\Exception $e) {
+            $connection->rollbackTransaction();
+
+            if (!is_null($fallback))
+            {
+                $fallback($e);
+            }
+        }
+        
+    }
+
+    /**
      * @return array|mixed
      * @throws \Exception
      */

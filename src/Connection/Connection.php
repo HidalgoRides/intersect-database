@@ -6,12 +6,13 @@ use Intersect\Database\Exception\DatabaseException;
 use Intersect\Database\Query\Query;
 use Intersect\Database\Query\Result;
 use Intersect\Database\Query\Builder\QueryBuilder;
+use PDOException;
 
 abstract class Connection {
 
     private static $QUERY_CACHE = [];
     private static $RETRIEVAL_TOKENS = ['select', 'show'];
-    private static $MODIFIED_TOKENS = ['insert', 'update', 'delete'];
+    private static $MODIFIED_TOKENS = ['insert', 'update', 'delete', 'truncate'];
 
     protected $pdoDriver = null;
 
@@ -146,14 +147,16 @@ abstract class Connection {
                 {
                     if (stripos($sql, $token) === 0)
                     {
-                        if ($affectedRows > 0)
+                        if ($affectedRows > 0 || $token === 'truncate')
                         {
                             self::$QUERY_CACHE = [];
                         }
 
                         if ($token == 'insert')
                         {
-                            $result->setInsertId($this->getConnection()->lastInsertId());
+                            try {
+                                $result->setInsertId($this->getConnection()->lastInsertId());
+                            } catch (PDOException $e) {}
                         }
 
                         break;
@@ -165,6 +168,21 @@ abstract class Connection {
         }
 
         return $result;
+    }
+
+    public function startTransaction() 
+    {
+        return $this->getConnection()->beginTransaction();
+    }
+    
+    public function commitTransaction() 
+    {
+        return $this->getConnection()->commit();
+    }
+    
+    public function rollbackTransaction() 
+    {
+        return $this->getConnection()->rollBack();
     }
 
     protected function buildDsnMap(ConnectionSettings $connectionSettings)

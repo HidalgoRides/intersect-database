@@ -307,4 +307,82 @@ class ModelTest extends TestCase {
         $this->assertEquals('999', $model->number);
     }
 
+    public function test_truncate() 
+    {
+        $phoneData = [];
+
+        for ($i = 0; $i <= 10; $i++)
+        {
+            $phoneData[] = ['number' => '12345678' . $i];
+        }
+
+        Phone::bulkCreate($phoneData);
+
+        $this->assertTrue(Phone::count() >= 10);
+
+        Phone::truncate();
+
+        $this->assertEquals(0, Phone::count());
+    }
+
+    public function test_withTransaction_success() 
+    {
+        Phone::truncate();
+        $this->assertEquals(0, Phone::count());
+
+        Phone::bulkCreate([
+            ['number' => 123]
+        ]);
+
+        $this->assertEquals(1, Phone::count());
+
+        Phone::withTransaction(function() {
+            Phone::bulkCreate([
+                ['number' => 456]
+            ]);
+        });
+
+        $this->assertEquals(2, Phone::count());
+    }
+
+    public function test_withTransaction_rollback_noFallback() 
+    {
+        Phone::truncate();
+        $this->assertEquals(0, Phone::count());
+
+        Phone::bulkCreate([
+            ['number' => 123]
+        ]);
+
+        $this->assertEquals(1, Phone::count());
+
+        Phone::withTransaction(function() {
+            Phone::bulkCreate([
+                ['number' => 456],
+                ['number' => 456, 'unknown column' => 'should cause a rollback']
+            ]);
+        });
+
+        $this->assertEquals(1, Phone::count());
+    }
+
+    public function test_withTransaction_rollback_withFallback() 
+    {
+        Phone::truncate();
+
+        $fallbackCalled = false;
+
+        Phone::withTransaction(function() {
+            Phone::bulkCreate([
+                ['number' => 456],
+                ['number' => 456, 'unknown column' => 'should cause a rollback']
+            ]);
+        }, function() use (&$fallbackCalled) {
+            $fallbackCalled = true;
+        });
+
+        $this->assertEquals(0, Phone::count());
+        $this->assertTrue($fallbackCalled);
+    }
+
 }

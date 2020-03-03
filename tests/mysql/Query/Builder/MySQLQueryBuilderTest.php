@@ -412,5 +412,12 @@ class MySQLQueryBuilderTest extends TestCase {
 
         $this->assertEquals("alter table `users` drop foreign key foreign_key;", $query->getSql());
     }
+
+    public function test_buildTruncateTableQuery()
+    {
+        $query = $this->queryBuilder->truncate('users')->build();
+
+        $this->assertEquals("truncate table `users`;", $query->getSql());
+    }
     
 }

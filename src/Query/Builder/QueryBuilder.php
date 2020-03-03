@@ -48,6 +48,7 @@ abstract class QueryBuilder {
     private static $ACTION_DROP_INDEX = 'dropIndex';
     private static $ACTION_ADD_FOREIGN_KEY = 'addForeignKey';
     private static $ACTION_DROP_FOREIGN_KEY = 'dropForeignKey';
+    private static $ACTION_TRUNCATE_TABLE = 'truncateTable';
 
     protected $columnData = [];
     protected $columns = ['*'];
@@ -271,6 +272,14 @@ abstract class QueryBuilder {
     public function columns()
     {
         $this->action = self::$ACTION_COLUMNS;
+        return $this;
+    }
+
+    /** @return QueryBuilder */
+    public function truncate($tableName)
+    {
+        $this->action = self::$ACTION_TRUNCATE_TABLE;
+        $this->tableName = $tableName;
         return $this;
     }
 
@@ -522,6 +531,9 @@ abstract class QueryBuilder {
             case self::$ACTION_DROP_FOREIGN_KEY:
                 $query = $this->buildDropForeignKeyQuery();
                 break;
+            case self::$ACTION_TRUNCATE_TABLE:
+                $query = $this->buildTruncateTableQuery();
+                break;
         }
 
         return $query;
@@ -694,6 +706,13 @@ abstract class QueryBuilder {
     protected function buildDropTableIfExistsQuery()
     {
         $queryString = 'drop table if exists ' . $this->wrapTableName($this->tableName);
+
+        return $this->buildFinalQuery($queryString, [], false, false);
+    }
+
+    protected function buildTruncateTableQuery()
+    {
+        $queryString = 'truncate table ' . $this->wrapTableName($this->tableName);
 
         return $this->buildFinalQuery($queryString, [], false, false);
     }

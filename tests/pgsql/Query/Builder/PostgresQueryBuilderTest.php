@@ -499,5 +499,19 @@ class PostgresQueryBuilderTest extends TestCase {
 
         $this->assertEquals("alter table public.users drop constraint foreign_key;", $query->getSql());
     }
+
+    public function test_buildTruncateTableQuery()
+    {
+        $query = $this->queryBuilder->truncate('users')->build();
+
+        $this->assertEquals("truncate table public.users;", $query->getSql());
+    }
+
+    public function test_buildTruncateTableQuery_withSchema()
+    {
+        $query = $this->queryBuilder->truncate('users')->schema('users')->build();
+
+        $this->assertEquals("truncate table users.users;", $query->getSql());
+    }
     
 }
