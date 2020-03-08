@@ -172,6 +172,64 @@ class BlueprintTest extends TestCase {
         $this->assertEquals(ColumnType::LONG_TEXT, $definition->getType());
     }
 
+    public function test_temporal_defaultColumns()
+    {
+        $this->blueprint->temporal();
+
+        $columnDefinitions = $this->blueprint->getColumnDefinitions();
+
+        $this->assertCount(2, $columnDefinitions);
+
+        $this->assertEquals('date_created', $columnDefinitions[0]->getName());
+        $this->assertEquals(ColumnType::DATETIME, $columnDefinitions[0]->getType());
+
+        $this->assertEquals('date_updated', $columnDefinitions[1]->getName());
+        $this->assertEquals(ColumnType::DATETIME, $columnDefinitions[1]->getType());
+        $this->assertTrue($columnDefinitions[1]->isNullable());
+    }
+
+    public function test_temporal_overrideColumns()
+    {
+        $this->blueprint->temporal('date_added', 'date_modified');
+
+        $columnDefinitions = $this->blueprint->getColumnDefinitions();
+
+        $this->assertCount(2, $columnDefinitions);
+
+        $this->assertEquals('date_added', $columnDefinitions[0]->getName());
+        $this->assertEquals(ColumnType::DATETIME, $columnDefinitions[0]->getType());
+
+        $this->assertEquals('date_modified', $columnDefinitions[1]->getName());
+        $this->assertEquals(ColumnType::DATETIME, $columnDefinitions[1]->getType());
+        $this->assertTrue($columnDefinitions[1]->isNullable());
+    }
+
+    public function test_temporal_excludeUpdatedColumn()
+    {
+        $this->blueprint->temporal('date_added', null);
+
+        $columnDefinitions = $this->blueprint->getColumnDefinitions();
+
+        $this->assertCount(1, $columnDefinitions);
+
+        $this->assertEquals('date_added', $columnDefinitions[0]->getName());
+        $this->assertEquals(ColumnType::DATETIME, $columnDefinitions[0]->getType());
+    }
+
+    public function test_temporal_excludeCreatedColumn()
+    {
+        $this->blueprint->temporal(null, 'date_updated');
+
+        $columnDefinitions = $this->blueprint->getColumnDefinitions();
+
+        $this->assertCount(1, $columnDefinitions);
+
+        $this->assertEquals('date_updated', $columnDefinitions[0]->getName());
+        $this->assertEquals(ColumnType::DATETIME, $columnDefinitions[0]->getType());
+        $this->assertTrue($columnDefinitions[0]->isNullable());
+        
+    }
+
     public function test_timestamp()
     {
         $definition = $this->blueprint->timestamp('created_at');

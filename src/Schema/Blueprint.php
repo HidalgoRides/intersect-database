@@ -12,6 +12,9 @@ use Intersect\Database\Schema\ColumnDefinition;
 
 class Blueprint {
 
+    private static $DEFAULT_TEMPORAL_COLUMN_DATE_CREATED = 'date_created';
+    private static $DEFAULT_TEMPORAL_COLUMN_DATE_UPDATED = 'date_updated';
+
     /** @var ColumnDefinition[] */
     private $columnDefinitions = [];
 
@@ -76,6 +79,22 @@ class Blueprint {
         $this->addColumnDefinition($columnDefinition);
 
         return $columnDefinition;
+    }
+
+    public function temporal($dateCreatedColumn = '', $dateUpdatedColumn = '')
+    {
+        $dateCreatedColumn = (($dateCreatedColumn === '') ? self::$DEFAULT_TEMPORAL_COLUMN_DATE_CREATED : $dateCreatedColumn);
+        $dateUpdatedColumn = (($dateUpdatedColumn === '') ? self::$DEFAULT_TEMPORAL_COLUMN_DATE_UPDATED : $dateUpdatedColumn);
+
+        if (!is_null($dateCreatedColumn))
+        {
+            $this->datetime($dateCreatedColumn);
+        }
+
+        if (!is_null($dateUpdatedColumn))
+        {
+            $this->datetime($dateUpdatedColumn)->nullable();
+        }
     }
 
     public function tinyInteger($name)
