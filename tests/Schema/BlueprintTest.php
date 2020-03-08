@@ -197,6 +197,18 @@ class BlueprintTest extends TestCase {
     public function test_primary()
     {
         $columns = ['id'];
+        $this->blueprint->primary($columns);
+
+        $this->assertCount(1, $this->blueprint->getKeys());
+        $key = $this->blueprint->getKeys()[0];
+        $this->assertTrue($key instanceof PrimaryKey);
+        $this->assertEquals($columns, $key->getColumns());
+        $this->assertNotNull($key->getName());
+    }
+
+    public function test_primary_withKeyName()
+    {
+        $columns = ['id'];
         $this->blueprint->primary($columns, 'test');
 
         $this->assertCount(1, $this->blueprint->getKeys());
@@ -207,6 +219,18 @@ class BlueprintTest extends TestCase {
     }
 
     public function test_unique()
+    {
+        $columns = ['id'];
+        $this->blueprint->unique($columns);
+
+        $this->assertCount(1, $this->blueprint->getKeys());
+        $key = $this->blueprint->getKeys()[0];
+        $this->assertTrue($key instanceof UniqueKey);
+        $this->assertEquals($columns, $key->getColumns());
+        $this->assertNotNull($key->getName());
+    }
+
+    public function test_unique_withKeyName()
     {
         $columns = ['id'];
         $this->blueprint->unique($columns, 'test');
@@ -227,6 +251,19 @@ class BlueprintTest extends TestCase {
         $key = $this->blueprint->getKeys()[0];
         $this->assertTrue($key instanceof Index);
         $this->assertEquals($columns, $key->getColumns());
+        $this->assertNotNull($key->getName());
+    }
+
+    public function test_index_withKeyName()
+    {
+        $columns = ['id'];
+        $this->blueprint->index($columns, 'idx_id');
+
+        $this->assertCount(1, $this->blueprint->getKeys());
+        $key = $this->blueprint->getKeys()[0];
+        $this->assertTrue($key instanceof Index);
+        $this->assertEquals($columns, $key->getColumns());
+        $this->assertEquals('idx_id', $key->getName());
     }
 
     public function test_foreign()
@@ -240,6 +277,19 @@ class BlueprintTest extends TestCase {
         $this->assertEquals('id', $key->getToColumn());
         $this->assertEquals('users', $key->getOnTable());
         $this->assertEquals('user_id_users_id', $key->getName());
+    }
+
+    public function test_foreign_withKeyName()
+    {
+        $this->blueprint->foreign('user_id', 'id', 'users', 'fidx_test');
+
+        $this->assertCount(1, $this->blueprint->getKeys());
+        $key = $this->blueprint->getKeys()[0];
+        $this->assertTrue($key instanceof ForeignKey);
+        $this->assertEquals('user_id', $key->getFromColumn());
+        $this->assertEquals('id', $key->getToColumn());
+        $this->assertEquals('users', $key->getOnTable());
+        $this->assertEquals('fidx_test', $key->getName());
     }
 
     public function test_charset_default()

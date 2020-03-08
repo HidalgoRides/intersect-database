@@ -195,9 +195,9 @@ class Blueprint {
         $this->keys[] = new ForeignKey($keyName, $fromColumn, $toColumn, $onTable);
     }
 
-    public function index($columns)
+    public function index($columns, $keyName = null)
     {
-        $this->keys[] = new Index($this->tableName, $columns);
+        $this->keys[] = new Index($this->tableName, $columns, $keyName);
     }
 
     /** @return Key[] */
