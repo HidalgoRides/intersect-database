@@ -22,6 +22,7 @@ class QueryParameters {
     private $order;
     private $queryConditions = [];
     private $rootConjunction;
+    private $start;
 
     public function __construct($rootConjunction = QueryConditionType::AND)
     {
@@ -34,10 +35,16 @@ class QueryParameters {
         return $this->columns;
     }
 
-    public function setColumns($columns = [])
+    public function columns($columns = [])
     {
         $this->columns = $columns;
         return $this;
+    }
+
+    /** @deprecated - use columns instead */
+    public function setColumns($columns = [])
+    {
+        return $this->columns($columns);
     }
 
     public function getLimit()
@@ -45,10 +52,16 @@ class QueryParameters {
         return $this->limit;
     }
 
-    public function setLimit($limit)
+    public function limit($limit)
     {
         $this->limit = $limit;
         return $this;
+    }
+
+    /** @deprecated - use limit instead */
+    public function setLimit($limit)
+    {
+        return $this->limit($limit);
     }
 
     public function getOrder()
@@ -56,10 +69,16 @@ class QueryParameters {
         return $this->order;
     }
 
-    public function setOrder($order)
+    public function order($order)
     {
         $this->order = $order;
         return $this;
+    }
+
+    /** @deprecated - use order instead */
+    public function setOrder($order)
+    {
+        return $this->order($order);
     }
 
     /** @return QueryCondition[] */
@@ -71,6 +90,17 @@ class QueryParameters {
     public function getRootConjunction()
     {
         return $this->rootConjunction;
+    }
+
+    public function getStart()
+    {
+        return $this->start;
+    }
+
+    public function start($start)
+    {
+        $this->start = $start;
+        return $this;
     }
 
     public function group(Closure $closure)

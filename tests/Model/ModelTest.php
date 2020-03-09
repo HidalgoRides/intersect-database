@@ -385,4 +385,27 @@ class ModelTest extends TestCase {
         $this->assertTrue($fallbackCalled);
     }
 
+    public function test_withPagination() 
+    {
+        Phone::truncate();
+        Phone::bulkCreate([
+            ['number' => 123],
+            ['number' => 456]
+        ]);
+
+        $this->assertEquals(2, Phone::count());
+
+        $params = new QueryParameters();
+        $params->limit(1);
+        $params->start(0);
+        
+        $result = Phone::findOne($params);
+        $this->assertEquals(123, $result->number);
+
+        $params->start(1);
+
+        $result = Phone::findOne($params);
+        $this->assertEquals(456, $result->number);
+    }
+
 }

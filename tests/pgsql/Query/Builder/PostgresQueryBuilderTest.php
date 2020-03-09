@@ -147,6 +147,18 @@ class PostgresQueryBuilderTest extends TestCase {
         $this->assertEquals("select " . $alias . ".* as \"" . $alias . ".*\" from public.users as " . $alias . " limit 3;", $query->getSql());
     }
 
+    public function test_buildSelectQuery_withLimitAndStart()
+    {
+        $alias = 'a0';
+        $query = $this->queryBuilder->select()
+            ->table('users', 'id', $alias)
+            ->limit(3)
+            ->start(2)
+            ->build();
+
+        $this->assertEquals("select " . $alias . ".* as \"" . $alias . ".*\" from public.users as " . $alias . " limit 3 offset 2;", $query->getSql());
+    }
+
     public function test_buildSelectQuery_withOrder()
     {
         $alias = 'a0';

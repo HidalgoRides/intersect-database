@@ -70,6 +70,7 @@ abstract class QueryBuilder {
     protected $indexName;
     protected $limit;
     protected $order;
+    protected $start;
     protected $useAliases = false;
     protected $primaryKey = 'id';
     /** @var Key */
@@ -320,6 +321,12 @@ abstract class QueryBuilder {
         {
             $this->limit($limit);
         }
+
+        $start = $queryParameters->getStart();
+        if (!is_null($start))
+        {
+            $this->start($start);
+        }
     }
 
     /** @return QueryBuilder */
@@ -367,6 +374,18 @@ abstract class QueryBuilder {
     public function schema($schema)
     {
         $this->schema = $schema;
+        return $this;
+    }
+
+    public function getStart()
+    {
+        return (int) $this->start;
+    }
+
+    /** @return QueryBuilder */
+    public function start($start)
+    {
+        $this->start = (int) $start;
         return $this;
     }
 
@@ -623,6 +642,11 @@ abstract class QueryBuilder {
         if (!is_null($this->limit))
         {
             $query->appendSql(' limit ' . $this->limit);
+
+            if (!is_null($this->start))
+            {
+                $query->appendSql(' offset ' . $this->start);
+            }
         }
     }
 
