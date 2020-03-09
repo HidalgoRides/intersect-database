@@ -63,6 +63,12 @@ abstract class Connection {
         return $this->connection;
     }
 
+    /** @return ConnectionSettings */
+    public function getConnectionSettings()
+    {
+        return $this->connectionSettings;
+    }
+
     public function closeConnection()
     {
         if (!is_null($this->connection))
@@ -200,12 +206,6 @@ abstract class Connection {
         }
 
         return $map;
-    }
-
-    /** @return ConnectionSettings */
-    protected function getConnectionSettings()
-    {
-        return $this->connectionSettings;
     }
 
     /**

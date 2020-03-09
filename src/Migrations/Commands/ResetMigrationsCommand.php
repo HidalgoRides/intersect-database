@@ -20,7 +20,7 @@ class ResetMigrationsCommand extends AbstractCommand {
 
     public function getDescription()
     {
-        return 'Rolls back all the current migrations and re-runs all migrations in your migrations directory';
+        return 'Drops the database and re-runs all migrations in your migrations directory';
     }
     
     public function getParameters()
@@ -35,8 +35,7 @@ class ResetMigrationsCommand extends AbstractCommand {
         $action = (isset($data[0]) ? $data[0] : null);
         $seedMigrationsEnabled = ($action == '--seed');
         
-        $this->runner->rollback();
-        $this->runner->migrate($seedMigrationsEnabled);
+        $this->runner->reset($seedMigrationsEnabled);
     }
 
 }

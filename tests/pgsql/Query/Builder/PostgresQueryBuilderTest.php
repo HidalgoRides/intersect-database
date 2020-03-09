@@ -262,6 +262,13 @@ class PostgresQueryBuilderTest extends TestCase {
         $this->assertEquals(1, $bindParameters['id']);
     }
 
+    public function test_buildCreateDatabaseQuery()
+    {
+        $query = $this->queryBuilder->createDatabase('app')->build();
+
+        $this->assertEquals("create database app;", $query->getSql());
+    }
+
     public function test_buildCreateTableQuery()
     {
         $blueprint = new Blueprint('users');
@@ -352,6 +359,13 @@ class PostgresQueryBuilderTest extends TestCase {
         $query = $this->queryBuilder->createTableIfNotExists($blueprint)->build();
 
         $this->assertEquals("create table if not exists public.users (id integer not null, email varchar(255) not null, age varchar(255) not null);", $query->getSql());
+    }
+
+    public function test_buildDropDatabaseQuery()
+    {
+        $query = $this->queryBuilder->dropDatabase('app')->build();
+
+        $this->assertEquals("drop database app;", $query->getSql());
     }
 
     public function test_buildDropTableQuery()

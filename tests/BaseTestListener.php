@@ -5,9 +5,11 @@ namespace Tests;
 use PHPUnit\Framework\TestSuite;
 use PHPUnit\Framework\TestListener;
 use Intersect\Core\Logger\ConsoleLogger;
+use Intersect\Core\Storage\FileStorage;
 use Intersect\Database\Connection\Connection;
 use Intersect\Database\Exception\DatabaseException;
 use Intersect\Database\Connection\ConnectionRepository;
+use Intersect\Database\Migrations\Runner;
 use PHPUnit\Framework\TestListenerDefaultImplementation;
 
 abstract class BaseTestListener implements TestListener {
@@ -15,20 +17,20 @@ abstract class BaseTestListener implements TestListener {
 
     /** @var Connection */
     protected $connection;
+    
+    private $databaseName = 'integration_tests';
 
     /** @var ConsoleLogger */
     private $logger;
-    private $databaseName = 'integration_tests';
+
+    /** @var Runner */
+    private $runner;
 
     /**
      * @return Connection
      */
     abstract protected function getConnection();
     abstract protected function testSuiteToHandle();
-    abstract protected function createDatabaseQuery($name);
-    abstract protected function createSchemaQueries();
-    abstract protected function createDataQueries();
-    abstract protected function dropDatabaseQuery($name);
 
     public function startTestSuite(TestSuite $suite): void
     {
@@ -36,7 +38,7 @@ abstract class BaseTestListener implements TestListener {
         {
             $this->logger = new ConsoleLogger();
             $this->connection = $this->getConnection();
-            
+
             ConnectionRepository::register($this->connection);
             ConnectionRepository::registerAlias('users');
 
@@ -45,7 +47,10 @@ abstract class BaseTestListener implements TestListener {
             $this->logger->info('');
 
             try {
-                $this->initDatabase();
+                $this->createDatabase();
+
+                $this->runner = new Runner($this->connection, new FileStorage(), $this->logger, [dirname(__FILE__) . '/Migrations/data/db-seed-data']);
+                $this->runner->migrate(true);
             } catch (DatabaseException $e) {
                 $this->logger->error($e->getMessage());
             }
@@ -64,11 +69,11 @@ abstract class BaseTestListener implements TestListener {
         }
     }
 
-    protected function initDatabase()
+    protected function createDatabase()
     {
         try {
             $this->logger->info('Creating database ' . $this->databaseName);
-            $this->connection->query($this->createDatabaseQuery($this->databaseName));
+            $this->connection->getQueryBuilder()->createDatabase($this->databaseName)->get();
         } catch (DatabaseException $e) {
             $this->logger->error($e->getMessage());
         }
@@ -76,22 +81,6 @@ abstract class BaseTestListener implements TestListener {
         try {
             $this->logger->info('Switching database to ' . $this->databaseName);
             $this->connection->switchDatabase($this->databaseName);
-
-            $this->logger->info('Applying database schemas');
-            
-            $queries = $this->createSchemaQueries();
-            foreach ($queries as $query)
-            {
-                $this->connection->query($query);
-            }
-
-            $this->logger->info('Applying database data');
-
-            $queries = $this->createDataQueries();
-            foreach ($queries as $query)
-            {
-                $this->connection->query($query);
-            }
         } catch (DatabaseException $e) {
             $this->logger->error($e->getMessage());
         }
@@ -100,12 +89,9 @@ abstract class BaseTestListener implements TestListener {
     protected function dropDatabase()
     {
         $this->logger->info('Dropping database ' . $this->databaseName);
-
-        $query = $this->dropDatabaseQuery($this->databaseName);
-
         $this->connection->closeConnection();
-
-        $this->connection->query($query);
+        $this->connection->switchDatabase('app');
+        $this->connection->getQueryBuilder()->dropDatabase($this->databaseName)->get();
     }
 
 }

@@ -11,10 +11,12 @@ class ExportConnection extends Connection {
     private static $EXPORTABLE_ACTIONS = [
         'addColumn',
         'addForeignKey',
+        'createDatabase',
         'createIndex', 
         'createTable',
         'createTableIfNotExists',
         'dropColumns',
+        'dropDatabase',
         'dropForeignKey',
         'dropIndex', 
         'dropTable', 

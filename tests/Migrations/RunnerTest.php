@@ -2,14 +2,18 @@
 
 namespace Tests\Migrations;
 
+use Intersect\Core\Logger\ConsoleLogger;
+use Tests\Stubs\Seed;
 use PHPUnit\Framework\TestCase;
 use Intersect\Core\Logger\NullLogger;
 use Intersect\Core\Storage\FileStorage;
 use Intersect\Database\Migrations\Runner;
+use PHPUnit\Framework\MockObject\MockObject;
 use Intersect\Database\Connection\Connection;
 use Intersect\Database\Exception\DatabaseException;
 use Intersect\Database\Connection\ConnectionRepository;
-use Tests\Stubs\Seed;
+use Intersect\Database\Connection\ConnectionSettings;
+use Intersect\Database\Query\Builder\NullQueryBuilder;
 
 class RunnerTest extends TestCase {
 

@@ -36,6 +36,7 @@ class SchemaTest extends TestCase {
             $this->assertCount(1, $b->getColumnDefinitions());
             return $queryBuilder;
         });
+        $queryBuilder->method('schema')->willReturn($queryBuilder);
         
         $expectedResult = new Result();
         $queryBuilder->method('get')->willReturn($expectedResult);
@@ -57,6 +58,7 @@ class SchemaTest extends TestCase {
             $this->assertCount(1, $b->getColumnDefinitions());
             return $queryBuilder;
         });
+        $queryBuilder->method('schema')->willReturn($queryBuilder);
         
         $expectedResult = new Result();
         $queryBuilder->method('get')->willReturn($expectedResult);
@@ -77,6 +79,7 @@ class SchemaTest extends TestCase {
             $this->assertEquals('test', $tableName);
             return $queryBuilder;
         });
+        $queryBuilder->method('schema')->willReturn($queryBuilder);
         
         $expectedResult = new Result();
         $queryBuilder->method('get')->willReturn($expectedResult);
@@ -95,6 +98,7 @@ class SchemaTest extends TestCase {
             $this->assertEquals('test', $tableName);
             return $queryBuilder;
         });
+        $queryBuilder->method('schema')->willReturn($queryBuilder);
         
         $expectedResult = new Result();
         $queryBuilder->method('get')->willReturn($expectedResult);
@@ -113,7 +117,7 @@ class SchemaTest extends TestCase {
             $this->assertEquals('test', $tableName);
             return $queryBuilder;
         });
-
+        $queryBuilder->method('schema')->willReturn($queryBuilder);
         $queryBuilder->method('dropColumns')->willReturn($queryBuilder);
         
         $expectedResult = new Result();
@@ -133,7 +137,7 @@ class SchemaTest extends TestCase {
             $this->assertEquals('test', $tableName);
             return $queryBuilder;
         });
-
+        $queryBuilder->method('schema')->willReturn($queryBuilder);
         $queryBuilder->method('addColumn')->willReturn($queryBuilder);
         
         $expectedResult = new Result();
@@ -157,7 +161,7 @@ class SchemaTest extends TestCase {
             $this->assertEquals('test', $tableName);
             return $queryBuilder;
         });
-
+        $queryBuilder->method('schema')->willReturn($queryBuilder);
         $queryBuilder->method('createIndex')->willReturn($queryBuilder);
         
         $expectedResult = new Result();
@@ -177,7 +181,7 @@ class SchemaTest extends TestCase {
             $this->assertEquals('test', $tableName);
             return $queryBuilder;
         });
-
+        $queryBuilder->method('schema')->willReturn($queryBuilder);
         $queryBuilder->method('dropIndex')->willReturn($queryBuilder);
         
         $expectedResult = new Result();
@@ -197,7 +201,7 @@ class SchemaTest extends TestCase {
             $this->assertEquals('test', $tableName);
             return $queryBuilder;
         });
-
+        $queryBuilder->method('schema')->willReturn($queryBuilder);
         $queryBuilder->method('addForeignKey')->willReturn($queryBuilder);
         
         $expectedResult = new Result();
@@ -217,7 +221,7 @@ class SchemaTest extends TestCase {
             $this->assertEquals('test', $tableName);
             return $queryBuilder;
         });
-
+        $queryBuilder->method('schema')->willReturn($queryBuilder);
         $queryBuilder->method('dropForeignKey')->willReturn($queryBuilder);
         
         $expectedResult = new Result();
@@ -237,6 +241,7 @@ class SchemaTest extends TestCase {
             $this->assertEquals('test', $tableName);
             return $queryBuilder;
         });
+        $queryBuilder->method('schema')->willReturn($queryBuilder);
         
         $expectedResult = new Result();
         $queryBuilder->method('get')->willReturn($expectedResult);

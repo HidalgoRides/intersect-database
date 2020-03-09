@@ -105,4 +105,14 @@ class ConnectionSettings {
         $this->charset = $charset;
     }
 
+    public function getSchema()
+    {
+        return $this->schema;
+    }
+
+    public function setSchema($schema)
+    {
+        $this->schema = $schema;
+    }
+
 }

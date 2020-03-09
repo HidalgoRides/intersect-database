@@ -12,4 +12,9 @@ class NullColumnDefinitionResolver extends AbstractColumnDefinitionResolver {
         return null;
     }
 
+    protected function getType(ColumnDefinition $columnDefinition)
+    {
+        return $columnDefinition->getType();
+    }
+
 }

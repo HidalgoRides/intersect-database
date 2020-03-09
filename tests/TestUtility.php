@@ -15,7 +15,7 @@ class TestUtility {
 
     public static function getPostgresConnection($name = 'app')
     {
-        $connectionSettings = ConnectionSettings::builder('db-postgres', 'root', 'password')->database($name)->port(5432)->build();
+        $connectionSettings = ConnectionSettings::builder('db-postgres', 'root', 'password')->database($name)->schema('public')->port(5432)->build();
         return ConnectionFactory::get('pgsql', $connectionSettings);
     }
 

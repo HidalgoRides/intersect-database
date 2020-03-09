@@ -44,6 +44,12 @@ class ExportQueryBuilder extends QueryBuilder {
         return $this->queryBuilder->build();
     }
 
+    public function createDatabase($databaseName)
+    {
+        $this->queryBuilder->createDatabase($databaseName);
+        return $this;
+    }
+
     public function createTable(Blueprint $blueprint)
     {
         $this->queryBuilder->createTable($blueprint);
@@ -53,6 +59,12 @@ class ExportQueryBuilder extends QueryBuilder {
     public function createTableIfNotExists(Blueprint $blueprint)
     {
         $this->queryBuilder->createTableIfNotExists($blueprint);
+        return $this;
+    }
+
+    public function dropDatabase($databaseName)
+    {
+        $this->queryBuilder->dropDatabase($databaseName);
         return $this;
     }
 

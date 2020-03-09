@@ -156,6 +156,31 @@ class Runner {
         $this->logger->info('Finished migration');
     }
 
+    public function reset($seedMigrationsEnabled = false)
+    {
+        $currentDatabase = $this->connection->getConnectionSettings()->getDatabase();
+        $tempDatabase = $currentDatabase . '_tmp';
+
+        try {
+            $this->connection->getQueryBuilder()->createDatabase($tempDatabase)->get();
+            $this->connection->switchDatabase($tempDatabase);
+        } catch (\Exception $e) {}
+
+        try {
+            $this->logger->info('Dropping database!');
+            $this->connection->getQueryBuilder()->dropDatabase($currentDatabase)->get();
+            $this->logger->info('Creating database!');
+            $this->connection->getQueryBuilder()->createDatabase($currentDatabase)->get();
+            $this->connection->switchDatabase($currentDatabase);
+            
+            $this->migrate($seedMigrationsEnabled);
+        } catch (\Exception $e) {}
+
+        try {
+            $this->connection->getQueryBuilder()->dropDatabase($tempDatabase)->get();
+        } catch (\Exception $e) {}
+    }
+
     public function rollbackLastBatch()
     {
         if (!$this->migrationTableExists())
@@ -211,7 +236,10 @@ class Runner {
 
         try {
             $result = $this->connection->getQueryBuilder()->selectMax('batch_id')->table('ic_migrations')->whereEquals('status', MigrationStatus::COMPLETED)->get();
-            $lastBatchId = (int) ($result->getFirstRecord()['max_value']);
+            if (!is_null($result))
+            {
+                $lastBatchId = (int) ($result->getFirstRecord()['max_value']);
+            }
         } catch (DatabaseException $e) {}
         
         return $lastBatchId;

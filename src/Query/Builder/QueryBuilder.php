@@ -38,8 +38,10 @@ abstract class QueryBuilder {
     private static $ACTION_UPDATE = 'update';
     private static $ACTION_INSERT = 'insert';
     private static $ACTION_COLUMNS = 'columns';
+    private static $ACTION_CREATE_DATABASE = 'createDatabase';
     private static $ACTION_CREATE_TABLE = 'createTable';
     private static $ACTION_CREATE_TABLE_IF_NOT_EXISTS = 'createTableIfNotExists';
+    private static $ACTION_DROP_DATABASE = 'dropDatabase';
     private static $ACTION_DROP_TABLE = 'dropTable';
     private static $ACTION_DROP_TABLE_IF_EXISTS = 'dropTableIfExists';
     private static $ACTION_DROP_COLUMNS = 'dropColumns';
@@ -52,6 +54,7 @@ abstract class QueryBuilder {
 
     protected $columnData = [];
     protected $columns = ['*'];
+    protected $databaseName;
     protected $joinQueries = [];
     protected $schema;
     protected $tableName;
@@ -110,6 +113,14 @@ abstract class QueryBuilder {
     }
 
     /** @return QueryBuilder */
+    public function createDatabase($databaseName)
+    {
+        $this->action = self::$ACTION_CREATE_DATABASE;
+        $this->databaseName = $databaseName;
+        return $this;
+    }
+
+    /** @return QueryBuilder */
     public function createTable(Blueprint $blueprint)
     {
         $this->action = self::$ACTION_CREATE_TABLE;
@@ -122,6 +133,14 @@ abstract class QueryBuilder {
     {
         $this->action = self::$ACTION_CREATE_TABLE_IF_NOT_EXISTS;
         $this->blueprint = $blueprint;
+        return $this;
+    }
+
+    /** @return QueryBuilder */
+    public function dropDatabase($databaseName)
+    {
+        $this->action = self::$ACTION_DROP_DATABASE;
+        $this->databaseName = $databaseName;
         return $this;
     }
 
@@ -501,11 +520,17 @@ abstract class QueryBuilder {
             case self::$ACTION_COLUMNS:
                 $query = $this->buildColumnQuery();
                 break;
+            case self::$ACTION_CREATE_DATABASE:
+                $query = $this->buildCreateDatabaseQuery();
+                break;
             case self::$ACTION_CREATE_TABLE:
                 $query = $this->buildCreateTableQuery($this->blueprint);
                 break;
             case self::$ACTION_CREATE_TABLE_IF_NOT_EXISTS:
                 $query = $this->buildCreateTableQuery($this->blueprint, true);
+                break;
+            case self::$ACTION_DROP_DATABASE:
+                $query = $this->buildDropDatabaseQuery();
                 break;
             case self::$ACTION_DROP_TABLE:
                 $query = $this->buildDropTableQuery();
@@ -632,6 +657,13 @@ abstract class QueryBuilder {
         return $this->buildFinalQuery($queryString);
     }
 
+    protected function buildCreateDatabaseQuery()
+    {
+        $queryString = 'create database ' . $this->databaseName;
+
+        return $this->buildFinalQuery($queryString);
+    }
+
     protected function buildCreateTableQuery(Blueprint $blueprint, $suffixWithIfNotExists = false)
     {
         $columnDefinitionStrings = [];
@@ -695,6 +727,13 @@ abstract class QueryBuilder {
     }
 
     protected function buildCreateTableOptions() {}
+
+    protected function buildDropDatabaseQuery()
+    {
+        $queryString = 'drop database ' . $this->databaseName;
+
+        return $this->buildFinalQuery($queryString);
+    }
 
     protected function buildDropTableQuery()
     {
