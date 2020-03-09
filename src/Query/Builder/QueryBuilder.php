@@ -192,8 +192,7 @@ abstract class QueryBuilder {
     public function addForeignKey($fromColumn, $toColumn, $onTable, $onTableSchema = 'public', $keyName = null)
     {
         $onTableSchema = (!is_null($onTableSchema) ? $onTableSchema : 'public');
-        $keyName = (!is_null($keyName) ? $keyName : $fromColumn . '_' . $onTable . '_' . $toColumn);
-        $this->key = new ForeignKey($keyName, $fromColumn, $toColumn, $onTable, $onTableSchema);
+        $this->key = new ForeignKey($this->tableName, $fromColumn, $toColumn, $onTable, $keyName, $onTableSchema);
 
         $this->action = self::$ACTION_ADD_FOREIGN_KEY;
         return $this;

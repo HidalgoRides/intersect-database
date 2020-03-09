@@ -4,6 +4,6 @@ namespace Intersect\Database\Schema\Key;
 
 class UniqueKey extends Key {
 
-    protected $prefix = 'unique_';
+    protected $prefix = 'uidx_';
 
 }

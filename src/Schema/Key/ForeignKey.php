@@ -4,21 +4,26 @@ namespace Intersect\Database\Schema\Key;
 
 class ForeignKey extends Key {
 
-    protected $prefix = 'foreign_';
+    protected $prefix = 'fidx_';
 
     private $fromColumn;
     private $toColumn;
     private $onTable;
     private $tableSchema;
 
-    public function __construct($keyName, $fromColumn, $toColumn, $onTable, $tableSchema = 'public')
+    public function __construct($sourceTable, $fromColumn, $toColumn, $onTable, $keyName = null, $tableSchema = 'public')
     {
-        parent::__construct(null, [$fromColumn], $keyName);
-
         $this->fromColumn = $fromColumn;
         $this->toColumn = $toColumn;
         $this->onTable = $onTable;
         $this->tableSchema = $tableSchema;
+
+        if (is_null($keyName))
+        {
+            $keyName = $this->generateName($sourceTable);
+        }
+
+        parent::__construct($sourceTable, [$fromColumn], $keyName);
     }
 
     public function getFromColumn()
@@ -39,6 +44,11 @@ class ForeignKey extends Key {
     public function getTableSchema()
     {
         return $this->tableSchema;
+    }
+
+    private function generateName($sourceTableName)
+    {
+        return $this->prefix . $sourceTableName . '_' . $this->fromColumn . '_' . $this->onTable . '_' . $this->toColumn;
     }
 
 }

@@ -209,9 +209,7 @@ class Blueprint {
 
     public function foreign($fromColumn, $toColumn, $onTable, $keyName = null)
     {
-        $keyName = (!is_null($keyName) ? $keyName : $fromColumn . '_' . $onTable . '_' . $toColumn);
-
-        $this->keys[] = new ForeignKey($keyName, $fromColumn, $toColumn, $onTable);
+        $this->keys[] = new ForeignKey($this->tableName, $fromColumn, $toColumn, $onTable, $keyName);
     }
 
     public function index($columns, $keyName = null)
