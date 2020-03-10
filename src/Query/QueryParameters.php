@@ -14,6 +14,10 @@ use Intersect\Database\Query\Builder\Condition\NotEqualsCondition;
 use Intersect\Database\Query\Builder\Condition\QueryConditionType;
 use Intersect\Database\Query\Builder\Condition\QueryConditionGroup;
 use Intersect\Database\Query\Builder\Condition\BetweenDatesCondition;
+use Intersect\Database\Query\Builder\Condition\GreaterThanCondition;
+use Intersect\Database\Query\Builder\Condition\GreaterThanOrEqualCondition;
+use Intersect\Database\Query\Builder\Condition\LessThanCondition;
+use Intersect\Database\Query\Builder\Condition\LessThanOrEqualCondition;
 
 class QueryParameters {
 
@@ -133,9 +137,33 @@ class QueryParameters {
         return $this;
     }
 
+    public function greaterThan($key, $value)
+    {
+        $this->queryConditions[] = new GreaterThanCondition($key, $value);
+        return $this;
+    }
+
+    public function greaterThanOrEqual($key, $value)
+    {
+        $this->queryConditions[] = new GreaterThanOrEqualCondition($key, $value);
+        return $this;
+    }
+
     public function notEquals($key, $value)
     {
         $this->queryConditions[] = new NotEqualsCondition($key, $value);
+        return $this;
+    }
+
+    public function lessThan($key, $value)
+    {
+        $this->queryConditions[] = new LessThanCondition($key, $value);
+        return $this;
+    }
+
+    public function lessThanOrEqual($key, $value)
+    {
+        $this->queryConditions[] = new LessThanOrEqualCondition($key, $value);
         return $this;
     }
 

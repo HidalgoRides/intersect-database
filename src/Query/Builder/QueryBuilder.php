@@ -28,6 +28,10 @@ use Intersect\Database\Query\Builder\Condition\NotEqualsCondition;
 use Intersect\Database\Query\Builder\Condition\QueryConditionType;
 use Intersect\Database\Query\Builder\Condition\QueryConditionGroup;
 use Intersect\Database\Query\Builder\Condition\BetweenDatesCondition;
+use Intersect\Database\Query\Builder\Condition\GreaterThanCondition;
+use Intersect\Database\Query\Builder\Condition\GreaterThanOrEqualCondition;
+use Intersect\Database\Query\Builder\Condition\LessThanCondition;
+use Intersect\Database\Query\Builder\Condition\LessThanOrEqualCondition;
 
 abstract class QueryBuilder {
 
@@ -427,6 +431,34 @@ abstract class QueryBuilder {
     public function whereEquals($column, $value)
     {
         $this->queryConditions[] = new EqualsCondition($column, $value);
+        return $this;
+    }
+
+    /** @return QueryBuilder */
+    public function whereGreaterThan($column, $value)
+    {
+        $this->queryConditions[] = new GreaterThanCondition($column, $value);
+        return $this;
+    }
+
+    /** @return QueryBuilder */
+    public function whereGreaterThanOrEqual($column, $value)
+    {
+        $this->queryConditions[] = new GreaterThanOrEqualCondition($column, $value);
+        return $this;
+    }
+
+    /** @return QueryBuilder */
+    public function whereLessThan($column, $value)
+    {
+        $this->queryConditions[] = new LessThanCondition($column, $value);
+        return $this;
+    }
+
+    /** @return QueryBuilder */
+    public function whereLessThanOrEqual($column, $value)
+    {
+        $this->queryConditions[] = new LessThanOrEqualCondition($column, $value);
         return $this;
     }
 

@@ -83,6 +83,10 @@ class MySQLQueryBuilderTest extends TestCase {
             ->whereIn('id', [1,2,3])
             ->whereBetween('value', 1, 10)
             ->whereBetweenDates('start', '1969-01-01', '1969-01-02')
+            ->whereGreaterThan('id1', 5)
+            ->whereGreaterThanOrEqual('id2', 10)
+            ->whereLessThan('id3', 2)
+            ->whereLessThanOrEqual('id4', 14)
             ->whereLike('foo', 'test%')
             ->group(function(QueryBuilder $queryBuilder) {
                 $queryBuilder->whereEquals('group', 'test');
@@ -90,7 +94,7 @@ class MySQLQueryBuilderTest extends TestCase {
             })
             ->build();
 
-        $this->assertEquals("select " . $alias . ".* as '" . $alias . ".*' from `users` as " . $alias . " where " . $alias . ".unit = :" . $alias . "_unit and " . $alias . ".test != :" . $alias . "_test and " . $alias . ".foo is null and " . $alias . ".bar is not null and " . $alias . ".id in (1, 2, 3) and " . $alias . ".value between 1 and 10 and " . $alias . ".start between cast('1969-01-01' as datetime) and cast('1969-01-02' as datetime) and " . $alias . ".foo like :" . $alias . "_foo and (" . $alias . ".group = :" . $alias . "_group and " . $alias . ".biz = :" . $alias . "_biz);", $query->getSql());
+        $this->assertEquals("select " . $alias . ".* as '" . $alias . ".*' from `users` as " . $alias . " where " . $alias . ".unit = :" . $alias . "_unit and " . $alias . ".test != :" . $alias . "_test and " . $alias . ".foo is null and " . $alias . ".bar is not null and " . $alias . ".id in (1, 2, 3) and " . $alias . ".value between 1 and 10 and " . $alias . ".start between cast('1969-01-01' as datetime) and cast('1969-01-02' as datetime) and " . $alias. ".id1 > :" . $alias . "_id1 and " . $alias . ".id2 >= :" . $alias . "_id2 and " . $alias. ".id3 < :" . $alias . "_id3 and " . $alias . ".id4 <= :" . $alias . "_id4 and " . $alias . ".foo like :" . $alias . "_foo and (" . $alias . ".group = :" . $alias . "_group and " . $alias . ".biz = :" . $alias . "_biz);", $query->getSql());
 
         $bindParameters = $query->getBindParameters();
         $this->assertArrayHasKey($alias . '_unit', $bindParameters);
@@ -98,11 +102,19 @@ class MySQLQueryBuilderTest extends TestCase {
         $this->assertArrayHasKey($alias . '_foo', $bindParameters);
         $this->assertArrayHasKey($alias . '_group', $bindParameters);
         $this->assertArrayHasKey($alias . '_biz', $bindParameters);
+        $this->assertArrayHasKey($alias . '_id1', $bindParameters);
+        $this->assertArrayHasKey($alias . '_id2', $bindParameters);
+        $this->assertArrayHasKey($alias . '_id3', $bindParameters);
+        $this->assertArrayHasKey($alias . '_id4', $bindParameters);
         $this->assertEquals('test', $bindParameters[$alias . '_unit']);
         $this->assertEquals('unit', $bindParameters[$alias . '_test']);
         $this->assertEquals('test%', $bindParameters[$alias . '_foo']);
         $this->assertEquals('test', $bindParameters[$alias . '_group']);
         $this->assertEquals('baz', $bindParameters[$alias . '_biz']);
+        $this->assertEquals('5', $bindParameters[$alias . '_id1']);
+        $this->assertEquals('10', $bindParameters[$alias . '_id2']);
+        $this->assertEquals('2', $bindParameters[$alias . '_id3']);
+        $this->assertEquals('14', $bindParameters[$alias . '_id4']);
     }
 
     public function test_buildSelectQuery_withLimit()

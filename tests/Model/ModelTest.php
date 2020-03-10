@@ -408,4 +408,82 @@ class ModelTest extends TestCase {
         $this->assertEquals(456, $result->number);
     }
 
+    public function test_greaterThan() 
+    {
+        Phone::truncate();
+        Phone::bulkCreate([
+            ['id' => 1, 'number' => 123],
+            ['id' => 2, 'number' => 456],
+            ['id' => 3, 'number' => 789]
+        ]);
+
+        $this->assertEquals(3, Phone::count());
+
+        $params = new QueryParameters();
+        $params->greaterThan('id', 2);
+        
+        $results = Phone::find($params);
+        $this->assertEquals(1, count($results));
+        $this->assertEquals(789, $results[0]->number);
+    }
+
+    public function test_greaterThanOrEqual() 
+    {
+        Phone::truncate();
+        Phone::bulkCreate([
+            ['id' => 1, 'number' => 123],
+            ['id' => 2, 'number' => 456],
+            ['id' => 3, 'number' => 789]
+        ]);
+
+        $this->assertEquals(3, Phone::count());
+
+        $params = new QueryParameters();
+        $params->greaterThanOrEqual('id', 2);
+        
+        $results = Phone::find($params);
+        $this->assertEquals(2, count($results));
+        $this->assertEquals(456, $results[0]->number);
+        $this->assertEquals(789, $results[1]->number);
+    }
+
+    public function test_lessThan() 
+    {
+        Phone::truncate();
+        Phone::bulkCreate([
+            ['id' => 1, 'number' => 123],
+            ['id' => 2, 'number' => 456],
+            ['id' => 3, 'number' => 789]
+        ]);
+
+        $this->assertEquals(3, Phone::count());
+
+        $params = new QueryParameters();
+        $params->lessThan('id', 2);
+        
+        $results = Phone::find($params);
+        $this->assertEquals(1, count($results));
+        $this->assertEquals(123, $results[0]->number);
+    }
+
+    public function test_lessThanOrEqual() 
+    {
+        Phone::truncate();
+        Phone::bulkCreate([
+            ['id' => 1, 'number' => 123],
+            ['id' => 2, 'number' => 456],
+            ['id' => 3, 'number' => 789]
+        ]);
+
+        $this->assertEquals(3, Phone::count());
+
+        $params = new QueryParameters();
+        $params->lessThanOrEqual('id', 2);
+        
+        $results = Phone::find($params);
+        $this->assertEquals(2, count($results));
+        $this->assertEquals(123, $results[0]->number);
+        $this->assertEquals(456, $results[1]->number);
+    }
+
 }
