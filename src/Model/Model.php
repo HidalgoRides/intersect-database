@@ -118,7 +118,7 @@ abstract class Model extends AbstractModel {
      * @param string $column
      * @return static|null
      */
-    public function hasOne($joiningClassName, $column)
+    public function hasOne($joiningClassName, $column, QueryParameters $queryParameters = null)
     {
         $attributeValue = $this->getAttribute($column);
 
@@ -133,7 +133,7 @@ abstract class Model extends AbstractModel {
 
         $queryBuilder = $joiningClass->getConnection()->getQueryBuilder();
         $queryBuilder
-            ->select($joiningClass->getColumnList())
+            ->select($joiningClass->getColumnList(), $queryParameters)
             ->table($joiningClass->getTableName, $joiningClass->getPrimaryKey(), $joiningTableAlias)
             ->schema($joiningClass->getSchema())
             ->whereEquals($joiningClass->getPrimaryKey(), $attributeValue)
@@ -147,7 +147,7 @@ abstract class Model extends AbstractModel {
      * @param string $column
      * @return static[]
      */
-    public function hasMany($joiningClassName, $column)
+    public function hasMany($joiningClassName, $column, QueryParameters $queryParameters = null)
     {
         $primaryKeyValue = $this->getPrimaryKeyValue();
 
@@ -162,7 +162,7 @@ abstract class Model extends AbstractModel {
 
         $queryBuilder = $joiningClass->getConnection()->getQueryBuilder();
         $queryBuilder
-            ->select($joiningClass->getColumnList())
+            ->select($joiningClass->getColumnList(), $queryParameters)
             ->table($joiningClass->getTableName, $joiningClass->getPrimaryKey(), $joiningTableAlias)
             ->schema($joiningClass->getSchema())
             ->whereEquals($column, $primaryKeyValue);
