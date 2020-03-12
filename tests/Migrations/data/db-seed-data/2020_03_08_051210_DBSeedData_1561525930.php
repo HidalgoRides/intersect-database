@@ -39,6 +39,12 @@ class DBSeedData1561525930 extends AbstractMigration {
             $blueprint->string('last_name', 20);
         });
 
+        $this->schema->createTableIfNotExists('user_name_associations', function(Blueprint $blueprint) {
+            $blueprint->integer('user_id');
+            $blueprint->integer('name_id');
+            $blueprint->primary(['user_id', 'name_id']);
+        });
+
         $this->schema->createTableIfNotExists('addresses', function(Blueprint $blueprint) {
             $blueprint->increments('id');
             $blueprint->integer('user_id');

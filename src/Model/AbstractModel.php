@@ -4,6 +4,7 @@ namespace Intersect\Database\Model;
 
 use Intersect\Database\Connection\Connection;
 use Intersect\Database\Query\QueryParameters;
+use Intersect\Database\Model\AssociativeModel;
 use Intersect\Database\Query\ModelAliasFactory;
 use Intersect\Database\Model\Traits\HasMetaData;
 use Intersect\Database\Query\Builder\QueryBuilder;
@@ -53,6 +54,24 @@ abstract class AbstractModel implements ModelActions {
         }
 
         return $models;
+    }
+
+    /**
+     * @param QueryParameters|null $queryParameters
+     * @return int
+     * @throws DatabaseException
+     */
+    public static function count(QueryParameters $queryParameters = null)
+    {
+        $modelClass = new static();
+
+        $queryBuilder = $modelClass->getConnection()->getQueryBuilder();
+        $result = $queryBuilder->table($modelClass->getTableName(), $modelClass->getPrimaryKey())
+            ->schema($modelClass->getSchema())
+            ->count($queryParameters)
+            ->get();
+
+        return (int) $result->getFirstRecord()['count'];
     }
 
     /**
@@ -120,6 +139,27 @@ abstract class AbstractModel implements ModelActions {
         $instance = new static();
         $instance->getConnection()->getQueryBuilder()->truncateTable($instance->getTableName())->get();
         return true;
+    }
+
+    /**
+     * @return static[]
+     */
+    public static function with(array $methodNames, QueryParameters $queryParameters = null)
+    {
+        $models = self::find($queryParameters);
+
+        foreach ($models as $model)
+        {
+            foreach ($methodNames as $methodName)
+            {
+                if (method_exists($model, $methodName))
+                {
+                    $model->{$methodName};
+                }
+            }
+        }
+
+        return $models;
     }
 
     /**
@@ -269,6 +309,158 @@ abstract class AbstractModel implements ModelActions {
     }
 
     /**
+     * @param string $className
+     * @param string $joiningClassColumn
+     * @param QueryParameters $queryParameters
+     * @return static[]
+     */
+    public function hasMany($joiningClassName, $joiningClassColumn, QueryParameters $queryParameters = null)
+    {
+        $primaryKeyValue = $this->getPrimaryKeyValue();
+
+        if (is_null($primaryKeyValue))
+        {
+            return [];
+        }
+
+        /** @var AbstractModel|AssociativeModel|null $joiningClass */
+        $joiningClass = new $joiningClassName();
+        $joiningTableAlias = ModelAliasFactory::generateAlias($joiningClass);
+        $joiningClassColumnValues = [$primaryKeyValue];
+
+        if ($joiningClass instanceof AssociativeModel)
+        {
+            $pivotClassName = null;
+            $pivotClassColumn = null;
+            $associations = [];
+
+            if ($joiningClass->getColumnOneName() == $joiningClassColumn)
+            {
+                $pivotClassName = $joiningClass->getColumnTwoClassName();
+                $pivotClassColumn = $joiningClass->getColumnTwoName();
+
+                $associations = $joiningClass::findAssociationsForColumnOne($this->getPrimaryKeyValue());
+            } 
+            else if ($joiningClass->getColumnTwoName() == $joiningClassColumn)
+            {
+                $pivotClassName = $joiningClass->getColumnOneClassName();
+                $pivotClassColumn = $joiningClass->getColumnOneName();
+
+                $associations = $joiningClass::findAssociationsForColumnTwo($this->getPrimaryKeyValue());
+            }
+
+            if (is_null($pivotClassName) || is_null($pivotClassColumn))
+            {
+                return [];
+            }
+
+            $associationIds = [];
+
+            foreach ($associations as $association)
+            {
+                $associationIds[] = $association->{$pivotClassColumn};
+            }
+
+            if (count($associationIds) == 0)
+            {
+                return [];
+            }
+
+            $joiningClass = new $pivotClassName();
+            $joiningClassColumn = $joiningClass->getPrimaryKey();
+            $joiningClassColumnValues = $associationIds;
+        }
+
+        $queryBuilder = $joiningClass->getConnection()->getQueryBuilder();
+        $queryBuilder
+            ->select($joiningClass->getColumnList(), $queryParameters)
+            ->table($joiningClass->getTableName, $joiningClass->getPrimaryKey(), $joiningTableAlias)
+            ->schema($joiningClass->getSchema())
+            ->whereIn($joiningClassColumn, $joiningClassColumnValues);
+
+        return $queryBuilder;
+    }
+
+    /**
+     * @param string $className
+     * @param string $sourceClassColumn
+     * @param QueryParameters $queryParameters
+     * @return static|null
+     */
+    public function hasOne($joiningClassName, $sourceClassColumn, QueryParameters $queryParameters = null)
+    {
+        /** @var AbstractModel|AssociativeModel|null $joiningClass */
+        $joiningClass = new $joiningClassName();
+        $joiningClassIsAssociativeModel = ($joiningClass instanceof AssociativeModel);
+        
+        $joiningClassColumnValue = $this->getAttribute($sourceClassColumn);
+
+        if (!$joiningClassIsAssociativeModel && is_null($joiningClassColumnValue))
+        {
+            return null;
+        }
+
+        $joiningTableAlias = ModelAliasFactory::generateAlias($joiningClass);
+
+        if ($joiningClassIsAssociativeModel) 
+        {
+            $pivotClassName = null;
+            $pivotClassColumn = null;
+            $associations = [];
+    
+            if ($joiningClass->getColumnOneName() == $sourceClassColumn)
+            {
+                $pivotClassName = $joiningClass->getColumnTwoClassName();
+                $pivotClassColumn = $joiningClass->getColumnTwoName();
+    
+                $associationCallback = function() use ($joiningClass) {
+                    return $joiningClass::findAssociationsForColumnOne($this->getPrimaryKeyValue());
+                };
+            } 
+            else if ($joiningClass->getColumnTwoName() == $sourceClassColumn)
+            {
+                $pivotClassName = $joiningClass->getColumnOneClassName();
+                $pivotClassColumn = $joiningClass->getColumnOneName();
+    
+                $associationCallback = function() use ($joiningClass) {
+                    return $joiningClass::findAssociationsForColumnTwo($this->getPrimaryKeyValue());
+                };
+            }
+    
+            if (is_null($pivotClassName) || is_null($pivotClassColumn))
+            {
+                return null;
+            }
+
+            $associations = $associationCallback();
+            $associationIds = [];
+
+            foreach ($associations as $association)
+            {
+                $associationIds[] = $association->{$pivotClassColumn};
+            }
+
+            if (count($associationIds) == 0)
+            {
+                return null;
+            }
+
+            $joiningClass = new $pivotClassName();
+            $joiningClassColumnValue = $associationIds[0];
+        }
+
+        $queryBuilder = $joiningClass->getConnection()->getQueryBuilder();
+        $queryBuilder
+            ->select($joiningClass->getColumnList(), $queryParameters)
+            ->table($joiningClass->getTableName, $joiningClass->getPrimaryKey(), $joiningTableAlias)
+            ->schema($joiningClass->getSchema())
+            ->whereEquals($joiningClass->getPrimaryKey(), $joiningClassColumnValue)
+            ->limit(1);
+
+        return $queryBuilder;
+    }
+
+    /**
      * @return bool
      */
     public function isDirty()
@@ -323,6 +515,11 @@ abstract class AbstractModel implements ModelActions {
      */
     public function __get($key)
     {
+        if ($key == $this->metaDataColumn)
+        {
+            return $this->getMetaData();
+        }
+        
         $value = $this->getAttribute($key);
 
         if (is_null($value))

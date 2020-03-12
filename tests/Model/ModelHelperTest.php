@@ -14,6 +14,8 @@ class ModelHelperTest extends TestCase {
         $models = User::with(['name']);
         $model = $models[0];
         $model->addMetaData('unit', 'test');
+
+        $this->assertNotNull($model->meta_data);
         
         $normalizedModel = ModelHelper::normalize($model);
 
@@ -25,6 +27,8 @@ class ModelHelperTest extends TestCase {
         $models = User::with(['name']);
         $model = $models[0];
         $model->addMetaData('unit', 'test');
+
+        $this->assertNotNull($model->meta_data);
         
         $normalizedModel = ModelHelper::normalize($model, true);
 
@@ -36,6 +40,8 @@ class ModelHelperTest extends TestCase {
         $models = User::with(['name']);
         $model = $models[0];
         $model->addMetaData('unit', 'test');
+
+        $this->assertNotNull($model->meta_data);
 
         $models = [
             $model,
@@ -56,6 +62,8 @@ class ModelHelperTest extends TestCase {
         $model = $models[0];
         $model->addMetaData('unit', 'test');
 
+        $this->assertNotNull($model->meta_data);
+
         $models = [
             $model,
             $model
@@ -73,7 +81,9 @@ class ModelHelperTest extends TestCase {
     {
         $model = Association::findAssociation(1, 1);
         $model->addMetaData('unit', 'test');
-        
+
+        $this->assertNotNull($model->meta_data);
+
         $normalizedModel = ModelHelper::normalize($model);
 
         $this->assertArrayHasKey('association_id', $normalizedModel);

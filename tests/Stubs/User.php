@@ -25,6 +25,16 @@ class User extends TemporalModel {
         return $this->hasMany(Address::class, 'user_id');
     }
 
+    public function name_association()
+    {
+        return $this->hasOne(UserNameAssociation::class, 'user_id');
+    }
+
+    public function name_associations()
+    {
+        return $this->hasMany(UserNameAssociation::class, 'user_id');
+    }
+
     // method expose for testing protected method functionality
     public function setAttribute($key, $value)
     {

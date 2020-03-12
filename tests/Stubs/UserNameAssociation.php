@@ -4,26 +4,26 @@ namespace Tests\Stubs;
 
 use Intersect\Database\Model\AssociativeModel;
 
-class Association extends AssociativeModel {
+class UserNameAssociation extends AssociativeModel {
 
     public function getColumnOneClassName()
     {
-        return null;
+        return User::class;
     }
 
     public function getColumnOneName()
     {
-        return 'key_one';
+        return 'user_id';
     }
 
     public function getColumnTwoClassName()
     {
-        return null;
+        return Name::class;
     }
 
     public function getColumnTwoName()
     {
-        return 'key_two';
+        return 'name_id';
     }
 
 }

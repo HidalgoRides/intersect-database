@@ -11,24 +11,6 @@ abstract class Model extends AbstractModel {
 
     /**
      * @param QueryParameters|null $queryParameters
-     * @return int
-     * @throws DatabaseException
-     */
-    public static function count(QueryParameters $queryParameters = null)
-    {
-        $modelClass = new static();
-
-        $queryBuilder = $modelClass->getConnection()->getQueryBuilder();
-        $result = $queryBuilder->table($modelClass->getTableName(), $modelClass->getPrimaryKey())
-            ->schema($modelClass->getSchema())
-            ->count($queryParameters)
-            ->get();
-
-        return (int) $result->getFirstRecord()['count'];
-    }
-
-    /**
-     * @param QueryParameters|null $queryParameters
      * @return static|null
      * @throws DatabaseException
      */
@@ -75,108 +57,6 @@ abstract class Model extends AbstractModel {
         }
 
         return $model;
-    }
-
-    /**
-     * @return static[]
-     */
-    public static function with(array $methodNames, QueryParameters $queryParameters = null)
-    {
-        $models = self::find($queryParameters);
-
-        foreach ($models as $model)
-        {
-            foreach ($methodNames as $methodName)
-            {
-                if (method_exists($model, $methodName))
-                {
-                    $model->{$methodName};
-                }
-            }
-        }
-
-        return $models;
-    }
-
-    /**
-     * @param $key
-     * @return mixed|null
-     * @throws DatabaseException
-     */
-    public function __get($key)
-    {
-        if ($key == $this->metaDataColumn)
-        {
-            return $this->getMetaData();
-        }
-
-        return parent::__get($key);
-    }
-
-    /**
-     * @param string $className
-     * @param string $column
-     * @return static|null
-     */
-    public function hasOne($joiningClassName, $column, QueryParameters $queryParameters = null)
-    {
-        $attributeValue = $this->getAttribute($column);
-
-        if (is_null($attributeValue))
-        {
-            return null;
-        }
-
-        /** @var Model $joiningClass */
-        $joiningClass = new $joiningClassName();
-        $joiningTableAlias = ModelAliasFactory::generateAlias($joiningClass);
-
-        $queryBuilder = $joiningClass->getConnection()->getQueryBuilder();
-        $queryBuilder
-            ->select($joiningClass->getColumnList(), $queryParameters)
-            ->table($joiningClass->getTableName, $joiningClass->getPrimaryKey(), $joiningTableAlias)
-            ->schema($joiningClass->getSchema())
-            ->whereEquals($joiningClass->getPrimaryKey(), $attributeValue)
-            ->limit(1);
-
-        return $queryBuilder;
-    }
-
-    /**
-     * @param string $className
-     * @param string $column
-     * @return static[]
-     */
-    public function hasMany($joiningClassName, $column, QueryParameters $queryParameters = null)
-    {
-        $primaryKeyValue = $this->getPrimaryKeyValue();
-
-        if (is_null($primaryKeyValue))
-        {
-            return [];
-        }
-
-        /** @var Model $joiningClass */
-        $joiningClass = new $joiningClassName();
-        $joiningTableAlias = ModelAliasFactory::generateAlias($joiningClass);
-
-        $queryBuilder = $joiningClass->getConnection()->getQueryBuilder();
-        $queryBuilder
-            ->select($joiningClass->getColumnList(), $queryParameters)
-            ->table($joiningClass->getTableName, $joiningClass->getPrimaryKey(), $joiningTableAlias)
-            ->schema($joiningClass->getSchema())
-            ->whereEquals($column, $primaryKeyValue);
-
-        return $queryBuilder;
-        
-        $models = [];
-        
-        foreach ($queryBuilder->get()->getRecords() as $record)
-        {
-            $models[] = $joiningClassName::newInstance($record);
-        }
-
-        return $models;
     }
 
     /**

@@ -2,11 +2,13 @@
 
 namespace Tests\Model;
 
+use Tests\Stubs\Name;
 use Tests\Stubs\User;
 use Tests\Stubs\Phone;
 use Tests\Stubs\Address;
 use PHPUnit\Framework\TestCase;
 use Tests\Stubs\PartialAssociation;
+use Tests\Stubs\UserNameAssociation;
 use Intersect\Database\Query\QueryParameters;
 
 class ModelTest extends TestCase {
@@ -190,6 +192,8 @@ class ModelTest extends TestCase {
         $this->assertEquals('test', $metaData);
 
         $metaData = $newUser->addMetaData('new', 'data');
+
+        $this->assertNotNull($newUser->meta_data);
 
         $newUser = $newUser->save();
         $metaDataUnit = $newUser->getMetaDataByKey('unit');
@@ -484,6 +488,45 @@ class ModelTest extends TestCase {
         $this->assertEquals(2, count($results));
         $this->assertEquals(123, $results[0]->number);
         $this->assertEquals(456, $results[1]->number);
+    }
+
+    public function test_hasAssociation()
+    {
+        $user = User::findOne();
+        $name = Name::findOne();
+
+        UserNameAssociation::truncate();
+        UserNameAssociation::bulkCreate([
+            ['user_id' => $user->id, 'name_id' => $name->id]
+        ]);
+
+        $nameFromAssociation = $user->name_association;
+
+        $this->assertNotNull($nameFromAssociation);
+        $this->assertEquals($name->id, $nameFromAssociation->id);
+    }
+
+    public function test_hasAssociations()
+    {
+        $user = User::findOne();
+        
+        UserNameAssociation::truncate();
+        $names = Name::bulkCreate([
+            ['first_name' => 'Test', 'last_name' => 'LastName1'],
+            ['first_name' => 'Test', 'last_name' => 'LastName2'],
+        ]);
+
+        UserNameAssociation::bulkCreate([
+            ['user_id' => $user->id, 'name_id' => $names[0]->id],
+            ['user_id' => $user->id, 'name_id' => $names[1]->id]
+        ]);
+
+        $namesFromAssociations = $user->name_associations;
+
+        $this->assertNotNull($namesFromAssociations);
+        $this->assertCount(2, $namesFromAssociations);
+        $this->assertEquals('LastName1', $namesFromAssociations[0]->last_name);
+        $this->assertEquals('LastName2', $namesFromAssociations[1]->last_name);
     }
 
 }

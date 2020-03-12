@@ -21,8 +21,10 @@ abstract class AssociativeModel extends AbstractModel implements Validation {
         $this->columnTwoName = $this->getColumnTwoName();
     }
 
-    abstract protected function getColumnOneName();
-    abstract protected function getColumnTwoName();
+    abstract public function getColumnOneClassName();
+    abstract public function getColumnOneName();
+    abstract public function getColumnTwoClassName();
+    abstract public function getColumnTwoName();
 
     public function getValidatorMap()
     {
@@ -106,6 +108,11 @@ abstract class AssociativeModel extends AbstractModel implements Validation {
         $result = $queryBuilder->delete($queryParameters)->table($this->tableName, $this->getColumnOneName())->schema($this->schema)->get();
 
         return ($result->getAffectedRows() == 1);
+    }
+
+    public function hasMany($joiningClassName, $joiningClassColumn, QueryParameters $queryParameters = null)
+    {
+        throw new \Exception('Method not supported');
     }
 
     /**
